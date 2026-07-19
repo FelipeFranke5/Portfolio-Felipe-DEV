@@ -1,8 +1,9 @@
 # ============================================================
 #  docker-compose.yml - DEV
 #
-#  Sobe: back-end (Spring Boot), PostgreSQL, NGINX (proxy de dev)
-#  e Keycloak (modo dev, com admin/admin padrão).
+#  Sobe: back-end (Spring Boot), front-end (Angular via ng serve),
+#  PostgreSQL, NGINX (proxy de dev) e Keycloak (modo dev, com
+#  admin/admin padrão).
 #
 #  Uso:
 #    docker compose up -d --build
@@ -56,7 +57,7 @@ services:
 
   backend:
     build:
-      context: ./website-backend
+      context: ./website-backend/website-backend
       dockerfile: Dockerfile
     container_name: website_api_dev
     environment:
@@ -93,13 +94,26 @@ services:
     networks:
       - website_dev_net
 
+  frontend:
+    build:
+      context: ./website-frontend
+      dockerfile: Dockerfile
+    container_name: website_frontend_dev
+    ports:
+      - "4200:4200"     # ng serve, acessado direto (não passa pelo NGINX de dev)
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - website_dev_net
+
   nginx:
     image: nginx:alpine
     container_name: website_nginx_dev
     ports:
       - "80:80"     # HTTP: API (/api/) + Keycloak (/auth/)
     volumes:
-      - ./nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./website-backend/nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - backend
       - keycloak

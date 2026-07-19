@@ -396,15 +396,23 @@ MAIL_PASS=app_password_aqui
 
 ## Build - Ambiente de DEV
 
+O `docker-compose.yml` de dev fica em `projetos/` (um nível acima de
+`website-backend/`), então os comandos abaixo devem ser executados a partir
+dessa pasta.
+
 ```bash
-# 1. Sobe todo o stack (Postgres, Keycloak, back-end, NGINX)
+cd projetos
+
+# 1. Sobe todo o stack (Postgres, Keycloak, back-end, front-end, NGINX)
 docker compose up -d --build
 
 # 2. Alternativa: rodar o back-end fora do Docker (hot reload via devtools)
 #    Ainda depende de subir postgres + keycloak (via docker compose up -d postgres keycloak)
+cd website-backend/website-backend
 ./mvnw spring-boot:run -Dspring.profiles.active=dev
 
-# 3. Sobe Angular (fora do Docker; o NGINX de dev não serve estático)
+# 3. Alternativa: rodar o Angular fora do Docker (hot reload sem rebuild de imagem)
+cd website-frontend
 ng serve
 ```
 
