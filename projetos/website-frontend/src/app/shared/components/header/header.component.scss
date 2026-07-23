@@ -1,0 +1,44 @@
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+
+  &__brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  &__nav {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+
+    a {
+      text-decoration: none;
+      color: inherit;
+      opacity: 0.75;
+      transition: opacity 0.2s ease;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  &__link--active {
+    opacity: 1;
+    font-weight: 600;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-header {
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
+}

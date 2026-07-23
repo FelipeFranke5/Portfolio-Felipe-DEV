@@ -1,0 +1,32 @@
+.app-footer {
+  padding: 1.5rem;
+  text-align: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 0.875rem;
+  opacity: 0.75;
+
+  &__social {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  &__social-link {
+    display: inline-flex;
+    color: inherit;
+    opacity: 0.75;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-footer {
+    border-top-color: rgba(255, 255, 255, 0.15);
+  }
+}

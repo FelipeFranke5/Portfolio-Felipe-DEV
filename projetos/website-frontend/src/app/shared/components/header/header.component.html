@@ -1,0 +1,10 @@
+<header class="app-header">
+   <a class="app-header__brand" routerLink="/">{{ siteName }}</a>
+
+   <nav class="app-header__nav">
+      <a routerLink="/" routerLinkActive="app-header__link--active" [routerLinkActiveOptions]="{ exact: true }">Início</a>
+      <a routerLink="/portfolio" routerLinkActive="app-header__link--active">Portfólio</a>
+      <a routerLink="/skills" routerLinkActive="app-header__link--active">Habilidades</a>
+      <a routerLink="/contact" routerLinkActive="app-header__link--active">Contato</a>
+   </nav>
+</header>
