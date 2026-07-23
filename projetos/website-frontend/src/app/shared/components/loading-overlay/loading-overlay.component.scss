@@ -1,0 +1,76 @@
+:host {
+  --loading-overlay-size: 64px;
+  --loading-overlay-thickness: 3px;
+  --loading-overlay-speed: 1s;
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(2px);
+}
+
+.loading-overlay__ring-outer {
+  position: relative;
+  width: var(--loading-overlay-size);
+  height: var(--loading-overlay-size);
+}
+
+.loading-overlay__glow {
+  position: absolute;
+  inset: calc(var(--loading-overlay-size) * -0.25);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--app-accent, #3b82f6) 0%, transparent 70%);
+  opacity: 0.5;
+  filter: blur(6px);
+  animation: loading-overlay-pulse-glow calc(var(--loading-overlay-speed) * 1.6) ease-in-out infinite;
+}
+
+.loading-overlay__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: var(--loading-overlay-thickness) solid rgba(0, 0, 0, 0.15);
+  border-top-color: var(--app-accent, #3b82f6);
+  animation: loading-overlay-spin var(--loading-overlay-speed) linear infinite;
+}
+
+@keyframes loading-overlay-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loading-overlay-pulse-glow {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .loading-overlay {
+    background: rgba(15, 17, 26, 0.8);
+  }
+
+  .loading-overlay__ring {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+// Acessibilidade: o design original não tratava isso. Quem tem
+// prefers-reduced-motion ativado não deve ver um spinner girando sem parar.
+@media (prefers-reduced-motion: reduce) {
+  .loading-overlay__ring,
+  .loading-overlay__glow {
+    animation: none;
+  }
+}

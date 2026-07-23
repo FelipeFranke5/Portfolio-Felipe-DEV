@@ -4,6 +4,17 @@
 
 :root {
   color-scheme: light dark;
+
+  /* Cor de destaque usada em elementos transversais (ex.: LoadingOverlayComponent).
+   * Ainda não existe uma paleta de marca definida no projeto — ajustar aqui
+   * quando houver, em vez de espalhar hex-codes pelos componentes. */
+  --app-accent: #3b82f6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-accent: #60a5fa;
+  }
 }
 
 html,
