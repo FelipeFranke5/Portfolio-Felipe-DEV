@@ -1,22 +1,23 @@
+@use "../../shared/styles/tokens";
 @use "../../shared/styles/animations";
 
-$bg: #090b11;
-$bg-alt: #121620;
-$card-bg: #1c2130;
-$card-bg-translucent: rgba(18, 22, 32, 0.5);
-$border: #2b334a;
-$border-soft: rgba(255, 255, 255, 0.05);
-$text: #f8fafc;
-$text-muted: #94a3b8;
-$accent: #3b82f6;
-$accent-hover: #2f6fe0;
-$accent-circle: rgba(59, 130, 246, 0.2);
-$accent-soft: rgba(59, 130, 246, 0.1);
-$accent-softer: rgba(59, 130, 246, 0.05);
-$accent-border: rgba(59, 130, 246, 0.2);
+$bg: tokens.$bg;
+$bg-alt: tokens.$bg-alt;
+$card-bg: tokens.$card-bg;
+$card-bg-translucent: tokens.$card-bg-translucent;
+$border: tokens.$border;
+$border-soft: tokens.$border-soft;
+$text: tokens.$text;
+$text-muted: tokens.$text-muted;
+$accent: tokens.$accent;
+$accent-hover: tokens.$accent-hover;
+$accent-circle: tokens.$accent-circle;
+$accent-soft: tokens.$accent-soft;
+$accent-softer: tokens.$accent-softer;
+$accent-border: tokens.$accent-border;
 
-$font-heading: "Plus Jakarta Sans", "Inter", sans-serif;
-$font-body: "Inter", sans-serif;
+$font-heading: tokens.$font-heading;
+$font-body: tokens.$font-body;
 
 :host {
   display: block;
@@ -548,7 +549,7 @@ $font-body: "Inter", sans-serif;
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: tokens.$bp-tablet) {
   .hero {
     grid-template-columns: 1fr;
     padding: 5rem 3rem;
@@ -590,7 +591,7 @@ $font-body: "Inter", sans-serif;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: tokens.$bp-mobile) {
   .hero {
     padding: 4rem 1.5rem;
   }

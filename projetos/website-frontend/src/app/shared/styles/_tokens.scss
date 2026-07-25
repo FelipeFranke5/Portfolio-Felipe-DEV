@@ -1,0 +1,25 @@
+// Design tokens compartilhados entre home, contact, header e footer.
+// Ajustar aqui em vez de duplicar hex-codes pelos componentes.
+$bg: #090b11;
+$bg-alt: #121620;
+$card-bg: #1c2130;
+$card-bg-translucent: rgba(18, 22, 32, 0.5);
+$border: #2b334a;
+$border-soft: rgba(255, 255, 255, 0.05);
+$text: #f8fafc;
+$text-muted: #94a3b8;
+
+$accent: #3b82f6;
+$accent-hover: #2f6fe0;
+$accent-circle: rgba(59, 130, 246, 0.2);
+$accent-soft: rgba(59, 130, 246, 0.1);
+$accent-softer: rgba(59, 130, 246, 0.05);
+$accent-border: rgba(59, 130, 246, 0.2);
+
+$danger: #ff5c5c;
+
+$font-heading: "Plus Jakarta Sans", "Inter", sans-serif;
+$font-body: "Inter", sans-serif;
+
+$bp-mobile: 640px;
+$bp-tablet: 1024px;

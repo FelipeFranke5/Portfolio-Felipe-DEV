@@ -1,16 +1,17 @@
+@use "../../shared/styles/tokens";
 @use "../../shared/styles/animations";
 
-$bg: #090b11;
-$card-bg: #1c2130;
-$border: #2b334a;
-$text: #f8fafc;
-$text-muted: #94a3b8;
-$accent: #3b82f6;
-$accent-soft: rgba(59, 130, 246, 0.1);
-$danger: #ff5c5c;
+$bg: tokens.$bg;
+$card-bg: tokens.$card-bg;
+$border: tokens.$border;
+$text: tokens.$text;
+$text-muted: tokens.$text-muted;
+$accent: tokens.$accent;
+$accent-soft: tokens.$accent-soft;
+$danger: tokens.$danger;
 
-$font-heading: "Plus Jakarta Sans", "Inter", sans-serif;
-$font-body: "Inter", sans-serif;
+$font-heading: tokens.$font-heading;
+$font-body: tokens.$font-body;
 
 :host {
   display: block;
@@ -383,7 +384,7 @@ $font-body: "Inter", sans-serif;
 
 @include animations.fade-in-utility;
 
-@media (max-width: 1024px) {
+@media (max-width: tokens.$bp-tablet) {
   .contact-page__inner {
     grid-template-columns: 1fr;
     gap: 4rem;
@@ -399,7 +400,7 @@ $font-body: "Inter", sans-serif;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: tokens.$bp-mobile) {
   .contact-page__inner {
     padding: 4rem 1.5rem;
     gap: 3rem;

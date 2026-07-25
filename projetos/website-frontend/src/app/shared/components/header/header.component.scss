@@ -1,3 +1,5 @@
+@use "../../styles/tokens";
+
 .app-header {
   position: sticky;
   top: 0;
@@ -11,15 +13,15 @@
   background-color: rgba(9, 11, 17, 0.8);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid tokens.$border-soft;
 
   &__brand {
-    font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+    font-family: tokens.$font-heading;
     font-weight: 700;
     font-size: 1.1rem;
     letter-spacing: -0.02em;
     text-decoration: none;
-    color: #f8fafc;
+    color: tokens.$text;
   }
 
   &__nav {
@@ -32,13 +34,13 @@
   &__link {
     position: relative;
     padding-bottom: 2px;
-    font-family: "Inter", sans-serif;
+    font-family: tokens.$font-body;
     font-weight: 500;
     font-size: 0.75rem;
     letter-spacing: 0.075rem;
     text-transform: uppercase;
     text-decoration: none;
-    color: #f8fafc;
+    color: tokens.$text;
     opacity: 0.7;
     transition: opacity 0.2s ease;
 
@@ -60,7 +62,7 @@
       height: 6px;
       transform: translateY(-50%);
       border-radius: 9999px;
-      background-color: #3b82f6;
+      background-color: tokens.$accent;
     }
 
     &::after {
@@ -70,12 +72,12 @@
       right: 0;
       bottom: -3px;
       height: 1px;
-      background-color: #3b82f6;
+      background-color: tokens.$accent;
     }
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: tokens.$bp-mobile) {
   .app-header {
     padding: 0.85rem 1.25rem;
 

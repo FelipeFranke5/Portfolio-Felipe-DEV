@@ -1,6 +1,8 @@
+@use "../../styles/tokens";
+
 .app-footer {
   padding: 4rem 3rem 3rem;
-  background-color: #090b11;
+  background-color: tokens.$bg;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 
   &__top {
@@ -12,13 +14,13 @@
 
   &__brand {
     flex: 1 1 280px;
-    font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+    font-family: tokens.$font-heading;
     font-weight: 800;
     font-size: clamp(2.5rem, 7vw, 6rem);
     line-height: 1;
     letter-spacing: -0.04em;
     text-decoration: none;
-    color: #f8fafc;
+    color: tokens.$text;
   }
 
   &__availability {
@@ -27,8 +29,8 @@
 
     p {
       margin: 0;
-      color: #94a3b8;
-      font-family: "Inter", sans-serif;
+      color: tokens.$text-muted;
+      font-family: tokens.$font-body;
       font-size: 0.875rem;
       line-height: 1.4;
     }
@@ -39,12 +41,12 @@
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 0.5rem;
-    font-family: "Inter", sans-serif;
+    font-family: tokens.$font-body;
     font-weight: 700;
     font-size: 0.75rem;
     letter-spacing: 0.075rem;
     text-transform: uppercase;
-    color: #f8fafc;
+    color: tokens.$text;
   }
 
   &__availability-dot {
@@ -67,9 +69,9 @@
 
     a {
       text-decoration: none;
-      color: #f8fafc;
+      color: tokens.$text;
       opacity: 0.8;
-      font-family: "Inter", sans-serif;
+      font-family: tokens.$font-body;
       font-weight: 500;
       font-size: 0.75rem;
       letter-spacing: 0.075rem;
@@ -90,7 +92,7 @@
     gap: 1rem;
     margin-top: 3.5rem;
     padding-top: 2rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid tokens.$border-soft;
   }
 
   &__social {
@@ -101,18 +103,18 @@
 
   &__social-link {
     display: inline-flex;
-    color: #94a3b8;
+    color: tokens.$text-muted;
     transition: color 0.2s ease;
 
     &:hover {
-      color: #f8fafc;
+      color: tokens.$text;
     }
   }
 
   &__copyright {
     margin: 0;
-    color: #94a3b8;
-    font-family: "Inter", sans-serif;
+    color: tokens.$text-muted;
+    font-family: tokens.$font-body;
     font-size: 0.75rem;
     letter-spacing: 0.075rem;
     text-transform: uppercase;
@@ -123,13 +125,13 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #94a3b8;
-    font-family: "Inter", sans-serif;
+    color: tokens.$text-muted;
+    font-family: tokens.$font-body;
     font-size: 0.75rem;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: tokens.$bp-mobile) {
   .app-footer {
     padding: 3rem 1.25rem 2rem;
 
