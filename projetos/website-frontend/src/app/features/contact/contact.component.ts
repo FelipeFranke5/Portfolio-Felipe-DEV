@@ -77,7 +77,7 @@ export class ContactComponent {
   constructor() {
     effect(() => {
       const step = this.currentStep();
-      this.stepInputs[step - 1]()?.nativeElement.focus();
+      this.stepInputs[step - 1]()?.nativeElement.focus({ preventScroll: true });
     });
   }
 
