@@ -1,3 +1,5 @@
+@use "../../shared/styles/animations";
+
 $bg: #090b11;
 $bg-alt: #121620;
 $card-bg: #1c2130;
@@ -632,39 +634,4 @@ $font-body: "Inter", sans-serif;
   }
 }
 
-$fade-in-duration: 0.5s;
-$fade-in-step: 45ms;
-$fade-in-count: 4;
-
-.fade-in {
-  opacity: 0;
-  animation-name: home-fade-in;
-  animation-duration: $fade-in-duration;
-  animation-timing-function: ease-out;
-  animation-fill-mode: forwards;
-}
-
-@for $index from 0 through $fade-in-count {
-  .fade-in--#{$index} {
-    animation-delay: $index * $fade-in-step;
-  }
-}
-
-@keyframes home-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fade-in {
-    opacity: 1;
-    animation: none;
-  }
-}
+@include animations.fade-in-utility;

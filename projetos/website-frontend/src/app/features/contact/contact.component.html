@@ -1,17 +1,17 @@
-<app-header></app-header>
+<app-header class="fade-in fade-in--0"></app-header>
 
 <main class="contact-page">
   <div class="contact-page__inner">
     <section class="contact-intro" aria-labelledby="contact-heading">
       <div class="contact-intro__header">
-        <p class="contact-intro__eyebrow">Desenvolvedor Back-End</p>
-        <h1 id="contact-heading" class="contact-intro__heading">Entre em<br />Contato</h1>
-        <p class="contact-intro__description">
+        <p class="contact-intro__eyebrow fade-in fade-in--1">Desenvolvedor Back-End</p>
+        <h1 id="contact-heading" class="contact-intro__heading fade-in fade-in--2">Entre em<br />Contato</h1>
+        <p class="contact-intro__description fade-in fade-in--3">
           Entre em contato comigo, se você tem interesse em:
         </p>
       </div>
 
-      <ul class="contact-intro__reasons">
+      <ul class="contact-intro__reasons fade-in fade-in--4">
         @for (reason of contactReasons; track reason.text) {
           <li class="contact-intro__reason">
             <span class="contact-intro__reason-marker" aria-hidden="true">/*</span>
@@ -20,7 +20,7 @@
         }
       </ul>
 
-      <div class="contact-intro__direct">
+      <div class="contact-intro__direct fade-in fade-in--4">
         <p class="contact-intro__direct-label">Contato Direto</p>
         <p class="contact-intro__direct-text">
           Se preferir, envie um E-mail diretamente para:
@@ -29,7 +29,7 @@
       </div>
     </section>
 
-    <section class="contact-form-card" aria-labelledby="contact-form-heading">
+    <section class="contact-form-card fade-in fade-in--4" aria-labelledby="contact-form-heading">
       <div class="contact-form-card__header">
         <div class="contact-form-card__header-text">
           <h2 id="contact-form-heading">Envie uma mensagem</h2>

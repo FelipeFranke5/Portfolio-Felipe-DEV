@@ -1,3 +1,5 @@
+@use "../../shared/styles/animations";
+
 $bg: #090b11;
 $card-bg: #1c2130;
 $border: #2b334a;
@@ -378,6 +380,8 @@ $font-body: "Inter", sans-serif;
     animation: none;
   }
 }
+
+@include animations.fade-in-utility;
 
 @media (max-width: 1024px) {
   .contact-page__inner {
