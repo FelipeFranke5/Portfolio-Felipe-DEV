@@ -49,7 +49,6 @@ export class HomeComponent {
   fullName: string = 'Felipe';
   currentJobTitle: string = 'Analista de Ongoing Júnior';
   currentJobCompany: string = 'NetBR by SEK';
-  currentJobWebsiteURL: string = 'https://www.netbr.com.br/';
   currentAge: number = this.calculateAge();
 
   readonly trailSteps: TrailStep[] = [
