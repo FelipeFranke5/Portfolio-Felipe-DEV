@@ -1,0 +1,497 @@
+@use "../../shared/styles/tokens";
+@use "../../shared/styles/animations";
+
+$card-bg: tokens.$card-bg;
+$card-bg-translucent: tokens.$card-bg-translucent;
+$border: tokens.$border;
+$border-soft: tokens.$border-soft;
+$text: tokens.$text;
+$text-muted: tokens.$text-muted;
+$accent: tokens.$accent;
+$accent-soft: tokens.$accent-soft;
+$accent-softer: tokens.$accent-softer;
+$accent-border: tokens.$accent-border;
+$danger: tokens.$danger;
+
+$font-heading: tokens.$font-heading;
+$font-body: tokens.$font-body;
+
+// Progressão dos 5 tiers de experiência via custom properties, compartilhadas
+// entre o card e o badge do modal (evita duplicar as regras de cor/borda).
+@mixin tier-vars($border, $bg: null, $color: null) {
+  --tier-border: #{$border};
+  @if $bg {
+    --tier-bg: #{$bg};
+  }
+  @if $color {
+    --tier-color: #{$color};
+  }
+}
+
+:host {
+  display: block;
+  background-color: tokens.$bg;
+  color: $text;
+  font-family: $font-body;
+}
+
+.skills-page__inner {
+  max-width: 90rem;
+  margin: 0 auto;
+  padding: 8rem 6rem 6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.skills-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 48rem;
+
+  &__heading {
+    margin: 0;
+    font-family: $font-heading;
+    font-weight: 800;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 1.1;
+  }
+
+  &__description {
+    margin: 0;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: $text-muted;
+  }
+}
+
+.skills-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid $border-soft;
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    min-width: 200px;
+
+    label {
+      font-size: 0.75rem;
+      color: $text-muted;
+    }
+
+    input,
+    select {
+      height: 38px;
+      padding: 0 0.75rem;
+      font: inherit;
+      font-size: 0.875rem;
+      color: $text;
+      background-color: $card-bg;
+      border: 1px solid $border;
+      border-radius: 8px;
+
+      &:hover {
+        border-color: $accent-border;
+      }
+      &:focus-visible {
+        outline: 2px solid $accent;
+        border-color: $accent;
+      }
+    }
+  }
+
+  &__count {
+    margin-left: auto;
+    align-self: center;
+    font-size: 0.8125rem;
+    color: $text-muted;
+  }
+}
+
+.skills-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.skills-group__heading {
+  margin: 0 0 1.25rem;
+  font-family: $font-heading;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $text-muted;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.skills-btn {
+  height: 38px;
+  padding: 0 1rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $accent;
+  background: transparent;
+  border: 1px solid $border;
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $accent;
+    background-color: $accent-softer;
+  }
+  &:focus-visible {
+    outline: 2px solid $accent;
+  }
+}
+
+.skill-card {
+  --tier-border: #{$border};
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 1px dashed var(--tier-border);
+  border-radius: 8px;
+  background-color: var(--tier-bg, #{$card-bg});
+  color: var(--tier-color, inherit);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3),
+      0 0 20px color-mix(in srgb, var(--tier-border) 30%, transparent);
+  }
+  &:focus-visible {
+    outline: 2px solid $accent;
+    outline-offset: 2px;
+  }
+
+  &__kicker {
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: $accent;
+  }
+
+  &__title {
+    font-family: $font-heading;
+    font-weight: 700;
+    font-size: 1.0625rem;
+  }
+
+  &__badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: fit-content;
+    padding: 0.375rem 0.625rem;
+    border-radius: 6px;
+    background-color: color-mix(in srgb, $border 35%, transparent);
+  }
+
+  &__badge-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  &__bars {
+    display: flex;
+    gap: 3px;
+  }
+
+  &__bar {
+    width: 10px;
+    height: 4px;
+    border-radius: 2px;
+    background-color: color-mix(in srgb, $text 15%, transparent);
+
+    &--filled {
+      background-color: $accent;
+    }
+  }
+
+  &--tier-0 {
+    @include tier-vars($border, null, $text-muted);
+    border-style: solid;
+  }
+  &--tier-1 {
+    @include tier-vars($accent-border, $accent-softer);
+    border-style: solid;
+  }
+  &--tier-2 {
+    @include tier-vars($accent-border, $accent-soft);
+    border-style: solid;
+  }
+  &--tier-3 {
+    @include tier-vars($accent, color-mix(in srgb, $accent 22%, $card-bg));
+    border-style: solid;
+  }
+  &--tier-4 {
+    @include tier-vars($accent, color-mix(in srgb, $accent 38%, $card-bg), #fff);
+    border-style: solid;
+    box-shadow: 0 0 0 1px $accent, 0 0 18px color-mix(in srgb, $accent 40%, transparent);
+  }
+}
+
+.skills-state {
+  text-align: center;
+  padding: 5rem 1.5rem;
+  border: 1px dashed $border;
+  border-radius: 12px;
+  max-width: 32rem;
+  margin: 0 auto;
+
+  &--error {
+    border-style: solid;
+    background-color: $card-bg-translucent;
+  }
+
+  &__title {
+    margin: 0 0 0.5rem;
+    font-family: $font-heading;
+    font-weight: 700;
+    font-size: 1.0625rem;
+  }
+
+  &__description {
+    margin: 0 0 1.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: $text-muted;
+  }
+}
+
+@keyframes skills-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.skill-card--skeleton {
+  cursor: default;
+  border-style: solid;
+  pointer-events: none;
+}
+
+.skill-card__skeleton-line {
+  border-radius: 4px;
+  background-color: $border;
+  animation: skills-skeleton-pulse 1.6s ease-in-out infinite;
+
+  &--kicker {
+    width: 40%;
+    height: 10px;
+  }
+  &--title {
+    width: 70%;
+    height: 16px;
+  }
+  &--badge {
+    width: 60%;
+    height: 24px;
+    border-radius: 6px;
+  }
+}
+
+.skill-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: rgba(0, 0, 0, 0.6);
+  animation: skills-modal-fade 0.18s ease;
+}
+
+.skill-modal {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 2rem;
+  border: 1px solid $border;
+  border-radius: 14px;
+  background-color: $card-bg;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  animation: skills-modal-scale-in 0.18s ease;
+
+  &__close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: $text-muted;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+
+    &:hover {
+      color: $text;
+      background-color: color-mix(in srgb, $text 8%, transparent);
+    }
+    &:focus-visible {
+      outline: 2px solid $accent;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    padding-right: 2rem;
+    font-family: $font-heading;
+    font-weight: 800;
+    font-size: 1.375rem;
+  }
+
+  &__loading {
+    margin: 0;
+    color: $text-muted;
+  }
+  &__error {
+    margin: 0;
+    color: $danger;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  &__label {
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  &__value {
+    font-size: 0.875rem;
+
+    &--mono {
+      font-family: ui-monospace, monospace;
+      font-size: 0.75rem;
+      word-break: break-all;
+      color: $text-muted;
+    }
+  }
+
+  &__badge {
+    --tier-border: #{$border};
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: fit-content;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--tier-border);
+    background-color: var(--tier-bg, transparent);
+    color: var(--tier-color, inherit);
+    font-size: 0.8125rem;
+    font-weight: 500;
+
+    &--tier-0 {
+      @include tier-vars($border, null, $text-muted);
+    }
+    &--tier-1 {
+      @include tier-vars($accent-border, $accent-softer);
+    }
+    &--tier-2 {
+      @include tier-vars($accent-border, $accent-soft);
+    }
+    &--tier-3 {
+      @include tier-vars($accent, color-mix(in srgb, $accent 22%, $card-bg));
+    }
+    &--tier-4 {
+      @include tier-vars($accent, color-mix(in srgb, $accent 38%, $card-bg), #fff);
+    }
+  }
+}
+
+@keyframes skills-modal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes skills-modal-scale-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-card,
+  .skill-modal-backdrop,
+  .skill-modal,
+  .skill-card__skeleton-line {
+    animation: none;
+    transition: none;
+  }
+}
+
+@media (max-width: tokens.$bp-tablet) {
+  .skills-page__inner {
+    padding: 6rem 3rem 5rem;
+  }
+}
+
+@media (max-width: tokens.$bp-mobile) {
+  .skills-page__inner {
+    padding: 5rem 1.5rem 4rem;
+  }
+
+  .skills-filters {
+    flex-direction: column;
+    align-items: stretch;
+
+    &__field {
+      min-width: 0;
+    }
+    &__count {
+      margin-left: 0;
+    }
+  }
+
+  .skills-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@include animations.fade-in-utility;
