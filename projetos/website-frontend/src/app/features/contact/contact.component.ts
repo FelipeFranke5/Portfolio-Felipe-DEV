@@ -1,4 +1,12 @@
-import { Component, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -64,34 +72,29 @@ export class ContactComponent {
   private readonly nameInput = viewChild<ElementRef<HTMLInputElement>>('nameInput');
   private readonly emailInput = viewChild<ElementRef<HTMLInputElement>>('emailInput');
   private readonly messageInput = viewChild<ElementRef<HTMLTextAreaElement>>('messageInput');
+  private readonly stepInputs = [this.nameInput, this.emailInput, this.messageInput] as const;
 
   constructor() {
     effect(() => {
       const step = this.currentStep();
-
-      if (step === 1) {
-        this.nameInput()?.nativeElement.focus();
-      } else if (step === 2) {
-        this.emailInput()?.nativeElement.focus();
-      } else {
-        this.messageInput()?.nativeElement.focus();
-      }
+      this.stepInputs[step - 1]()?.nativeElement.focus();
     });
   }
 
-  get completedFields(): CompletedField[] {
+  readonly completedFields = computed<CompletedField[]>(() => {
     const completedFields: CompletedField[] = [];
+    const step = this.currentStep();
 
-    if (this.currentStep() > 1) {
+    if (step > 1) {
       completedFields.push({ label: 'Nome', value: this.contactForm.controls.name.value });
     }
 
-    if (this.currentStep() > 2) {
+    if (step > 2) {
       completedFields.push({ label: 'E-mail', value: this.contactForm.controls.email.value });
     }
 
     return completedFields;
-  }
+  });
 
   isFieldInvalid(fieldName: ContactFieldName): boolean {
     const control = this.contactForm.controls[fieldName];
@@ -115,25 +118,22 @@ export class ContactComponent {
   }
 
   continueFromName(): void {
-    const nameControl = this.contactForm.controls.name;
-
-    if (nameControl.invalid) {
-      nameControl.markAsTouched();
-      return;
-    }
-
-    this.currentStep.set(2);
+    this.continueFromStep('name', 2);
   }
 
   continueFromEmail(): void {
-    const emailControl = this.contactForm.controls.email;
+    this.continueFromStep('email', 3);
+  }
 
-    if (emailControl.invalid) {
-      emailControl.markAsTouched();
+  private continueFromStep(fieldName: ContactFieldName, nextStep: ContactStep): void {
+    const control = this.contactForm.controls[fieldName];
+
+    if (control.invalid) {
+      control.markAsTouched();
       return;
     }
 
-    this.currentStep.set(3);
+    this.currentStep.set(nextStep);
   }
 
   submit(): void {

@@ -81,12 +81,12 @@ describe('ContactComponent', () => {
     component.contactForm.controls.name.setValue('Felipe');
     component.continueFromName();
 
-    expect(component.completedFields).toEqual([{ label: 'Nome', value: 'Felipe' }]);
+    expect(component.completedFields()).toEqual([{ label: 'Nome', value: 'Felipe' }]);
 
     component.contactForm.controls.email.setValue('felipe@example.com');
     component.continueFromEmail();
 
-    expect(component.completedFields).toEqual([
+    expect(component.completedFields()).toEqual([
       { label: 'Nome', value: 'Felipe' },
       { label: 'E-mail', value: 'felipe@example.com' },
     ]);

@@ -33,7 +33,7 @@
       <div class="contact-form-card__header">
         <div class="contact-form-card__header-text">
           <h2 id="contact-form-heading">Envie uma mensagem</h2>
-          <p>Preenchimento rápido e fluido.</p>
+          <p>Entrarei em contato com você assim que possível.</p>
         </div>
 
         <div class="contact-form-card__progress">
@@ -50,9 +50,9 @@
       </div>
 
       <form [formGroup]="contactForm" (ngSubmit)="submit()" novalidate>
-        @if (completedFields.length > 0) {
+        @if (completedFields().length > 0) {
           <div class="contact-form-card__completed">
-            @for (field of completedFields; track field.label) {
+            @for (field of completedFields(); track field.label) {
               <div class="contact-form-card__completed-item">
                 <span class="contact-form-card__completed-label">{{ field.label }}</span>
                 <span class="contact-form-card__completed-value">{{ field.value }}</span>
