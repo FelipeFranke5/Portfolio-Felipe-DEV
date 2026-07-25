@@ -108,6 +108,8 @@ Esta seção descreve como cada parte do projeto está organizada.
 - **`shared`** — componentes, pipes e diretivas reaproveitáveis entre features.
   Inclui os componentes padrão `HeaderComponent` (`app-header`) e `FooterComponent`
   (`app-footer`), já em uso no `HomeComponent` e disponíveis para as demais páginas.
+  Também inclui `shared/styles`, com os design tokens Sass (`_tokens.scss` — cores,
+  fontes e breakpoints) reaproveitados entre `home`, `contact`, `header` e `footer`.
 
 ### Back-End (Spring Boot)
 
