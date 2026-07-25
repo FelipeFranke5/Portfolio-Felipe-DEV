@@ -27,6 +27,8 @@ typings/
 .angular/
 .claude/
 CLAUDE.md
+CLAUDE-BACK-END.md
+CLAUDE-FRONT-END.md
 
 # e2e
 e2e/*.js
