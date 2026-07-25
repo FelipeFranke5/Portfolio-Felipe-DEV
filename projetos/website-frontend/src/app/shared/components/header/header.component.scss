@@ -3,16 +3,14 @@
 .app-header {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
   padding: 1rem 1.5rem;
-  background-color: rgba(9, 11, 17, 0.8);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background-color: tokens.$bg;
   border-bottom: 1px solid tokens.$border-soft;
 
   &__brand {
