@@ -1,206 +1,640 @@
-@function java-cup-icon($hex) {
-  @return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40' width='40' height='40'%3E%3Cpath d='M12 16h16v10a8 8 0 0 1-8 8 8 8 0 0 1-8-8z' fill='%23#{$hex}' fill-opacity='0.15'/%3E%3Cpath d='M28 19a5 5 0 0 1 0 10h-2v-3h2a2 2 0 0 0 0-4h-2v-3z' fill='%23#{$hex}' fill-opacity='0.15'/%3E%3Cpath d='M16 12c-1.5 1.5 1.5 2 0 4M20 12c-1.5 1.5 1.5 2 0 4M24 12c-1.5 1.5 1.5 2 0 4' stroke='%23#{$hex}' stroke-opacity='0.15' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E";
-}
+$bg: #090b11;
+$bg-alt: #121620;
+$card-bg: #1c2130;
+$card-bg-translucent: rgba(18, 22, 32, 0.5);
+$border: #2b334a;
+$border-soft: rgba(255, 255, 255, 0.05);
+$text: #f8fafc;
+$text-muted: #94a3b8;
+$accent: #3b82f6;
+$accent-hover: #2f6fe0;
+$accent-circle: rgba(59, 130, 246, 0.2);
+$accent-soft: rgba(59, 130, 246, 0.1);
+$accent-softer: rgba(59, 130, 246, 0.05);
+$accent-border: rgba(59, 130, 246, 0.2);
+
+$font-heading: "Plus Jakarta Sans", "Inter", sans-serif;
+$font-body: "Inter", sans-serif;
 
 :host {
-  position: relative;
   display: block;
-  background-repeat: repeat;
-  background-size: 240px 240px;
-  background-image: url("#{java-cup-icon('1f2933')}");
+  background-color: $bg;
+  color: $text;
+  font-family: $font-body;
 }
 
-@media (prefers-color-scheme: dark) {
-  :host {
-    background-image: url("#{java-cup-icon('f8fafc')}");
+.hero__scroll-hint span,
+.roadmap__divider p {
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.075rem;
+  color: $text-muted;
+}
+
+.trail__label,
+.cta__button {
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.0875rem;
+  text-transform: uppercase;
+}
+
+.about__quote-cta,
+.cta__button {
+  display: inline-flex;
+  align-items: center;
+  color: #fff;
+  text-decoration: none;
+}
+
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  align-items: center;
+  gap: 3rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 7rem 6rem;
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
   }
-}
 
-.home-carousel {
-  position: relative;
-  max-width: 960px;
-  margin: 2rem auto;
-  padding: 0 3rem;
+  &__eyebrow {
+    margin: 0;
+    font-weight: 500;
+    font-size: 0.875rem;
+    letter-spacing: 0.0875rem;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
 
-  &__viewport {
+  &__heading {
+    margin: 0;
+    font-family: $font-heading;
+    font-weight: 800;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 1.1;
+    color: $text;
+  }
+
+  &__heading-accent {
+    color: $accent;
+  }
+
+  &__description {
+    margin: 0;
+    max-width: 42rem;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: $text-muted;
+  }
+
+  &__scroll-hint {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    img {
+      opacity: 0.8;
+    }
+  }
+
+  &__media {
+    position: relative;
+  }
+
+  &__media-glow {
+    position: absolute;
+    inset: -1rem;
+    border-radius: 9999px;
+    background-color: $accent-soft;
+    filter: blur(32px);
+    opacity: 0.5;
+  }
+
+  &__media-frame {
+    position: relative;
     overflow: hidden;
-    border-radius: 12px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    aspect-ratio: 1 / 1;
+    border-radius: 16px;
+    border: 1px solid $border;
+    background-color: $card-bg;
   }
+
+  &__media-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.trail {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 6rem 4rem;
 
   &__track {
     display: flex;
-    align-items: stretch;
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 0;
+    padding: 2rem;
+    border: 1px solid $border;
+    border-radius: 12px;
+    background-color: rgba(28, 33, 48, 0.5);
   }
 
-  &__slide {
-    flex: 0 0 100%;
-    box-sizing: border-box;
-    padding: 3rem 4rem;
-    min-height: 560px;
-    max-height: 80vh;
-    overflow-y: auto;
+  &__step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
 
-    h1,
-    h2 {
-      margin-top: 0;
-      text-align: center;
+  &__step--highlighted &__icon-box {
+    background-color: $accent;
+  }
+
+  &__icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    background-color: $accent-circle;
+  }
+
+  &__icon {
+    width: auto;
+    height: auto;
+    max-width: 16px;
+    max-height: 16px;
+  }
+
+  &__label {
+    color: $text;
+    white-space: nowrap;
+  }
+
+  &__separator {
+    width: 14px;
+    height: 12px;
+    margin: 0 0.75rem;
+    flex-shrink: 0;
+  }
+}
+
+.about {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 6rem 6rem 8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+
+  &__intro {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 48rem;
+  }
+
+  &__heading {
+    margin: 0;
+    font-family: $font-heading;
+    font-weight: 800;
+    font-size: clamp(2rem, 4vw, 3.75rem);
+    color: $text;
+  }
+
+  &__lead {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: $text-muted;
+  }
+
+  &__timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+
+  &__entry {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    gap: 1rem 2rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid $border-soft;
+
+    &:last-child {
+      padding-bottom: 0;
+      border-bottom: none;
     }
+  }
+
+  &__entry-eyebrow {
+    font-weight: 700;
+    font-size: 1.125rem;
+    letter-spacing: 0.1125rem;
+    color: $accent;
+  }
+
+  &__entry-body {
+    h3 {
+      margin: 0 0 0.5rem;
+      font-family: $font-heading;
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: $text;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: $text-muted;
+    }
+  }
+
+  &__quote {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 3rem;
+    border-radius: 16px;
+    border: 1px solid $accent-border;
+    background-color: $accent-softer;
+    text-align: center;
+
+    p {
+      margin: 0;
+      max-width: 44rem;
+      font-style: italic;
+      font-size: 1.25rem;
+      line-height: 1.5;
+      color: $text-muted;
+    }
+  }
+
+  &__quote-cta {
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    background-color: $accent;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.1rem;
+    text-transform: uppercase;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+      background-color: $accent-hover;
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.journey__inner,
+.roadmap__inner {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 0 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}
+
+.journey__intro h2,
+.skills__intro h2,
+.roadmap__intro h2 {
+  margin: 0 0 1rem;
+  font-family: $font-heading;
+  font-weight: 800;
+  font-size: clamp(2rem, 4vw, 3.75rem);
+  color: $text;
+}
+
+.journey__intro p,
+.skills__intro p,
+.roadmap__intro p {
+  margin: 0;
+  font-size: 1.125rem;
+  color: $text-muted;
+}
+
+.journey {
+  background-color: $bg-alt;
+  padding: 6rem 0;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3rem;
+  }
+
+  &__step {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  &__step-number {
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: $accent;
+  }
+
+  &__step-body {
+    h4 {
+      margin: 0 0 0.5rem;
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: $text;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+      line-height: 1.4;
+      color: $text-muted;
+    }
+  }
+}
+
+.skills {
+  max-width: 1248px;
+  margin: 0 auto;
+  padding: 6rem 6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 2rem;
+    border: 1px solid $border;
+    border-radius: 8px;
+    background-color: $card-bg;
+
+    h3 {
+      margin: 0;
+      font-family: $font-heading;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: $text;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+      line-height: 1.4;
+      color: $text-muted;
+    }
+  }
+
+  &__card-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+  }
+}
+
+.roadmap {
+  padding: 6rem 0;
+  border-top: 1px solid $border;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 2rem;
+    border: 1px solid $border;
+    border-radius: 12px;
+    background-color: $card-bg-translucent;
+  }
+
+  &__card-code {
+    font-weight: 700;
+    font-size: 0.875rem;
+    letter-spacing: -0.035rem;
+    color: $accent;
+  }
+
+  &__card h4 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: $text;
+  }
+
+  &__card p {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: $text-muted;
+  }
+
+  &__divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+
+    p {
+      margin: 0;
+      white-space: nowrap;
+    }
+  }
+
+  &__divider-line {
+    width: 48px;
+    height: 1px;
+    background-color: $border;
+  }
+}
+
+.gallery {
+  width: 100%;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  &__item {
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
 
     img {
       display: block;
       width: 100%;
-      max-width: 420px;
-      height: 260px;
+      height: 100%;
       object-fit: cover;
-      margin: 0 auto 1.5rem;
-      border-radius: 8px;
-    }
-
-    a {
-      color: inherit;
-    }
-  }
-
-  &__slide--intro {
-    background-color: #1f2933;
-    color: #f8fafc;
-  }
-
-  &__slide--about {
-    background-color: #fef3c7;
-    color: #78350f;
-  }
-
-  &__slide--journey {
-    background-color: #0f766e;
-    color: #ecfeff;
-  }
-
-  &__dots {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 1rem;
-  }
-
-  &__dot {
-    width: 0.6rem;
-    height: 0.6rem;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.2);
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-  }
-
-  &__dot--active {
-    background-color: rgba(0, 0, 0, 0.6);
-    transform: scale(1.3);
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .home-carousel {
-    &__dot {
-      background-color: rgba(255, 255, 255, 0.25);
-    }
-
-    &__dot--active {
-      background-color: rgba(255, 255, 255, 0.85);
+      filter: saturate(0.7);
     }
   }
 }
 
-.skills-panel {
-  max-width: 960px;
-  margin: 5rem auto 3rem;
-  padding: 3rem 4rem;
-  border-radius: 16px;
-  background-color: #fff;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 6rem;
+  background-color: $accent;
 
-  &__group + &__group {
-    margin-top: 3rem;
-    padding-top: 3rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-  }
-
-  &__heading {
-    text-align: center;
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-  }
-
-  &__list {
+  &__content {
     display: flex;
     flex-direction: column;
-  }
+    gap: 2rem;
+    max-width: 42rem;
 
-  &__item {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-
-    &:last-child {
-      border-bottom: none;
-    }
-
-    &[open] > &-header::after {
-      transform: rotate(180deg);
-    }
-  }
-
-  &__item-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1.25rem 0;
-    cursor: pointer;
-    list-style: none;
-
-    &::-webkit-details-marker {
-      display: none;
-    }
-
-    h3 {
+    h2 {
       margin: 0;
-      font-size: 1.1rem;
+      font-family: $font-heading;
+      font-weight: 800;
+      font-size: clamp(2rem, 4vw, 3.75rem);
+      color: #fff;
     }
 
-    &::after {
-      content: "▾";
-      flex-shrink: 0;
-      transition: transform 0.2s ease;
+    p {
+      margin: 0;
+      font-size: 1.125rem;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.9);
     }
   }
 
-  &__item-body {
-    padding: 0 0 1.5rem;
-    line-height: 1.6;
+  &__button {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    height: 48px;
+    padding: 0 2rem;
+    border: 1px solid #fff;
+    transition: background-color 0.2s ease, color 0.2s ease;
+
+    &:hover {
+      background-color: #fff;
+      color: $accent;
+    }
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  .skills-panel {
-    background-color: #101c33;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+@media (max-width: 1024px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 5rem 3rem;
 
-    &__group + &__group {
-      border-top-color: rgba(255, 255, 255, 0.15);
+    &__media {
+      order: -1;
+      max-width: 26rem;
     }
+  }
 
-    &__item {
-      border-bottom-color: rgba(255, 255, 255, 0.15);
+  .trail {
+    padding: 0 3rem 3rem;
+  }
+
+  .about {
+    padding: 5rem 3rem 6rem;
+
+    &__entry {
+      grid-template-columns: 1fr;
     }
+  }
+
+  .journey__grid,
+  .roadmap__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .skills {
+    padding: 5rem 3rem;
+  }
+
+  .skills__grid,
+  .gallery__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cta {
+    padding: 4rem 3rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding: 4rem 1.5rem;
+  }
+
+  .trail {
+    padding: 0 1.5rem 2.5rem;
+
+    &__track {
+      padding: 1.25rem;
+    }
+  }
+
+  .about {
+    padding: 4rem 1.5rem 5rem;
+    gap: 3rem;
+  }
+
+  .journey,
+  .roadmap {
+    padding: 4rem 0;
+  }
+
+  .journey__inner,
+  .roadmap__inner {
+    padding: 0 1.5rem;
+  }
+
+  .skills {
+    padding: 4rem 1.5rem;
+  }
+
+  .skills__grid,
+  .gallery__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cta {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 3rem 1.5rem;
   }
 }
 
 $fade-in-duration: 0.5s;
 $fade-in-step: 45ms;
-$fade-in-count: 11;
+$fade-in-count: 4;
 
 .fade-in {
   opacity: 0;

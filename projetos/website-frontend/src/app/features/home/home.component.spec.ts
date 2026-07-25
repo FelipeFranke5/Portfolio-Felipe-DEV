@@ -38,38 +38,61 @@ describe('HomeComponent', () => {
     expect(component.currentAge).toBe(expectedAge);
   });
 
-  it('should start on the first carousel slide', () => {
-    expect(component.currentSlideIndex).toBe(0);
+  it('should render the hero heading with the accent word', () => {
+    const heading = fixture.nativeElement.querySelector('.hero__heading');
+    const accent = fixture.nativeElement.querySelector('.hero__heading-accent');
 
-    const activeDot = fixture.nativeElement.querySelector('.home-carousel__dot--active');
-
-    expect(activeDot.getAttribute('aria-label')).toBe('Ir para a introdução');
+    expect(heading.textContent).toContain('Seja bem-vindo(a) ao meu pequeno');
+    expect(accent.textContent).toContain('Portfólio!');
   });
 
-  it('should change the current slide index when goToSlide is called', () => {
-    const targetSlideIndex = 2;
-    component.goToSlide(targetSlideIndex);
-    fixture.detectChanges();
+  it('should render one trail step per entry in trailSteps', () => {
+    const steps = fixture.nativeElement.querySelectorAll('.trail__step');
 
-    expect(component.currentSlideIndex).toBe(targetSlideIndex);
-
-    const activeDot = fixture.nativeElement.querySelector('.home-carousel__dot--active');
-
-    expect(activeDot.getAttribute('aria-label')).toBe('Ir para Primeiros passos na programação');
+    expect(steps.length).toBe(component.trailSteps.length);
   });
 
-  it('should move the carousel track by clicking on a dot', () => {
-    const dots = fixture.nativeElement.querySelectorAll('.home-carousel__dot');
-    const secondDotIndex = 1;
+  it('should render one timeline entry per item in aboutTimeline', () => {
+    const entries = fixture.nativeElement.querySelectorAll('.about__entry');
 
-    dots[secondDotIndex].click();
-    fixture.detectChanges();
+    expect(entries.length).toBe(component.aboutTimeline.length);
+  });
 
-    expect(component.currentSlideIndex).toBe(secondDotIndex);
+  it('should render a "Fale comigo" link pointing to /contact', () => {
+    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.about__quote-cta');
 
-    const track = fixture.nativeElement.querySelector('.home-carousel__track');
-    const expectedTranslatePercentage = secondDotIndex * 100;
+    expect(link.textContent).toContain('Fale comigo');
+    expect(link.getAttribute('href')).toBe('/contact');
+  });
 
-    expect(track.style.transform).toBe(`translateX(-${expectedTranslatePercentage}%)`);
+  it('should render one journey step per item in journeySteps', () => {
+    const steps = fixture.nativeElement.querySelectorAll('.journey__step');
+
+    expect(steps.length).toBe(component.journeySteps.length);
+  });
+
+  it('should render one skill card per item in skillCards', () => {
+    const cards = fixture.nativeElement.querySelectorAll('.skills__card');
+
+    expect(cards.length).toBe(component.skillCards.length);
+  });
+
+  it('should render one roadmap card per item in roadmapCards', () => {
+    const cards = fixture.nativeElement.querySelectorAll('.roadmap__card');
+
+    expect(cards.length).toBe(component.roadmapCards.length);
+  });
+
+  it('should render one gallery image per item in galleryImages', () => {
+    const images = fixture.nativeElement.querySelectorAll('.gallery__item img');
+
+    expect(images.length).toBe(component.galleryImages.length);
+  });
+
+  it('should render a CTA button pointing to /contact', () => {
+    const button: HTMLAnchorElement = fixture.nativeElement.querySelector('.cta__button');
+
+    expect(button.textContent).toContain('Contato');
+    expect(button.getAttribute('href')).toBe('/contact');
   });
 });

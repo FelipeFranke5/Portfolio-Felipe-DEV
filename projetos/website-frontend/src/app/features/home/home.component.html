@@ -1,270 +1,170 @@
 <app-header class="fade-in fade-in--0"></app-header>
 
-<section class="home-carousel fade-in fade-in--1">
-   <div class="home-carousel__viewport">
-      <div class="home-carousel__track" [style.transform]="'translateX(-' + (currentSlideIndex * 100) + '%)'">
+<section class="hero" id="hero">
+   <div class="hero__content">
+      <p class="hero__eyebrow fade-in fade-in--1">Desenvolvedor Back-End</p>
 
-   <div class="home-carousel__slide home-carousel__slide--intro">
+      <h1 class="hero__heading fade-in fade-in--2">
+         Seja bem-vindo(a) ao meu pequeno <span class="hero__heading-accent">Portfólio!</span>
+      </h1>
 
-      <h1>Seja bem-vindo(a) ao meu pequeno Portfólio!</h1>
-
-      <img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2tmMTQ5dGxhZHYyZHMxMGZtMnd3ajhrMDg4dTdiMmVhd2xsZ2sydyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/JIX9t2j0ZTN9S/giphy.gif" alt="" srcset="">
-      <p>
-         O meu nome é {{fullName}} e tenho {{currentAge}} anos.
-         Estou em busca de aperfeiçoar minhas habilidades como
-         Desenvolvedor Web e por isso estou disponibilizando este
-         site. Aqui, você conseguirá entender melhor quem sou, quais
-         projetos já participei e minhas habilidades técnicas.
-      </p>
-   </div>
-
-   <div class="home-carousel__slide home-carousel__slide--about">
-
-      <h2>Sobre Mim</h2>
-      <p>
-         Desde pequeno, sempre gostei de tentar encontrar soluções 
-         para problemas que eu encontrava no dia a dia. Desde páginas
-         simples de uma web-rádio que mantive no ar junto com alguns
-         amigos, até assuntos que muitos não gostavam de estudar no
-         Ensino Médio / Fundamental, mas que eu tinha muita curiosidade 
-         de tentar entender. Caminhar em um dia ou tarde tranquila e 
-         pensar sobre como algo pode ser resolvido é uma das "manias"
-         que carrego comigo até os dias de hoje e me ajuda demais, seja
-         no contexto de trabalho ou pessoal. <br>
-
-         A minha primeira oportunidade de trabalho foi na área de
-         <strong>Atendimento ao Cliente</strong>. No começo, precisei
-         aplicar procedimentos da empresa que muitas vezes eu
-         não entendia o motivo de existirem e nem o motivo de estar
-         seguindo elas, sendo um desafio e tanto!Mas com o passar do 
-         tempo, as coisas foram ficando mais claras
-         para mim e me vi em uma situação onde eu não somente <strong>seguia</strong>
-         um processo específico, mas <strong>entendia</strong> o porquê
-         ele existia e como ele podia ser <strong>otimizado</strong>. <br>
-
-         Permaneci nessa empresa por muito tempo e por causa dela, tive
-         meu primeiro contato com <strong>API's</strong> e <strong>chamadas HTTP</strong>,
-         que chamaram muito a minha atenção logo de cara. Na época, se tratava de
-         uma solução E-commerce, onde cada chamada gerava uma <strong>transação</strong> e
-         permitia compras / vendas online, de forma bem prática. A partir desse ponto, estudei
-         mais sobre o funcionamento dessas API's e então tive o primeiro contato
-         com a programação.
+      <p class="hero__description fade-in fade-in--3">
+         O meu nome é {{ fullName }} e tenho {{ currentAge }} anos. Estou em busca de aperfeiçoar minhas
+         habilidades como Desenvolvedor Web e por isso estou disponibilizando este site. Aqui, você
+         conseguirá entender melhor quem sou, quais projetos já participei e minhas habilidades técnicas.
       </p>
 
-      <p>
-         Atualmente trabalho na <a href="{{currentJobWebsiteURL}}">{{currentJobCompany}}</a> 
-         como {{currentJobTitle}}. Com essa oportunidade, consegui entender na prática como um
-         processo de <strong>build</strong>, <strong>deploy</strong> e <strong>sustentação</strong>
-         funciona na prática. <br>
-         
-         Diariamente crio testes unitários e de integração, participo de alinhamentos com o time
-         de <strong>run</strong> e garanto o correto funcionamento das ferramentas de
-         <strong>Identity Governance and Administration</strong> (IGA) e
-         <strong>Identity and Access Management</strong> (IAM), pilares muito importantes para a segurança
-         de sistemas críticos de TI. Estou em busca de novos certificados nessa área, para me especializar
-         cada vez mais! Recentemente obtive o certificado de
-         <a href="https://university.sailpoint.com/sailpoint-certified-identityiq-engineer">IdentityIQ Engineer</a>, um
-
-      </p>
-
-      <p>
-         Além de estudar sobre sistemas de IAM e IGA + aplicações Back-end, recentemente comecei a estudar sobre algumas
-         soluções de Front-end, para que assim que possa ter uma visão mais completa de como tudo é integrado. Até o 
-         momento tenho gostado bastante e sigo praticando sempre que tenho um tempo livre disponível. <br><br>
-
-
-         Se você também é desenvolvedor e busca pessoas para contribuir com algum projeto seu na parte do Back-end, fique
-         à vontade para entrar em contato!
-      </p>
-
-   </div>
-
-   <div class="home-carousel__slide home-carousel__slide--journey">
-
-      <h2>Primeiros passos na programação</h2>
-      <p>
-         Ainda trabalhando como analista (suporte N1), Comecei tentando entender sobre como 
-         uma API realizava um processamento, analisando <strong>logs</strong> de erros e auxiliando 
-         outras pessoas com base em documentações criadas todos os dias. Falei com outros desenvolvedores 
-         que tinham dúvidas ou muitas vezes, compartilhavam sugestões de melhorias que eu anotava e 
-         passava para o time técnico. Com isso, surgiu naturalmente a curiosidade de saber como as coisas 
-         funcionavam <strong>do outro lado</strong>. <br>
-
-         Foi então que descobri que as API's que eu fornecia suporte tinham um <strong>Back-end</strong>
-         robusto e os clientes se comunicavam com o <strong>Back-end</strong> através das API's e então
-         quis saber mais como essa comunicação ocorria. Na época, lembro que assisti muitos videos
-         do <a href="https://www.youtube.com/@cursoemvideo">Gustavo Guanabara</a> e entrei na faculdade
-         de <strong>Análise e Desenvolvimento de Sistemas</strong> na Cruzeiro do Sul, aprendendo sobre
-         como a comunicação entre cliente-servidor funciona e também sobre os <strong>algoritmos</strong>
-         (rotinas) são criados, formando assim a base necessária para criar as minhas próprias
-         automações. <br> <br>
-
-         Com o passar dos anos, fui praticando mais - Lendo documentações, assistindo à videos no YouTube e
-         sempre tentando aperfeiçoar minhas habilidades, até conseguir de fato participar de um projeto
-         e demonstrar minha capabilidade de contribuir quando precisam aplicar soluções técnicas. <br> <br>
-
-         Entendi a diferença entre <strong>Front-end</strong> e <strong>Back-end</strong>, mas como o meu
-         background de aprendizado foi voltado para entender sobre <strong>regras de negócio</strong> e 
-         <strong>API's</strong>, mesmo sabendo que criar UI's também é muito legal, acabei focando os meus
-         esforços no <strong>Back-end</strong>, entendendo quais ferramentas podem ser utilizadas para
-         resolver determinadas demandas. Hoje com uma boa base, estou estudando mais sobre a criação de 
-         interfaces, para que um dia eu possa ser capaz de desenvolver um sistema completo.
-      </p>
-
-   </div>
-
+      <div class="hero__scroll-hint fade-in fade-in--4">
+         <span>Role para explorar</span>
+         <img src="/images/home/hero-scroll-arrow.svg" alt="" width="11" height="6">
       </div>
    </div>
 
-   <div class="home-carousel__dots">
-      <button type="button" class="home-carousel__dot" [class.home-carousel__dot--active]="currentSlideIndex === 0" (click)="goToSlide(0)" aria-label="Ir para a introdução"></button>
-      <button type="button" class="home-carousel__dot" [class.home-carousel__dot--active]="currentSlideIndex === 1" (click)="goToSlide(1)" aria-label="Ir para Sobre Mim"></button>
-      <button type="button" class="home-carousel__dot" [class.home-carousel__dot--active]="currentSlideIndex === 2" (click)="goToSlide(2)" aria-label="Ir para Primeiros passos na programação"></button>
+   <div class="hero__media fade-in fade-in--4">
+      <div class="hero__media-glow" aria-hidden="true"></div>
+      <div class="hero__media-frame">
+         <img
+            src="/images/home/hero-portrait.jpg"
+            alt="Ilustração estilizada de um desenvolvedor programando à noite, com monitores iluminados"
+            class="hero__media-image"
+         >
+      </div>
    </div>
 </section>
 
-<section>
-
-   <div class="skills-panel">
-
-         <div class="skills-panel__group">
-            <h2 class="skills-panel__heading fade-in fade-in--2">O que eu aprendi na prática</h2>
-
-            <div class="skills-panel__list">
-
-               <details class="skills-panel__item fade-in fade-in--3">
-                  <summary class="skills-panel__item-header">
-                     <h3>Setup - Aplicação Web</h3>
-                  </summary>
-                  <div class="skills-panel__item-body">
-                     Já realizei atividades que envolvem <strong>instalar</strong> e
-                     <strong>realizar o deploy</strong> de aplicações web que possuem
-                     um Back-end e se comunicam com sistemas externos.
-                     Em especial, menciono o <strong>Apache Tomcat</strong> para Java
-                     e <strong>Uvicorn</strong> para Python.
-                  </div>
-               </details>
-
-               <details class="skills-panel__item fade-in fade-in--4">
-                  <summary class="skills-panel__item-header">
-                     <h3>Host na AWS</h3>
-                  </summary>
-                  <div class="skills-panel__item-body">
-                     Deploy de uma aplicação em uma instância EC2 da AWS como parte de um projeto pessoal.
-                     Desde a <strong>configuração inicial</strong>
-                     no painel administrativo, até definir quais comandos são executados durante
-                     a inicialização de um servidor. No meu trabalho do dia a dia, ainda não tive a oportunidade
-                     de instalar e configurar uma instância do zero, porém já contribui sendo um analista de
-                     sustentação provendo <strong>troubleshooting</strong> e auxiliando os administradores
-                     com a manutenção de servidores já em funcionamento. <br> <br>
-
-
-                     Acompanhei de perto um processo de <strong>migração</strong> de uma aplicação que antes
-                     estava hospedada no <strong>on-premises</strong> (infra do cliente) para a AWS e foi um
-                     desafio bem interessante. Os projetos de migração são aqueles que colocam "pra jogo" tudo
-                     o que você sabe sobre trabalho em equipe, pois em um ambiente com uma infra-estrutura grande,
-                     um bom planejamento e comunicação com todos os times responsáveis são importantes (ou como
-                     gostam de falar por ai, mas não falo muito: imprescindíveis).
-                  </div>
-               </details>
-
-               <details class="skills-panel__item fade-in fade-in--5">
-                  <summary class="skills-panel__item-header">
-                     <h3>Sustentação de Aplicações</h3>
-                  </summary>
-                  <div class="skills-panel__item-body">
-                     Encontrar a solução para um problema que parece muito complexo é algo
-                     que me mantem <strong>motivado</strong> no dia a dia. Aqui entra toda
-                     a parte de abertura / encerramento de chamados (atualmente trabalhei apenas
-                     com ServiceNow), análise de logs, interações com os clientes, abertura
-                     de card's no Jira (ou registro das atividades), abertura de GMUD's,
-                     monitoramento do ambiente na camada da aplicação, entre outras atividades
-                     que envolvem <strong>garantir</strong> que uma aplicação continue funcionando.
-                  </div>
-               </details>
-
-               <details class="skills-panel__item fade-in fade-in--6">
-                  <summary class="skills-panel__item-header">
-                     <h3>Desenvolvimento</h3>
-                  </summary>
-                  <div class="skills-panel__item-body">
-                     Desde plenejar com a squad sobre quais itens serão priorizados, até o encerramento
-                     de uma GMUD. Meu pouco tempo no mercado me mostrou a importância de criar testes
-                     para tudo o que for desenvolvido; A importância de ter ambientes de Desenvolvimento e
-                     Homologação para que todas as alterações estejam no meu controle; As vantagens e
-                     desvantagens do SCRUM; O fluxo de trabalho com <strong>GMUD + Release</strong> 🤝 e
-                     que às vezes criar uma documentação para aquilo que está sendo criado / alterado te salva de
-                     muita coisa. <br><br>
-
-
-                     Hoje, desenvolvo principalmente em <strong>Java</strong>, mas de vez em quando utilizo <strong>Python</strong>
-                     para algumas automações de tarefas repetitivas. A verdade é que a linguagem é apenas
-                     uma ferramenta, mas a base de tudo (algoritmos e estrutura de dados), aliada com um
-                     pouco de pesquisa e / ou leitura de documentações me fazem ser capaz de resolver
-                     muitos problemas reais que surgem.
-                  </div>
-               </details>
-
-            </div>
+<section class="trail" aria-label="Linha do tempo resumida da minha trajetória">
+   <div class="trail__track">
+      @for (step of trailSteps; track step.label; let last = $last) {
+         <div class="trail__step" [class.trail__step--highlighted]="step.highlighted">
+            <span class="trail__icon-box">
+               <img [src]="step.icon" alt="" class="trail__icon">
+            </span>
+            <span class="trail__label">{{ step.label }}</span>
          </div>
 
-         <div class="skills-panel__group">
-            <h2 class="skills-panel__heading fade-in fade-in--7">O que preciso estudar mais sobre ou melhorar..</h2>
-
-            <div class="skills-panel__list">
-
-               <details class="skills-panel__item fade-in fade-in--8">
-                  <summary class="skills-panel__item-header">
-                     <h3>Passar o conhecimento adiante</h3>
-                  </summary>
-                  <div class="skills-panel__item-body">
-                     Quando tive a minha primeira oportunidade de trabalhar com código e
-                     desenvolvimento, tive um excelente instrutor que foi capaz de me
-                     ensinar MUITA coisa sobre o ambiente do cliente, melhores práticas e
-                     até mesmo quais dores de cabeça eu poderia ter. No meu primeiro emprego,
-                     eu conseguia compartilhar bem com outras pessoas o que eu sabia, porém
-                     sinto que com o tempo, essa "habilidade" se perdeu. Talvez por falta de
-                     prática, pois na maior parte do tempo estava com pessoas que têm o mesmo
-                     conhecimento que eu (ou bem mais), então não me vi muito em situações onde
-                     precisava treinar ou explicar de forma muito detalhada sobre os processos
-                     da empresa. Quero futuramente melhorar neste aspecto. <br><br>
-
-
-                     Afinal de contas, nada melhor para o aprendizado do que precisar <strong>explicar</strong>
-                     para outras pessoas tudo o que sabe.
-                  </div>
-               </details>
-
-               <details class="skills-panel__item fade-in fade-in--9">
-                  <summary class="skills-panel__item-header">
-                     <h3>Front-end</h3>
-                  </summary>
-                  <div class="skills-panel__item-body">
-                     Estou estudando um pouco mais sobre as tecnologias disponíveis para Front-end. Acredito
-                     que isso será benéfico para entender melhor como a comunicação funciona no mundo da
-                     web.
-                  </div>
-               </details>
-
-               <details class="skills-panel__item fade-in fade-in--10">
-                  <summary class="skills-panel__item-header">
-                     <h3>Pipeline de CI / CD Automatizado</h3>
-                  </summary>
-                  <div class="skills-panel__item-body">
-                     Ainda não tive a oportunidade de construir uma Pipelina de CI / CD que funcione bem.
-                     Apesar de já trabalhar com entrega contínua, boa parte das minhas atividades envolve
-                     realizar procedimentos manuais - Desde os testes da aplicação (garantir que após alguma
-                     alteração minha, a aplicação continue funcionando como deveria) até o fim da entrega
-                     (encerramento de uma GMUD, por exemplo). Já vi alguns conceitos básicos sobre isso e
-                     que é possível criar configurações onde os testes são gerados a cada entrega, porém
-                     em algum momento, terei que pesquisar mais sobre isso e tentar aplicar nas tarefas.
-                  </div>
-               </details>
-
-            </div>
-         </div>
+         @if (!last) {
+            <img src="/images/home/icon-chevron.svg" alt="" class="trail__separator">
+         }
+      }
    </div>
-
 </section>
 
-<app-footer class="fade-in fade-in--11"></app-footer>
+<section class="about" id="sobre">
+   <div class="about__intro">
+      <h2 class="about__heading">Sobre Mim</h2>
+      <p class="about__lead">
+         Uma trajetória marcada pela evolução constante, desde a curiosidade por tecnologia e resolução de
+         problemas até a atuação profissional como desenvolvedor focado em infraestrutura e segurança.
+      </p>
+   </div>
+
+   <div class="about__timeline">
+      @for (entry of aboutTimeline; track entry.title) {
+         <div class="about__entry">
+            <span class="about__entry-eyebrow">{{ entry.eyebrow }}</span>
+            <div class="about__entry-body">
+               <h3>{{ entry.title }}</h3>
+               <p>{{ entry.description }}</p>
+            </div>
+         </div>
+      }
+   </div>
+
+   <div class="about__quote">
+      <p>
+         &quot;Se você também é desenvolvedor e busca pessoas para contribuir com algum projeto seu na
+         parte do Back-end, fique à vontade para entrar em contato!&quot;
+      </p>
+      <a class="about__quote-cta" routerLink="/contact">
+         Fale comigo
+         <img src="/images/home/icon-arrow-cta.svg" alt="" width="16" height="16">
+      </a>
+   </div>
+</section>
+
+<section class="journey" id="jornada">
+   <div class="journey__inner">
+      <div class="journey__intro">
+         <h2>Primeiros Passos na Programação</h2>
+         <p>Como a experiência profissional despertou meu interesse pelo desenvolvimento de software.</p>
+      </div>
+
+      <div class="journey__grid">
+         @for (step of journeySteps; track step.number) {
+            <div class="journey__step">
+               <span class="journey__step-number">{{ step.number }}</span>
+               <div class="journey__step-body">
+                  <h4>{{ step.title }}</h4>
+                  <p>{{ step.description }}</p>
+               </div>
+            </div>
+         }
+      </div>
+   </div>
+</section>
+
+<section class="skills" id="skills">
+   <div class="skills__intro">
+      <h2>O que aprendi na prática</h2>
+      <p>Experiências técnicas consolidadas em projetos reais e de estudos.</p>
+   </div>
+
+   <div class="skills__grid">
+      @for (card of skillCards; track card.title) {
+         <article class="skills__card">
+            <img [src]="card.icon" alt="" class="skills__card-icon">
+            <h3>{{ card.title }}</h3>
+            <p>{{ card.description }}</p>
+         </article>
+      }
+   </div>
+</section>
+
+<section class="roadmap" id="roadmap">
+   <div class="roadmap__inner">
+      <div class="roadmap__intro">
+         <h2>O que preciso estudar mais</h2>
+         <p>Meu roadmap de aprendizado contínuo e autoconhecimento profissional.</p>
+      </div>
+
+      <div class="roadmap__grid">
+         @for (card of roadmapCards; track card.title) {
+            <article class="roadmap__card">
+               <span class="roadmap__card-code">{{ card.code }}</span>
+               <h4>{{ card.title }}</h4>
+               <p>{{ card.description }}</p>
+            </article>
+         }
+      </div>
+
+      <div class="roadmap__divider">
+         <span class="roadmap__divider-line" aria-hidden="true"></span>
+         <p>Roadmap em evolução</p>
+         <span class="roadmap__divider-line" aria-hidden="true"></span>
+      </div>
+   </div>
+</section>
+
+<section class="gallery" aria-label="Galeria de imagens">
+   <div class="gallery__grid">
+      @for (image of galleryImages; track image.src) {
+         <div class="gallery__item">
+            <img [src]="image.src" [alt]="image.alt" loading="lazy">
+         </div>
+      }
+   </div>
+</section>
+
+<section class="cta" id="contato">
+   <div class="cta__content">
+      <h2>Têm algum projeto e precisa de ajuda?</h2>
+      <p>
+         Se você está procurando um desenvolvedor back-end dedicado e curioso para seu próximo projeto,
+         entre em contato comigo.
+      </p>
+   </div>
+
+   <a class="cta__button" routerLink="/contact">Contato</a>
+</section>
+
+<app-footer></app-footer>

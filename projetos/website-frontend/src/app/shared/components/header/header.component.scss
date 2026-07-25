@@ -1,44 +1,90 @@
 .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: rgba(9, 11, 17, 0.8);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 
   &__brand {
-    font-size: 1.25rem;
+    font-family: "Plus Jakarta Sans", "Inter", sans-serif;
     font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: -0.02em;
     text-decoration: none;
-    color: inherit;
+    color: #f8fafc;
   }
 
   &__nav {
     display: flex;
-    gap: 1.5rem;
+    align-items: center;
+    gap: 2rem;
     flex-wrap: wrap;
+  }
 
-    a {
-      text-decoration: none;
-      color: inherit;
-      opacity: 0.75;
-      transition: opacity 0.2s ease;
+  &__link {
+    position: relative;
+    padding-bottom: 2px;
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    font-size: 0.75rem;
+    letter-spacing: 0.075rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: #f8fafc;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
 
-      &:hover {
-        opacity: 1;
-      }
+    &:hover {
+      opacity: 1;
     }
   }
 
   &__link--active {
     opacity: 1;
     font-weight: 600;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: -14px;
+      top: 50%;
+      width: 6px;
+      height: 6px;
+      transform: translateY(-50%);
+      border-radius: 9999px;
+      background-color: #3b82f6;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -3px;
+      height: 1px;
+      background-color: #3b82f6;
+    }
   }
 }
 
-@media (prefers-color-scheme: dark) {
+@media (max-width: 640px) {
   .app-header {
-    border-bottom-color: rgba(255, 255, 255, 0.15);
+    padding: 0.85rem 1.25rem;
+
+    &__nav {
+      gap: 1.25rem;
+    }
+
+    &__link--active::before {
+      display: none;
+    }
   }
 }
