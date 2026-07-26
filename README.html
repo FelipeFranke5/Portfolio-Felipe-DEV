@@ -143,7 +143,7 @@
 				<h1 id="website-pessoal">Website Pessoal</h1>
 <h2 id="visão-geral">Visão Geral</h2>
 <p>Site pessoal com Angular no front-end e Spring Boot no back-end,
-hospedado em uma única instância EC2 com NGINX como proxy reverso.
+hospedado em uma VPS (Hostinger) com NGINX como proxy reverso.
 Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).</p>
 <hr>
 <h2 id="stack-tecnológica">Stack Tecnológica</h2>
@@ -183,9 +183,9 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).</p>
 </tr>
 <tr>
 <td>Banco de Dados (produção)</td>
-<td>Amazon RDS - PostgreSQL</td>
+<td>PostgreSQL (container Docker na VPS)</td>
 <td>—</td>
-<td>Integra muito bem com instâncias EC2 e aplicações Java</td>
+<td>Facilidade de configuração junto à VPS, sem depender de um serviço gerenciado externo</td>
 </tr>
 <tr>
 <td>ORM</td>
@@ -195,9 +195,9 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).</p>
 </tr>
 <tr>
 <td>Migrations</td>
-<td>Flyway (<code>spring-boot-starter-flyway</code>)</td>
+<td>Flyway (<code>spring-boot-starter-flyway</code> + <code>org.flywaydb:flyway-database-postgresql</code>)</td>
 <td>—</td>
-<td>A partir do Spring Boot 4, o <code>flyway-core</code> não migra mais automaticamente; o starter dedicado é necessário. Utilizado para automatizar a criação das tabelas e facilitar a manutenção delas</td>
+<td>Automatiza a criação e o versionamento incremental das tabelas a partir dos scripts SQL em <code>db/migration</code></td>
 </tr>
 <tr>
 <td>Proxy reverso</td>
@@ -219,15 +219,15 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).</p>
 </tr>
 <tr>
 <td>Deploy</td>
-<td>AWS EC2</td>
+<td>VPS (Hostinger)</td>
 <td>—</td>
-<td>Familiaridade com deploy na AWS. Simples de conectar</td>
+<td>Plano com suporte a importação/execução de imagens Docker, simples de conectar</td>
 </tr>
 <tr>
 <td>SSL</td>
-<td>Let's Encrypt (Certbot)</td>
+<td>Gerenciado pela VPS (Hostinger)</td>
 <td>—</td>
-<td>Certificado gratuito renovado automaticamente</td>
+<td>Domínio e certificado SSL administrados diretamente pelo painel da VPS</td>
 </tr>
 <tr>
 <td>Utilitários</td>
@@ -317,7 +317,7 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).</p>
     │
     │  HTTPS :443
     ▼
-┌──────────── EC2 t3.medium ─────────────────────────────────────────┐
+┌──────────── VPS (Hostinger) ───────────────────────────────────────┐
 │                                                                      │
 │  NGINX (:443 / :80)                                                  │
 │    ├── /* ──────────── serve Angular dist (arquivos estáticos)       │
@@ -365,7 +365,11 @@ API, wrapper de autenticação sobre o <code>keycloak-angular</code>).</li>
 <li><strong><code>features</code></strong> — cada seção pública do site (hero/about, portfólio, skills, contato)
 como um módulo próprio, e uma área <code>admin</code> separada para os formulários de
 CRUD protegidos por autenticação.</li>
-<li><strong><code>shared</code></strong> — componentes, pipes e diretivas reaproveitáveis entre features.</li>
+<li><strong><code>shared</code></strong> — componentes, pipes e diretivas reaproveitáveis entre features.
+Inclui os componentes padrão <code>HeaderComponent</code> (<code>app-header</code>) e <code>FooterComponent</code>
+(<code>app-footer</code>), já em uso no <code>HomeComponent</code> e disponíveis para as demais páginas.
+Também inclui <code>shared/styles</code>, com os design tokens Sass (<code>_tokens.scss</code> — cores,
+fontes e breakpoints) reaproveitados entre <code>home</code>, <code>contact</code>, <code>header</code> e <code>footer</code>.</li>
 </ul>
 <h3 id="back-end-spring-boot">Back-End (Spring Boot)</h3>
 <p>O back-end segue a organização em camadas tradicional do Spring Boot, um pacote por
@@ -414,9 +418,10 @@ torna previsível onde adicionar uma nova funcionalidade no futuro. Os testes se
 mesma divisão: testes unitários de <code>service</code> (com Mockito) e testes de integração de
 <code>controller</code> (MockMvc + Testcontainers, subindo um Postgres real).</p>
 <blockquote>
-<p>O deploy em produção é manual: acesso ao painel da AWS para subir a instância EC2, seguido de acesso via
-<strong>SSH</strong> para baixar o projeto e as dependências e iniciar as aplicações com as instruções de Docker já
-descritas nesta documentação.</p>
+<p>O deploy em produção é manual, por um destes dois caminhos (conforme o plano/painel da VPS): (a)
+importação direta da imagem Docker já publicada, pelo painel da Hostinger, <strong>ou</strong> (b) acesso via
+<strong>SSH</strong> para clonar o repositório e subir os serviços com as instruções de Docker já descritas
+nesta documentação.</p>
 </blockquote>
 <hr>
 <h2 id="api-rest--endpoints">API REST — Endpoints</h2>
@@ -854,7 +859,7 @@ falhou, permitindo consultar depois quais mensagens nunca chegaram por e-mail.</
 em produção, <strong>todas</strong> essas variáveis devem ser sobrescritas via <code>.env</code> /
 secrets do orquestrador; nenhuma delas deve ficar com o valor padrão.</p>
 </blockquote>
-<h3 id="env-ec2-nunca-commitar-no-git">.env (EC2, nunca commitar no git)</h3>
+<h3 id="env-vps-nunca-commitar-no-git">.env (VPS, nunca commitar no git)</h3>
 <pre><code class="language-dotenv">DB_URL=jdbc:postgresql://postgres:5432/website_db
 DB_USER=website_user
 DB_PASS=senha_segura_aqui
@@ -891,9 +896,18 @@ ng serve
 <hr>
 <h2 id="build-e-deploy">Build e Deploy</h2>
 <p>Build e Deploy da aplicação Java, Angular e Keycloak.</p>
-<pre><code class="language-bash"><span class="hljs-comment"># 1. Instalar Docker na EC2</span>
+<p>Existem dois caminhos possíveis, dependendo do plano/painel da VPS contratado:</p>
+<p><strong>(a) Importação direta da imagem Docker pelo painel da Hostinger</strong> — não requer os
+passos 1-2 abaixo; a imagem já publicada é importada e executada diretamente pelo
+painel.</p>
+<p><strong>(b) Acesso via SSH</strong>, clonando o projeto e subindo os serviços manualmente:</p>
+<pre><code class="language-bash"><span class="hljs-comment"># 1. Instalar Docker na VPS</span>
+<span class="hljs-comment"># Os comandos abaixo assumem uma distro Debian/Ubuntu (apt); ajuste conforme a</span>
+<span class="hljs-comment"># distro efetivamente oferecida pela VPS contratada (ex.: dnf/yum em distros</span>
+<span class="hljs-comment"># baseadas em RHEL). Substitua &quot;&lt;usuario_ssh&gt;&quot; pelo usuário configurado no</span>
+<span class="hljs-comment"># acesso SSH da VPS.</span>
 sudo apt update &amp;&amp; sudo apt install docker.io docker-compose-plugin -y
-sudo usermod -aG docker ubuntu
+sudo usermod -aG docker &lt;usuario_ssh&gt;
 
 <span class="hljs-comment"># 2. Clonar o repositório</span>
 <span class="hljs-comment"># OU subir os arquivos com SCP</span>
@@ -909,10 +923,8 @@ nano .<span class="hljs-built_in">env</span>
 <span class="hljs-comment"># 5. Subir tudo</span>
 <span class="hljs-built_in">cd</span> .. &amp;&amp; docker compose up -d
 
-<span class="hljs-comment"># 6. Configurar SSL (primeira vez)</span>
-docker run --<span class="hljs-built_in">rm</span> -v ./ssl:/etc/letsencrypt -v ./certbot_www:/var/www/certbot \
-  certbot/certbot certonly --webroot -w /var/www/certbot \
-  -d seusite.dev --email seu@email.com --agree-tos
+<span class="hljs-comment"># 6. SSL e domínio: configurados diretamente no painel da VPS (Hostinger),</span>
+<span class="hljs-comment">#    sem necessidade de Certbot/Let&#x27;s Encrypt manual</span>
 
 <span class="hljs-comment"># 7. Criar realm &#x27;website&#x27; e client no Keycloak</span>
 <span class="hljs-comment"># Acesse: https://seusite.dev/auth (após DNS configurado)</span>
