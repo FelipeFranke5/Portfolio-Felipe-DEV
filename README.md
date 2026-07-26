@@ -3,7 +3,7 @@
 ## Visão Geral
 
 Site pessoal com Angular no front-end e Spring Boot no back-end,
-hospedado em uma única instância EC2 com NGINX como proxy reverso.
+hospedado em uma VPS (Hostinger) com NGINX como proxy reverso.
 Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).
 
 ---
@@ -16,14 +16,14 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).
 | Back-End | Spring Boot (Java) | 4.1.0 / Java 21 | Conhecimento prévio, REST simples, ecossistema maduro |
 | Banco de Dados | PostgreSQL | 16 | Robusto, JSONB, arrays nativos, compatível com JPA |
 | Banco de Dados (testes) | H2 (in-memory) + Testcontainers (PostgreSQL 16) | — | H2 disponível para testes rápidos; integração real via Testcontainers |
-| Banco de Dados (produção) | Amazon RDS - PostgreSQL | — | Integra muito bem com instâncias EC2 e aplicações Java |
+| Banco de Dados (produção) | PostgreSQL (container Docker na VPS) | — | Facilidade de configuração junto à VPS, sem depender de um serviço gerenciado externo |
 | ORM | Hibernate (Spring Data JPA) | — | Integrado ao Spring Boot |
-| Migrations | Flyway (`spring-boot-starter-flyway`) | — | A partir do Spring Boot 4, o `flyway-core` não migra mais automaticamente; o starter dedicado é necessário. Utilizado para automatizar a criação das tabelas e facilitar a manutenção delas |
+| Migrations | Flyway (`spring-boot-starter-flyway` + `org.flywaydb:flyway-database-postgresql`) | — | Automatiza a criação e o versionamento incremental das tabelas a partir dos scripts SQL em `db/migration` |
 | Proxy reverso | NGINX | alpine | Serve estático, faz proxy da API, SSL/TLS, rate limiting |
 | Auth | Keycloak | latest | Self-hosted, OAuth2/OIDC, padrão enterprise Java. Servidor de Autenticação e Autorização bem completo |
 | Containers | Docker + Docker Compose | — | Todos os serviços em containers. Facilita os testes e deploy |
-| Deploy | AWS EC2 | — | Familiaridade com deploy na AWS. Simples de conectar |
-| SSL | Let's Encrypt (Certbot) | — | Certificado gratuito renovado automaticamente |
+| Deploy | VPS (Hostinger) | — | Plano com suporte a importação/execução de imagens Docker, simples de conectar |
+| SSL | Gerenciado pela VPS (Hostinger) | — | Domínio e certificado SSL administrados diretamente pelo painel da VPS |
 | Utilitários | Lombok | — | Reduz boilerplate (`@Getter`/`@Setter`/`@RequiredArgsConstructor`/`@Slf4j`); excluído do jar final |
 | Validação | Jakarta Bean Validation (`spring-boot-starter-validation`) | — | `@NotBlank`, `@Email`, `@Size`, `@URL`, `@Pattern` nos DTOs de request |
 | E-mail | Spring Mail (`JavaMailSender`) + `@Scheduled` | — | Envio assíncrono/agendado de notificações de contato, com retry |
@@ -52,7 +52,7 @@ Browser (Angular SPA)
     │
     │  HTTPS :443
     ▼
-┌──────────── EC2 t3.medium ─────────────────────────────────────────┐
+┌──────────── VPS (Hostinger) ───────────────────────────────────────┐
 │                                                                      │
 │  NGINX (:443 / :80)                                                  │
 │    ├── /* ──────────── serve Angular dist (arquivos estáticos)       │
@@ -132,9 +132,10 @@ torna previsível onde adicionar uma nova funcionalidade no futuro. Os testes se
 mesma divisão: testes unitários de `service` (com Mockito) e testes de integração de
 `controller` (MockMvc + Testcontainers, subindo um Postgres real).
 
-> O deploy em produção é manual: acesso ao painel da AWS para subir a instância EC2, seguido de acesso via
-> **SSH** para baixar o projeto e as dependências e iniciar as aplicações com as instruções de Docker já
-> descritas nesta documentação.
+> O deploy em produção é manual, por um destes dois caminhos (conforme o plano/painel da VPS): (a)
+> importação direta da imagem Docker já publicada, pelo painel da Hostinger, **ou** (b) acesso via
+> **SSH** para clonar o repositório e subir os serviços com as instruções de Docker já descritas
+> nesta documentação.
 
 ---
 
@@ -409,7 +410,7 @@ server {
 > em produção, **todas** essas variáveis devem ser sobrescritas via `.env` /
 > secrets do orquestrador; nenhuma delas deve ficar com o valor padrão.
 
-### .env (EC2, nunca commitar no git)
+### .env (VPS, nunca commitar no git)
 
 ```dotenv
 DB_URL=jdbc:postgresql://postgres:5432/website_db
@@ -457,10 +458,22 @@ ng serve
 
 Build e Deploy da aplicação Java, Angular e Keycloak.
 
+Existem dois caminhos possíveis, dependendo do plano/painel da VPS contratado:
+
+**(a) Importação direta da imagem Docker pelo painel da Hostinger** — não requer os
+passos 1-2 abaixo; a imagem já publicada é importada e executada diretamente pelo
+painel.
+
+**(b) Acesso via SSH**, clonando o projeto e subindo os serviços manualmente:
+
 ```bash
-# 1. Instalar Docker na EC2
+# 1. Instalar Docker na VPS
+# Os comandos abaixo assumem uma distro Debian/Ubuntu (apt); ajuste conforme a
+# distro efetivamente oferecida pela VPS contratada (ex.: dnf/yum em distros
+# baseadas em RHEL). Substitua "<usuario_ssh>" pelo usuário configurado no
+# acesso SSH da VPS.
 sudo apt update && sudo apt install docker.io docker-compose-plugin -y
-sudo usermod -aG docker ubuntu
+sudo usermod -aG docker <usuario_ssh>
 
 # 2. Clonar o repositório
 # OU subir os arquivos com SCP
@@ -476,10 +489,8 @@ cp -r dist/ ../frontend/
 # 5. Subir tudo
 cd .. && docker compose up -d
 
-# 6. Configurar SSL (primeira vez)
-docker run --rm -v ./ssl:/etc/letsencrypt -v ./certbot_www:/var/www/certbot \
-  certbot/certbot certonly --webroot -w /var/www/certbot \
-  -d seusite.dev --email seu@email.com --agree-tos
+# 6. SSL e domínio: configurados diretamente no painel da VPS (Hostinger),
+#    sem necessidade de Certbot/Let's Encrypt manual
 
 # 7. Criar realm 'website' e client no Keycloak
 # Acesse: https://seusite.dev/auth (após DNS configurado)
