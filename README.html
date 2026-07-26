@@ -185,7 +185,7 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).</p>
 <td>Banco de Dados (produção)</td>
 <td>PostgreSQL (container Docker na VPS)</td>
 <td>—</td>
-<td>Facilidade de configuração junto à VPS, sem depender de um serviço gerenciado externo</td>
+<td>Facilidade de configuração junto à VPS, sem depender de um serviço gerenciado externo. Dados persistidos em volume Docker nomeado; <strong>sem rotina de backup/restore automatizada ainda</strong> (ver "Pontos de Atenção Conhecidos")</td>
 </tr>
 <tr>
 <td>ORM</td>
@@ -221,7 +221,7 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).</p>
 <td>Deploy</td>
 <td>VPS (Hostinger)</td>
 <td>—</td>
-<td>Plano com suporte a importação/execução de imagens Docker, simples de conectar</td>
+<td>Acesso via SSH para rodar o stack completo com Docker Compose; o recurso de importação de imagem do painel cobre apenas um único container, insuficiente para os 5 serviços deste projeto</td>
 </tr>
 <tr>
 <td>SSL</td>
@@ -418,10 +418,11 @@ torna previsível onde adicionar uma nova funcionalidade no futuro. Os testes se
 mesma divisão: testes unitários de <code>service</code> (com Mockito) e testes de integração de
 <code>controller</code> (MockMvc + Testcontainers, subindo um Postgres real).</p>
 <blockquote>
-<p>O deploy em produção é manual, por um destes dois caminhos (conforme o plano/painel da VPS): (a)
-importação direta da imagem Docker já publicada, pelo painel da Hostinger, <strong>ou</strong> (b) acesso via
-<strong>SSH</strong> para clonar o repositório e subir os serviços com as instruções de Docker já descritas
-nesta documentação.</p>
+<p>O deploy em produção é manual, via acesso <strong>SSH</strong>: o recurso de importação de imagem Docker do painel
+da Hostinger cobre apenas um único container, o que não é suficiente para este projeto (5 serviços —
+Postgres, Keycloak, back-end, front-end, NGINX — orquestrados via Docker Compose). O fluxo real é
+clonar o repositório via SSH e subir os serviços com as instruções de Docker já descritas nesta
+documentação.</p>
 </blockquote>
 <hr>
 <h2 id="api-rest--endpoints">API REST — Endpoints</h2>
@@ -863,10 +864,10 @@ secrets do orquestrador; nenhuma delas deve ficar com o valor padrão.</p>
 <pre><code class="language-dotenv">DB_URL=jdbc:postgresql://postgres:5432/website_db
 DB_USER=website_user
 DB_PASS=senha_segura_aqui
-KEYCLOAK_JWKS_URI=http://keycloak:8080/realms/website/protocol/openid-connect/certs
+KEYCLOAK_JWKS_URI=http://keycloak:8080/auth/realms/website/protocol/openid-connect/certs
 FRONT_END_URL=https://seusite.dev
-KC_ADMIN=admin
-KC_ADMIN_PASS=senha_keycloak_aqui
+KEYCLOAK_ADMIN=admin
+KEYCLOAK_ADMIN_PASSWORD=senha_keycloak_aqui
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USER=seu@email.com
@@ -896,11 +897,10 @@ ng serve
 <hr>
 <h2 id="build-e-deploy">Build e Deploy</h2>
 <p>Build e Deploy da aplicação Java, Angular e Keycloak.</p>
-<p>Existem dois caminhos possíveis, dependendo do plano/painel da VPS contratado:</p>
-<p><strong>(a) Importação direta da imagem Docker pelo painel da Hostinger</strong> — não requer os
-passos 1-2 abaixo; a imagem já publicada é importada e executada diretamente pelo
-painel.</p>
-<p><strong>(b) Acesso via SSH</strong>, clonando o projeto e subindo os serviços manualmente:</p>
+<p>O plano de VPS contratado (Hostinger) importa/executa apenas uma imagem Docker por vez
+pelo painel — insuficiente para este projeto, que roda 5 serviços (Postgres, Keycloak,
+back-end, front-end, NGINX) via Docker Compose. Por isso o deploy é feito via acesso
+<strong>SSH</strong>, clonando o projeto e subindo os serviços manualmente:</p>
 <pre><code class="language-bash"><span class="hljs-comment"># 1. Instalar Docker na VPS</span>
 <span class="hljs-comment"># Os comandos abaixo assumem uma distro Debian/Ubuntu (apt); ajuste conforme a</span>
 <span class="hljs-comment"># distro efetivamente oferecida pela VPS contratada (ex.: dnf/yum em distros</span>
@@ -963,6 +963,11 @@ conter apenas a criação de <code>internal_log</code> — ver ressalva na seç�
 Banco de Dados&quot; acima. Não causa erro hoje (por causa do <code>IF NOT EXISTS</code>), mas
 foge do padrão de migrations incrementais e é uma fonte em potencial de
 divergência entre o que está documentado em cada arquivo e o schema real (<strong>MANTER VERSÃO ATUAL</strong>).</li>
+<li><strong>Sem backup/restore automatizado para o PostgreSQL em produção.</strong> Os dados são
+persistidos em um volume Docker nomeado na VPS, o que sobrevive a restart/recreate
+dos containers, mas não protege contra perda ou corrupção do disco da própria VPS.
+Hoje não existe rotina de <code>pg_dump</code>/snapshot agendada nem processo de restore
+documentado (<strong>PENDENTE</strong>).</li>
 </ol>
 
             <script async src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
