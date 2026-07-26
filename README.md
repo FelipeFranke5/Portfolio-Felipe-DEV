@@ -16,13 +16,13 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).
 | Back-End | Spring Boot (Java) | 4.1.0 / Java 21 | Conhecimento prévio, REST simples, ecossistema maduro |
 | Banco de Dados | PostgreSQL | 16 | Robusto, JSONB, arrays nativos, compatível com JPA |
 | Banco de Dados (testes) | H2 (in-memory) + Testcontainers (PostgreSQL 16) | — | H2 disponível para testes rápidos; integração real via Testcontainers |
-| Banco de Dados (produção) | PostgreSQL (container Docker na VPS) | — | Facilidade de configuração junto à VPS, sem depender de um serviço gerenciado externo |
+| Banco de Dados (produção) | PostgreSQL (container Docker na VPS) | — | Facilidade de configuração junto à VPS, sem depender de um serviço gerenciado externo. Dados persistidos em volume Docker nomeado; **sem rotina de backup/restore automatizada ainda** (ver "Pontos de Atenção Conhecidos") |
 | ORM | Hibernate (Spring Data JPA) | — | Integrado ao Spring Boot |
 | Migrations | Flyway (`spring-boot-starter-flyway` + `org.flywaydb:flyway-database-postgresql`) | — | Automatiza a criação e o versionamento incremental das tabelas a partir dos scripts SQL em `db/migration` |
 | Proxy reverso | NGINX | alpine | Serve estático, faz proxy da API, SSL/TLS, rate limiting |
 | Auth | Keycloak | latest | Self-hosted, OAuth2/OIDC, padrão enterprise Java. Servidor de Autenticação e Autorização bem completo |
 | Containers | Docker + Docker Compose | — | Todos os serviços em containers. Facilita os testes e deploy |
-| Deploy | VPS (Hostinger) | — | Plano com suporte a importação/execução de imagens Docker, simples de conectar |
+| Deploy | VPS (Hostinger) | — | Acesso via SSH para rodar o stack completo com Docker Compose; o recurso de importação de imagem do painel cobre apenas um único container, insuficiente para os 5 serviços deste projeto |
 | SSL | Gerenciado pela VPS (Hostinger) | — | Domínio e certificado SSL administrados diretamente pelo painel da VPS |
 | Utilitários | Lombok | — | Reduz boilerplate (`@Getter`/`@Setter`/`@RequiredArgsConstructor`/`@Slf4j`); excluído do jar final |
 | Validação | Jakarta Bean Validation (`spring-boot-starter-validation`) | — | `@NotBlank`, `@Email`, `@Size`, `@URL`, `@Pattern` nos DTOs de request |
@@ -132,10 +132,11 @@ torna previsível onde adicionar uma nova funcionalidade no futuro. Os testes se
 mesma divisão: testes unitários de `service` (com Mockito) e testes de integração de
 `controller` (MockMvc + Testcontainers, subindo um Postgres real).
 
-> O deploy em produção é manual, por um destes dois caminhos (conforme o plano/painel da VPS): (a)
-> importação direta da imagem Docker já publicada, pelo painel da Hostinger, **ou** (b) acesso via
-> **SSH** para clonar o repositório e subir os serviços com as instruções de Docker já descritas
-> nesta documentação.
+> O deploy em produção é manual, via acesso **SSH**: o recurso de importação de imagem Docker do painel
+> da Hostinger cobre apenas um único container, o que não é suficiente para este projeto (5 serviços —
+> Postgres, Keycloak, back-end, front-end, NGINX — orquestrados via Docker Compose). O fluxo real é
+> clonar o repositório via SSH e subir os serviços com as instruções de Docker já descritas nesta
+> documentação.
 
 ---
 
@@ -416,10 +417,10 @@ server {
 DB_URL=jdbc:postgresql://postgres:5432/website_db
 DB_USER=website_user
 DB_PASS=senha_segura_aqui
-KEYCLOAK_JWKS_URI=http://keycloak:8080/realms/website/protocol/openid-connect/certs
+KEYCLOAK_JWKS_URI=http://keycloak:8080/auth/realms/website/protocol/openid-connect/certs
 FRONT_END_URL=https://seusite.dev
-KC_ADMIN=admin
-KC_ADMIN_PASS=senha_keycloak_aqui
+KEYCLOAK_ADMIN=admin
+KEYCLOAK_ADMIN_PASSWORD=senha_keycloak_aqui
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USER=seu@email.com
@@ -458,13 +459,10 @@ ng serve
 
 Build e Deploy da aplicação Java, Angular e Keycloak.
 
-Existem dois caminhos possíveis, dependendo do plano/painel da VPS contratado:
-
-**(a) Importação direta da imagem Docker pelo painel da Hostinger** — não requer os
-passos 1-2 abaixo; a imagem já publicada é importada e executada diretamente pelo
-painel.
-
-**(b) Acesso via SSH**, clonando o projeto e subindo os serviços manualmente:
+O plano de VPS contratado (Hostinger) importa/executa apenas uma imagem Docker por vez
+pelo painel — insuficiente para este projeto, que roda 5 serviços (Postgres, Keycloak,
+back-end, front-end, NGINX) via Docker Compose. Por isso o deploy é feito via acesso
+**SSH**, clonando o projeto e subindo os serviços manualmente:
 
 ```bash
 # 1. Instalar Docker na VPS
@@ -533,3 +531,8 @@ Lista consolidada dos pontos levantados na revisão de código, para acompanhame
    Banco de Dados" acima. Não causa erro hoje (por causa do `IF NOT EXISTS`), mas
    foge do padrão de migrations incrementais e é uma fonte em potencial de
    divergência entre o que está documentado em cada arquivo e o schema real (**MANTER VERSÃO ATUAL**).
+9. **Sem backup/restore automatizado para o PostgreSQL em produção.** Os dados são
+   persistidos em um volume Docker nomeado na VPS, o que sobrevive a restart/recreate
+   dos containers, mas não protege contra perda ou corrupção do disco da própria VPS.
+   Hoje não existe rotina de `pg_dump`/snapshot agendada nem processo de restore
+   documentado (**PENDENTE**).
