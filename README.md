@@ -18,7 +18,7 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).
 | Banco de Dados (testes) | H2 (in-memory) + Testcontainers (PostgreSQL 16) | — | H2 disponível para testes rápidos; integração real via Testcontainers |
 | Banco de Dados (produção) | PostgreSQL (container Docker na VPS) | — | Facilidade de configuração junto à VPS, sem depender de um serviço gerenciado externo |
 | ORM | Hibernate (Spring Data JPA) | — | Integrado ao Spring Boot |
-| Migrations | Flyway (`spring-boot-starter-flyway`) | — | A partir do Spring Boot 4, o `flyway-core` não migra mais automaticamente; o starter dedicado é necessário. Utilizado para automatizar a criação das tabelas e facilitar a manutenção delas |
+| Migrations | Flyway (`spring-boot-starter-flyway` + `org.flywaydb:flyway-database-postgresql`) | — | Automatiza a criação e o versionamento incremental das tabelas a partir dos scripts SQL em `db/migration` |
 | Proxy reverso | NGINX | alpine | Serve estático, faz proxy da API, SSL/TLS, rate limiting |
 | Auth | Keycloak | latest | Self-hosted, OAuth2/OIDC, padrão enterprise Java. Servidor de Autenticação e Autorização bem completo |
 | Containers | Docker + Docker Compose | — | Todos os serviços em containers. Facilita os testes e deploy |
@@ -132,9 +132,10 @@ torna previsível onde adicionar uma nova funcionalidade no futuro. Os testes se
 mesma divisão: testes unitários de `service` (com Mockito) e testes de integração de
 `controller` (MockMvc + Testcontainers, subindo um Postgres real).
 
-> O deploy em produção é manual: acesso ao painel da VPS (Hostinger) para importar/executar as imagens
-> Docker, seguido de acesso via **SSH** para baixar o projeto e as dependências e iniciar as aplicações
-> com as instruções de Docker já descritas nesta documentação.
+> O deploy em produção é manual, por um destes dois caminhos (conforme o plano/painel da VPS): (a)
+> importação direta da imagem Docker já publicada, pelo painel da Hostinger, **ou** (b) acesso via
+> **SSH** para clonar o repositório e subir os serviços com as instruções de Docker já descritas
+> nesta documentação.
 
 ---
 
@@ -457,11 +458,22 @@ ng serve
 
 Build e Deploy da aplicação Java, Angular e Keycloak.
 
+Existem dois caminhos possíveis, dependendo do plano/painel da VPS contratado:
+
+**(a) Importação direta da imagem Docker pelo painel da Hostinger** — não requer os
+passos 1-2 abaixo; a imagem já publicada é importada e executada diretamente pelo
+painel.
+
+**(b) Acesso via SSH**, clonando o projeto e subindo os serviços manualmente:
+
 ```bash
-# 1. Instalar Docker na VPS (ou usar a importação de imagens Docker já
-#    oferecida pelo painel da Hostinger, conforme o plano contratado)
+# 1. Instalar Docker na VPS
+# Os comandos abaixo assumem uma distro Debian/Ubuntu (apt); ajuste conforme a
+# distro efetivamente oferecida pela VPS contratada (ex.: dnf/yum em distros
+# baseadas em RHEL). Substitua "<usuario_ssh>" pelo usuário configurado no
+# acesso SSH da VPS.
 sudo apt update && sudo apt install docker.io docker-compose-plugin -y
-sudo usermod -aG docker ubuntu
+sudo usermod -aG docker <usuario_ssh>
 
 # 2. Clonar o repositório
 # OU subir os arquivos com SCP
