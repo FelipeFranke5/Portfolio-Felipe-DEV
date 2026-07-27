@@ -168,4 +168,34 @@ describe('PortfolioComponent', () => {
 
     expect(component.isModalOpen()).toBeFalse();
   });
+
+  it('should render one certificate card per certificate', () => {
+    const cards = fixture.nativeElement.querySelectorAll('.certificate-card');
+    expect(cards.length).toBe(component.certificates.length);
+  });
+
+  it('should render the issuer, name and image for each certificate', () => {
+    const firstCertificate = component.certificates[0];
+    const firstCard = fixture.nativeElement.querySelector('.certificate-card');
+
+    expect(firstCard.querySelector('.certificate-card__issuer').textContent).toContain(
+      firstCertificate.issuer
+    );
+    expect(firstCard.querySelector('.certificate-card__title').textContent).toContain(
+      firstCertificate.name
+    );
+
+    const image = firstCard.querySelector('.certificate-card__image-frame img');
+    expect(image.getAttribute('src')).toBe(firstCertificate.imageSrc);
+    expect(image.getAttribute('alt')).toContain(firstCertificate.name);
+  });
+
+  it('should link each certificate to its external certificate URL in a new tab', () => {
+    const firstCertificate = component.certificates[0];
+    const link = fixture.nativeElement.querySelector('.certificate-card__link');
+
+    expect(link.getAttribute('href')).toBe(firstCertificate.certificateUrl);
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+  });
 });

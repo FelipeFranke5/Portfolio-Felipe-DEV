@@ -94,6 +94,78 @@
         }
       </div>
     }
+
+    <section class="certificates fade-in fade-in--4" aria-label="Certificados">
+      <div class="certificates__intro">
+        <h2 class="certificates__heading">Certificados</h2>
+        <p class="certificates__description">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </p>
+      </div>
+
+      <div class="certificates__grid">
+        @for (certificate of certificates; track certificate.certificateUrl) {
+          <article class="certificate-card">
+            <div class="certificate-card__image-frame">
+              <img
+                [src]="certificate.imageSrc"
+                [alt]="'Certificado: ' + certificate.name"
+                loading="lazy"
+              />
+            </div>
+
+            <div class="certificate-card__body">
+              <span class="certificate-card__issuer">{{ certificate.issuer }}</span>
+              <h3 class="certificate-card__title">{{ certificate.name }}</h3>
+              <p class="certificate-card__description">{{ certificate.description }}</p>
+            </div>
+
+            <div class="certificate-card__footer">
+              <span class="certificate-card__date">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                Emitido em: {{ certificate.issuedAt }}
+              </span>
+
+              <a
+                class="certificate-card__link"
+                [href]="certificate.certificateUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                Ver certificado
+              </a>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
   </div>
 
   @if (isModalOpen()) {

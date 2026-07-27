@@ -17,6 +17,18 @@ import { Project, ProjectDetail, ProjectsService } from './projects.service';
 
 const MODAL_CLOSE_ANIMATION_MS = 180;
 
+const CERTIFICATE_PLACEHOLDER_DESCRIPTION =
+  'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+
+interface Certificate {
+  issuer: string;
+  name: string;
+  description: string;
+  issuedAt: string;
+  certificateUrl: string;
+  imageSrc: string;
+}
+
 @Component({
   selector: 'app-portfolio',
   standalone: true,
@@ -26,6 +38,49 @@ const MODAL_CLOSE_ANIMATION_MS = 180;
 })
 export class PortfolioComponent {
   private readonly projectsService = inject(ProjectsService);
+
+  readonly certificates: Certificate[] = [
+    {
+      issuer: 'KipperDev Marketing e Treinamentos',
+      name: 'Curso de Angular v18',
+      description: CERTIFICATE_PLACEHOLDER_DESCRIPTION,
+      issuedAt: 'Julho de 2026',
+      certificateUrl: 'https://fernandakipper.com/certificado/d47841ed-7ca4-4162-b099-d87125b99cf0',
+      imageSrc: '/images/portfolio/certificates/certificate-angular-v18.jpg',
+    },
+    {
+      issuer: 'SailPoint',
+      name: 'SailPoint Certified IdentityIQ Engineer',
+      description: CERTIFICATE_PLACEHOLDER_DESCRIPTION,
+      issuedAt: 'Julho de 2026',
+      certificateUrl: 'https://www.credly.com/badges/c2174a1f-0c8e-4fa7-be1f-c5301710a54d/public_url',
+      imageSrc: '/images/portfolio/certificates/certificate-sailpoint-identityiq-engineer.jpg',
+    },
+    {
+      issuer: 'SailPoint',
+      name: 'Set Up and Administer Identity Security Cloud',
+      description: CERTIFICATE_PLACEHOLDER_DESCRIPTION,
+      issuedAt: 'Agosto de 2025',
+      certificateUrl: 'https://verify.skilljar.com/c/7eugin4petmm',
+      imageSrc: '/images/portfolio/certificates/certificate-sailpoint-isc-setup-administer.jpg',
+    },
+    {
+      issuer: 'SailPoint',
+      name: 'SailPoint Identity Security Leader Credential',
+      description: CERTIFICATE_PLACEHOLDER_DESCRIPTION,
+      issuedAt: 'Setembro de 2025',
+      certificateUrl: 'https://verify.skilljar.com/c/hvpwt534z3ck',
+      imageSrc: '/images/portfolio/certificates/certificate-sailpoint-identity-security-leader.jpg',
+    },
+    {
+      issuer: 'SailPoint',
+      name: 'Introduction to Identity Security Cloud',
+      description: CERTIFICATE_PLACEHOLDER_DESCRIPTION,
+      issuedAt: 'Agosto de 2025',
+      certificateUrl: 'https://verify.skilljar.com/c/tqgjrowfdt38',
+      imageSrc: '/images/portfolio/certificates/certificate-sailpoint-isc-introduction.jpg',
+    },
+  ];
 
   private readonly defaultErrorMessage =
     'Houve uma falha ao consultar /api/projects. Tente novamente.';
