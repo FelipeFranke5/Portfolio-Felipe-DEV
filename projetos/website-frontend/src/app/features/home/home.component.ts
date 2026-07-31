@@ -66,34 +66,52 @@ export class HomeComponent {
 
   readonly aboutTimeline: AboutTimelineEntry[] = [
     {
-      eyebrow: 'Infância & Interesse',
-      title: 'Curiosidade e Soluções',
+      eyebrow: 'Infância e Interesse',
+      title: 'Curiosidade e Busca de Soluções',
       description:
-        'Interesse natural em encontrar soluções para problemas e entender o funcionamento das coisas desde cedo.',
+        'Desde cedo tive curiosidade em saber o porquê das coisas. Mesmo antes de saber programar, buscava tentar entender as etapas lógicas de tudo que acontecia na minha vida e na vida da minha familia. Sempre fui uma pessoa tímida, mas que gosta de pensar bastante - Isso é fundamental em qualquer área, mas hoje vejo o quão importante é ter sempre um tempo para refletir, seja sobre uma solução para um problema, ou sobre questionamentos da vida.',
     },
     {
-      eyebrow: 'Primeiros Passos',
-      title: 'Projetos Web Iniciais',
+      eyebrow: 'Primeiros Passos - Dev',
+      title: 'Projetos Iniciais',
       description:
-        'Minhas primeiras experiências reais com páginas web e a construção de interfaces simples.',
+        'Surgem as primeiras experiências reais com a construção de algoritmos. Mais ou menos no fim do Ensino Médio, descobri os vídeos do Gustavo Guanabara (curso em video) sobre estrutura de dados e algoritmos - Com isso, pude começar a criar alguns algoritmos e scripts em Python.',
     },
     {
-      eyebrow: 'Mercado',
-      title: 'Atendimento ao Cliente',
+      eyebrow: 'Entrada no Mercado de Trabalho',
+      title: 'Suporte N1',
       description:
-        'Primeira experiência profissional, onde desenvolvi habilidades de comunicação e análise de problemas críticos.',
+        'Primeira experiência profissional como Suporte N1. Permitiu que eu aprendesse MUITO sobre procedimentos, regras de negócio e leitura de documentações - Por muito tempo, tive contato com a área de E-commerce em uma adquirente, onde aprendi sobre como analisar logs e entender sobre alguns fluxos que ocorrem no Back-end. Sou grato à todos que responderam os meus chamados no Jira com detalhes técnicos, eu sempre parava para ler e tentar entender melhor sobre os processos quando tinha tempo.',
     },
     {
       eyebrow: 'Evolução',
       title: 'Contato com APIs e Back-End',
       description:
-        'O ponto de virada: contato inicial com chamadas HTTP, sistemas de E-commerce e a descoberta do poder do Back-End.',
+        'Um pouco antes da minha primeira oportunidade como Desenvolvedor de fato e ainda na empresa atuando como Suporte N1, comecei a me interessar cada vez mais por APIs, Banco de Dados e integrações. A empresa tinha um ambiente Sandbox no qual eu conseguia disparar requisições para criar transações fictícias e isso foi muito importante no meu aprendizado. Além disso, eu já participava de reuniões técnicas, onde eu ajudava outros desenvolvedores e gestores com relação à integração das APIs da empresa - Não apenas eu auxiliava os desenvolvedores, mas também aprendia com eles! Conheci pessoas que trabalhavam em todas as pontas: Desde um Front-end interessado em fazer uma nova integração e tinha dúvidas de como usar as APIs, até Desenvolvedores Back-End com sugestões de melhorias. Nessa época eu costumava enviar as sugestões dos clientes (e outras ideias que eu mesmo tinha) para a empresa e fico feliz de lembrar que algumas delas ajudaram no crescimento da empresa.',
+    },
+    {
+      eyebrow: 'Cursos e Projetos Pessoais',
+      title: 'Curso de Django, Leitura de Livros e Criação de Projetos',
+      description:
+        'Comecei a ler alguns livros para tentar me aprofundar em Algoritmos e Estrutura de Dados, aprender sobre Python e JavaScript. Confesso que não gostei muito do livro de JavaScript (aquele que é bem grande), mas li dois sobre Python que gostei bastante e me aprofundei: Um deles focado mais em explicar sobre Algoritmos e Estrutura de Dados (com trechos de exemplo em Python) e outro focado na linguagem Python em si, além de alguns frameworks como Django. Em paralelo, iniciei um curso de Django, onde aprendi como criar projetos, conectar com Banco de Dados e criar páginas web simples - Gostei bastante do Django e praticava bastante, dessa forma aprendi bastante sobre análise de erros, criação de novos Endpoints, inserção de Autenticação e Autorização, entre outros temas.',
+    },
+    {
+      eyebrow: 'Faculdade',
+      title: 'Analise e Desenvolvimento de Sistemas',
+      description:
+        'O curso de ADS me ajudou bastante a entender diversos conceitos que utilizo até hoje no Desenvolvimento de Software. Aprendi a configurar um Banco de Dados (utilizar um SGBD), reforcei meus conhecimentos sobre Algoritmos / Estrutura de Dados e tive a oportunidade de construir alguns projetos para praticar.',
     },
     {
       eyebrow: 'Atualidade',
-      title: 'Identity Management (IGA/IAM)',
+      title: 'Analista Ongoing Júnior',
       description:
-        `Atuação focada em sustentação, testes e entrega em sistemas de Identity Governance and Administration e Identity and Access Management. Atualmente sou ${this.currentJobTitle} na ${this.currentJobCompany}, buscando a certificação IdentityIQ Engineer.`,
+        'Minha primeira oportunidade como Desenvolvedor 🙏🙏 Onde de fato realizei meu primeiro deploy. Comecei como ajustes simples para melhorar a performance e deixar alguns processos de IAM mais robustos - Com o tempo, fiquei mais confortável em contribuir mais e sugerir novos fluxos.',
+    },
+    {
+      eyebrow: 'Certificados',
+      title: 'Cursos e Certificados SailPoint',
+      description:
+        'Obtive alguns certificados estudando na SailPoint University, graças à NetBR. Recentemente obtive o certificado de IdentityIQ Security Engineer e estou em busca do IdentityIQ Security Professional.',
     },
   ];
 
@@ -185,9 +203,9 @@ export class HomeComponent {
   ];
 
   readonly galleryImages: GalleryImage[] = [
-    { src: '/images/home/gallery-study.png', alt: 'Ambiente de estudos com notebook e café' },
-    { src: '/images/home/gallery-frontend.png', alt: 'Representação abstrata de componentes de Front-End' },
-    { src: '/images/home/gallery-architecture.jpg', alt: 'Interior arquitetônico moderno com concreto e vidro' },
+    { src: '/images/home/configuracao-ci-cd.jpg', alt: 'Imagem de uma Pipeline de CI / CI no GitHub Actions com um arquivo de configuração para geração de um artetafo e envio para AWS' },
+    { src: '/images/home/imagem-ci-cd-pipeline-gha.jpg', alt: 'Imagem de uma Pipeline de CI / CI no GitHub Actions com algumas ações e fluxos executados' },
+    { src: '/images/home/print-desenvolvimento.jpg', alt: 'Imagem do editor VS Code com linhas de código em um arquivo HTML de um projeto Django' },
   ];
 
   calculateAge(): number {
