@@ -15,6 +15,9 @@ $accent-circle: tokens.$accent-circle;
 $accent-soft: tokens.$accent-soft;
 $accent-softer: tokens.$accent-softer;
 $accent-border: tokens.$accent-border;
+$cta-hover-surface: tokens.$cta-hover-surface;
+$cta-hover-ink: tokens.$cta-hover-ink;
+$cta-hover-ink-soft: tokens.$cta-hover-ink-soft;
 
 $font-heading: tokens.$font-heading;
 $font-body: tokens.$font-body;
@@ -502,13 +505,20 @@ $font-body: tokens.$font-body;
 }
 
 .cta {
+  // Tema local da seção. O hover troca apenas estas três variáveis e o h2, o
+  // parágrafo e o botão acompanham sozinhos, sem regra de override para cada um.
+  --cta-surface: #{$accent};
+  --cta-ink: #fff;
+  --cta-ink-soft: #{rgba(#fff, 0.9)};
+
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 2rem;
   padding: 6rem;
-  background-color: $accent;
+  background-color: var(--cta-surface);
+  transition: background-color 0.25s ease;
 
   &__content {
     display: flex;
@@ -521,14 +531,16 @@ $font-body: tokens.$font-body;
       font-family: $font-heading;
       font-weight: 800;
       font-size: clamp(2rem, 4vw, 3.75rem);
-      color: #fff;
+      color: var(--cta-ink);
+      transition: color 0.25s ease;
     }
 
     p {
       margin: 0;
       font-size: 1.125rem;
       line-height: 1.6;
-      color: rgba(255, 255, 255, 0.9);
+      color: var(--cta-ink-soft);
+      transition: color 0.25s ease;
     }
   }
 
@@ -539,13 +551,28 @@ $font-body: tokens.$font-body;
     justify-content: center;
     height: 48px;
     padding: 0 2rem;
-    border: 1px solid #fff;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    border: 1px solid var(--cta-ink);
+    // Sobrescreve o `color: #fff` da regra compartilhada lá em cima: mesma
+    // especificidade, vence por vir depois na ordem de declaração.
+    color: var(--cta-ink);
+    background-color: transparent;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.25s ease;
 
     &:hover {
-      background-color: #fff;
-      color: $accent;
+      background-color: var(--cta-ink);
+      color: var(--cta-surface);
     }
+  }
+}
+
+// `:hover` em uma seção inteira "gruda" em tela de toque (o iOS mantém o estado
+// até o próximo toque), o que deixaria o bloco branco permanentemente. Por isso
+// a inversão fica restrita a ponteiro fino.
+@media (hover: hover) and (pointer: fine) {
+  .cta:hover {
+    --cta-surface: #{$cta-hover-surface};
+    --cta-ink: #{$cta-hover-ink};
+    --cta-ink-soft: #{$cta-hover-ink-soft};
   }
 }
 

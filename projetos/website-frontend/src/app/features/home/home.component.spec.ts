@@ -95,4 +95,18 @@ describe('HomeComponent', () => {
     expect(button.textContent).toContain('Contato');
     expect(button.getAttribute('href')).toBe('/contact');
   });
+
+  it('should keep the CTA section anchored at #contato', () => {
+    const section: HTMLElement = fixture.nativeElement.querySelector('section.cta');
+
+    expect(section.getAttribute('id')).toBe('contato');
+  });
+
+  it('should resolve the CTA colors from its local custom properties', () => {
+    const section: HTMLElement = fixture.nativeElement.querySelector('.cta');
+    const button: HTMLElement = fixture.nativeElement.querySelector('.cta__button');
+
+    expect(getComputedStyle(section).backgroundColor).toBe('rgb(59, 130, 246)');
+    expect(getComputedStyle(button).color).toBe('rgb(255, 255, 255)');
+  });
 });
