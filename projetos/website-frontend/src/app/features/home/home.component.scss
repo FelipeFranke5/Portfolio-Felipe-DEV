@@ -270,6 +270,7 @@ $coffee-tint-light: brightness(0) invert(1);
     font-size: 1rem;
     line-height: 1.6;
     color: $text-muted;
+    max-width: 70ch;
   }
 
   &__timeline {
@@ -304,6 +305,7 @@ $coffee-tint-light: brightness(0) invert(1);
       font-family: $font-heading;
       font-weight: 800;
       font-size: 1.5rem;
+      max-width: 70ch;
       color: $text;
     }
 
