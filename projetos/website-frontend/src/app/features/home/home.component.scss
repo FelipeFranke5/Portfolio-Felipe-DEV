@@ -28,8 +28,20 @@ $font-body: tokens.$font-body;
 $typewriter-delay: 0.6s;
 $typewriter-duration: 2.2s;
 
+// As 4 xícaras (índigo, marrom, teal e azul-marinho) têm a cor cravada no root
+// do SVG, e via <img> o CSS não alcança o `fill`. Estes filtros normalizam
+// qualquer uma delas: o `brightness(0) saturate(100%)` inicial descarta a cor de
+// origem e o resto tinge no alvo. Conferido por screenshot contra o $accent.
+$coffee-tint: brightness(0) saturate(100%) invert(46%) sepia(51%) saturate(3134%)
+  hue-rotate(203deg) brightness(99%) contrast(93%);
+// Sobre o azul do CTA uma xícara azul sumiria, então lá ela vai de branco.
+$coffee-tint-light: brightness(0) invert(1);
+
 :host {
   display: block;
+  // Bloco de contenção da .coffee-layer. Sem z-index de propósito: não cria
+  // stacking context, então o header sticky continua acima de tudo.
+  position: relative;
   background-color: $bg;
   color: $text;
   font-family: $font-body;
@@ -513,6 +525,15 @@ $typewriter-duration: 2.2s;
     height: 1px;
     background-color: $border;
   }
+
+  // Única xícara que não é decoração de fundo: entra no fluxo do divisor como
+  // ícone de verdade, ao lado de "Roadmap em evolução".
+  &__divider-cup {
+    width: 22px;
+    height: auto;
+    opacity: 0.75;
+    filter: $coffee-tint;
+  }
 }
 
 .gallery {
@@ -608,6 +629,47 @@ $typewriter-duration: 2.2s;
     --cta-ink: #{$cta-hover-ink};
     --cta-ink-soft: #{$cta-hover-ink-soft};
   }
+
+  // A .coffee-layer é irmã da .cta (vem depois do app-footer), então dá para
+  // escurecer a xícara branca que fica sobre o CTA quando ele vira branco —
+  // senão ela desapareceria junto com o fundo.
+  .cta:hover ~ .coffee-layer .coffee-layer__cup--light {
+    filter: brightness(0);
+  }
+}
+
+// Camada decorativa de xícaras ("cara de Javeiro"). Cobre a página inteira em
+// vez de uma xícara absoluta por section: assim nenhum seletor de layout
+// existente precisa ganhar position/overflow, e o único `overflow: hidden` fica
+// aqui, garantindo que nada do que vaza gere scroll horizontal.
+// Posição, tamanho, rotação e opacidade de cada xícara vêm do array
+// coffeeAccents no .ts, então acrescentar ou remover uma custa zero CSS.
+.coffee-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+
+  &__cup {
+    position: absolute;
+    // Sem isto os atributos width/height do <img> distorcem a xícara quando o
+    // width inline sobrescreve a largura.
+    height: auto;
+    filter: $coffee-tint;
+    animation: home-coffee-drift 15s ease-in-out infinite alternate;
+
+    // Dessincroniza metade das xícaras para o movimento não parecer um bloco só.
+    &:nth-child(2n) {
+      animation-duration: 19s;
+      animation-direction: alternate-reverse;
+    }
+
+    &--light {
+      filter: $coffee-tint-light;
+      transition: filter 0.25s ease;
+    }
+  }
 }
 
 @keyframes home-typewriter {
@@ -627,10 +689,20 @@ $typewriter-duration: 2.2s;
   }
 }
 
+@keyframes home-coffee-drift {
+  to {
+    translate: 0 -14px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   // A capa some e a palavra já está inteira embaixo dela.
   .hero__heading-accent::after {
     display: none;
+  }
+
+  .coffee-layer__cup {
+    animation: none;
   }
 }
 
@@ -717,6 +789,12 @@ $typewriter-duration: 2.2s;
     flex-direction: column;
     align-items: flex-start;
     padding: 3rem 1.5rem;
+  }
+
+  // A 390px uma xícara de 200px domina a tela, e as âncoras em % da altura
+  // perdem a referência quando as sections viram coluna única.
+  .coffee-layer {
+    display: none;
   }
 }
 

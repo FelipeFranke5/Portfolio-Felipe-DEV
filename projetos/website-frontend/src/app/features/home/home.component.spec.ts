@@ -115,4 +115,42 @@ describe('HomeComponent', () => {
 
     expect(accent.textContent?.trim()).toBe('Portfólio!');
   });
+
+  it('should render one coffee accent per item in coffeeAccents', () => {
+    const cups = fixture.nativeElement.querySelectorAll('.coffee-layer__cup');
+
+    expect(cups.length).toBe(component.coffeeAccents.length);
+  });
+
+  it('should apply the configured placement to each coffee accent', () => {
+    const cups: NodeListOf<HTMLImageElement> =
+      fixture.nativeElement.querySelectorAll('.coffee-layer__cup');
+
+    cups.forEach((cup, index) => {
+      const accent = component.coffeeAccents[index];
+
+      expect(cup.getAttribute('src')).toBe(accent.src);
+      expect(cup.style.top).toBe(accent.top);
+      expect(cup.style.left).toBe(accent.left);
+      expect(cup.style.width).toBe(accent.size);
+      expect(cup.style.rotate).toBe(accent.rotate);
+      expect(cup.style.opacity).toBe(accent.opacity);
+      expect(cup.classList.contains('coffee-layer__cup--light')).toBe(!!accent.light);
+    });
+  });
+
+  it('should hide every decorative coffee image from assistive technology', () => {
+    const layer: HTMLElement = fixture.nativeElement.querySelector('.coffee-layer');
+    const decorativeCups: NodeListOf<HTMLImageElement> = fixture.nativeElement.querySelectorAll(
+      '.coffee-layer__cup, .roadmap__divider-cup',
+    );
+
+    expect(layer.getAttribute('aria-hidden')).toBe('true');
+    expect(decorativeCups.length).toBe(component.coffeeAccents.length + 1);
+
+    decorativeCups.forEach((cup) => {
+      expect(cup.getAttribute('alt')).toBe('');
+      expect(cup.getAttribute('src')).toContain('/images/home/coffee-');
+    });
+  });
 });
