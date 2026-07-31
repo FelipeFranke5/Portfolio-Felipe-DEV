@@ -38,6 +38,18 @@ interface GalleryImage {
   alt: string;
 }
 
+interface CoffeeAccent {
+  id: string;
+  src: string;
+  top: string;
+  left: string;
+  size: string;
+  rotate: string;
+  opacity: string;
+  /** Xícara sobre fundo claro: vai de branco em vez do azul padrão. */
+  light?: boolean;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -206,6 +218,25 @@ export class HomeComponent {
     { src: '/images/home/configuracao-ci-cd.jpg', alt: 'Imagem de uma Pipeline de CI / CI no GitHub Actions com um arquivo de configuração para geração de um artetafo e envio para AWS' },
     { src: '/images/home/imagem-ci-cd-pipeline-gha.jpg', alt: 'Imagem de uma Pipeline de CI / CI no GitHub Actions com algumas ações e fluxos executados' },
     { src: '/images/home/print-desenvolvimento.jpg', alt: 'Imagem do editor VS Code com linhas de código em um arquivo HTML de um projeto Django' },
+  ];
+
+  // Xícaras decorativas espalhadas por uma camada única sobre a página inteira.
+  // `top`/`left` são percentuais da altura/largura total da Home. Os valores de
+  // `top` foram calibrados contra a altura real medida em 1440px de largura
+  // (~5790px), em que as sections ficam assim: hero 2-12%, sobre mim 18-42%,
+  // jornada 42-54%, habilidades 54-67%, roadmap 68-77%, galeria 78-87%,
+  // contato 88-94%. A galeria fica de fora de propósito: silhueta sobre foto
+  // vira borrão. Como a camada é desenhada por cima do conteúdo, as opacidades
+  // ficam baixas para não criar véu sobre o texto.
+  // `id` existe porque o @for precisa de track único e há arquivo repetido.
+  readonly coffeeAccents: CoffeeAccent[] = [
+    { id: 'hero', src: '/images/home/coffee-svgrepo-com.svg', top: '3%', left: '-3%', size: '200px', rotate: '-14deg', opacity: '0.11' },
+    { id: 'about', src: '/images/home/coffee-svgrepo-com-2.svg', top: '21%', left: '85%', size: '230px', rotate: '10deg', opacity: '0.1' },
+    { id: 'about-lower', src: '/images/home/coffee-svgrepo-com-3.svg', top: '34%', left: '1%', size: '150px', rotate: '-18deg', opacity: '0.09' },
+    { id: 'journey', src: '/images/home/coffee-svgrepo-com-4.svg', top: '46%', left: '88%', size: '190px', rotate: '8deg', opacity: '0.11' },
+    { id: 'skills', src: '/images/home/coffee-svgrepo-com-2.svg', top: '58%', left: '1%', size: '165px', rotate: '-8deg', opacity: '0.1' },
+    { id: 'roadmap', src: '/images/home/coffee-svgrepo-com-3.svg', top: '71%', left: '86%', size: '180px', rotate: '16deg', opacity: '0.1' },
+    { id: 'cta', src: '/images/home/coffee-svgrepo-com.svg', top: '90%', left: '66%', size: '200px', rotate: '-10deg', opacity: '0.3', light: true },
   ];
 
   calculateAge(): number {

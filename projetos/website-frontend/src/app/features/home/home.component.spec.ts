@@ -95,4 +95,62 @@ describe('HomeComponent', () => {
     expect(button.textContent).toContain('Contato');
     expect(button.getAttribute('href')).toBe('/contact');
   });
+
+  it('should keep the CTA section anchored at #contato', () => {
+    const section: HTMLElement = fixture.nativeElement.querySelector('section.cta');
+
+    expect(section.getAttribute('id')).toBe('contato');
+  });
+
+  it('should resolve the CTA colors from its local custom properties', () => {
+    const section: HTMLElement = fixture.nativeElement.querySelector('.cta');
+    const button: HTMLElement = fixture.nativeElement.querySelector('.cta__button');
+
+    expect(getComputedStyle(section).backgroundColor).toBe('rgb(59, 130, 246)');
+    expect(getComputedStyle(button).color).toBe('rgb(255, 255, 255)');
+  });
+
+  it('should keep the full accent word in the DOM for the typewriter animation', () => {
+    const accent: HTMLElement = fixture.nativeElement.querySelector('.hero__heading-accent');
+
+    expect(accent.textContent?.trim()).toBe('Portfólio!');
+  });
+
+  it('should render one coffee accent per item in coffeeAccents', () => {
+    const cups = fixture.nativeElement.querySelectorAll('.coffee-layer__cup');
+
+    expect(cups.length).toBe(component.coffeeAccents.length);
+  });
+
+  it('should apply the configured placement to each coffee accent', () => {
+    const cups: NodeListOf<HTMLImageElement> =
+      fixture.nativeElement.querySelectorAll('.coffee-layer__cup');
+
+    cups.forEach((cup, index) => {
+      const accent = component.coffeeAccents[index];
+
+      expect(cup.getAttribute('src')).toBe(accent.src);
+      expect(cup.style.top).toBe(accent.top);
+      expect(cup.style.left).toBe(accent.left);
+      expect(cup.style.width).toBe(accent.size);
+      expect(cup.style.rotate).toBe(accent.rotate);
+      expect(cup.style.opacity).toBe(accent.opacity);
+      expect(cup.classList.contains('coffee-layer__cup--light')).toBe(!!accent.light);
+    });
+  });
+
+  it('should hide every decorative coffee image from assistive technology', () => {
+    const layer: HTMLElement = fixture.nativeElement.querySelector('.coffee-layer');
+    const decorativeCups: NodeListOf<HTMLImageElement> = fixture.nativeElement.querySelectorAll(
+      '.coffee-layer__cup, .roadmap__divider-cup',
+    );
+
+    expect(layer.getAttribute('aria-hidden')).toBe('true');
+    expect(decorativeCups.length).toBe(component.coffeeAccents.length + 1);
+
+    decorativeCups.forEach((cup) => {
+      expect(cup.getAttribute('alt')).toBe('');
+      expect(cup.getAttribute('src')).toContain('/images/home/coffee-');
+    });
+  });
 });

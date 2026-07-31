@@ -139,6 +139,15 @@
 
       <div class="roadmap__divider">
          <span class="roadmap__divider-line" aria-hidden="true"></span>
+         <img
+            src="/images/home/coffee-svgrepo-com-3.svg"
+            alt=""
+            aria-hidden="true"
+            class="roadmap__divider-cup"
+            width="122"
+            height="122"
+            loading="lazy"
+         >
          <p>Roadmap em evolução</p>
          <span class="roadmap__divider-line" aria-hidden="true"></span>
       </div>
@@ -168,3 +177,23 @@
 </section>
 
 <app-footer></app-footer>
+
+<div class="coffee-layer" aria-hidden="true">
+   @for (accent of coffeeAccents; track accent.id) {
+      <img
+         class="coffee-layer__cup"
+         [class.coffee-layer__cup--light]="accent.light"
+         [src]="accent.src"
+         [style.top]="accent.top"
+         [style.left]="accent.left"
+         [style.width]="accent.size"
+         [style.rotate]="accent.rotate"
+         [style.opacity]="accent.opacity"
+         alt=""
+         width="122"
+         height="122"
+         loading="lazy"
+         decoding="async"
+      >
+   }
+</div>

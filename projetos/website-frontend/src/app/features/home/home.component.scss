@@ -15,12 +15,33 @@ $accent-circle: tokens.$accent-circle;
 $accent-soft: tokens.$accent-soft;
 $accent-softer: tokens.$accent-softer;
 $accent-border: tokens.$accent-border;
+$cta-hover-surface: tokens.$cta-hover-surface;
+$cta-hover-ink: tokens.$cta-hover-ink;
+$cta-hover-ink-soft: tokens.$cta-hover-ink-soft;
+$hero-accent-hover: tokens.$hero-accent-hover;
 
 $font-heading: tokens.$font-heading;
 $font-body: tokens.$font-body;
 
+// Efeito máquina de escrever do hero: começa quando o .fade-in--2 do h1 termina
+// (delay de 2 * 45ms + 0.5s de duração) e revela um caractere a cada 220ms.
+$typewriter-delay: 0.6s;
+$typewriter-duration: 2.2s;
+
+// As 4 xícaras (índigo, marrom, teal e azul-marinho) têm a cor cravada no root
+// do SVG, e via <img> o CSS não alcança o `fill`. Estes filtros normalizam
+// qualquer uma delas: o `brightness(0) saturate(100%)` inicial descarta a cor de
+// origem e o resto tinge no alvo. Conferido por screenshot contra o $accent.
+$coffee-tint: brightness(0) saturate(100%) invert(46%) sepia(51%) saturate(3134%)
+  hue-rotate(203deg) brightness(99%) contrast(93%);
+// Sobre o azul do CTA uma xícara azul sumiria, então lá ela vai de branco.
+$coffee-tint-light: brightness(0) invert(1);
+
 :host {
   display: block;
+  // Bloco de contenção da .coffee-layer. Sem z-index de propósito: não cria
+  // stacking context, então o header sticky continua acima de tudo.
+  position: relative;
   background-color: $bg;
   color: $text;
   font-family: $font-body;
@@ -85,7 +106,35 @@ $font-body: tokens.$font-body;
   }
 
   &__heading-accent {
+    position: relative;
+    display: inline-block;
     color: $accent;
+    transition: color 0.2s ease, text-shadow 0.2s ease;
+
+    // Máquina de escrever: esta "capa" é pintada com a cor do fundo por cima da
+    // palavra e recua em 10 passos (um por caractere), revelando o texto. A
+    // borda esquerda da capa funciona como cursor. O texto nunca sai do DOM.
+    // Depende de $bg ser mesmo o fundo do hero (definido no :host).
+    &::after {
+      content: "";
+      position: absolute;
+      top: -0.1em;
+      right: -0.08em;
+      bottom: -0.1em;
+      left: 0;
+      background-color: $bg;
+      border-left: 2px solid currentColor;
+      animation:
+        home-typewriter $typewriter-duration steps(10, end) $typewriter-delay forwards,
+        home-caret-blink 0.7s step-end $typewriter-delay 5 forwards;
+    }
+
+    &:hover {
+      color: $hero-accent-hover;
+      // O tom pedido é escuro demais para o fundo do site; o halo mantém as
+      // bordas da palavra perceptíveis sem alterar a cor em si.
+      text-shadow: 0 0 18px rgba($text, 0.45);
+    }
   }
 
   &__description {
@@ -478,6 +527,15 @@ $font-body: tokens.$font-body;
     height: 1px;
     background-color: $border;
   }
+
+  // Única xícara que não é decoração de fundo: entra no fluxo do divisor como
+  // ícone de verdade, ao lado de "Roadmap em evolução".
+  &__divider-cup {
+    width: 22px;
+    height: auto;
+    opacity: 0.75;
+    filter: $coffee-tint;
+  }
 }
 
 .gallery {
@@ -504,13 +562,20 @@ $font-body: tokens.$font-body;
 }
 
 .cta {
+  // Tema local da seção. O hover troca apenas estas três variáveis e o h2, o
+  // parágrafo e o botão acompanham sozinhos, sem regra de override para cada um.
+  --cta-surface: #{$accent};
+  --cta-ink: #fff;
+  --cta-ink-soft: #{rgba(#fff, 0.9)};
+
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 2rem;
   padding: 6rem;
-  background-color: $accent;
+  background-color: var(--cta-surface);
+  transition: background-color 0.25s ease;
 
   &__content {
     display: flex;
@@ -523,14 +588,16 @@ $font-body: tokens.$font-body;
       font-family: $font-heading;
       font-weight: 800;
       font-size: clamp(2rem, 4vw, 3.75rem);
-      color: #fff;
+      color: var(--cta-ink);
+      transition: color 0.25s ease;
     }
 
     p {
       margin: 0;
       font-size: 1.125rem;
       line-height: 1.6;
-      color: rgba(255, 255, 255, 0.9);
+      color: var(--cta-ink-soft);
+      transition: color 0.25s ease;
     }
   }
 
@@ -541,13 +608,103 @@ $font-body: tokens.$font-body;
     justify-content: center;
     height: 48px;
     padding: 0 2rem;
-    border: 1px solid #fff;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    border: 1px solid var(--cta-ink);
+    // Sobrescreve o `color: #fff` da regra compartilhada lá em cima: mesma
+    // especificidade, vence por vir depois na ordem de declaração.
+    color: var(--cta-ink);
+    background-color: transparent;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.25s ease;
 
     &:hover {
-      background-color: #fff;
-      color: $accent;
+      background-color: var(--cta-ink);
+      color: var(--cta-surface);
     }
+  }
+}
+
+// `:hover` em uma seção inteira "gruda" em tela de toque (o iOS mantém o estado
+// até o próximo toque), o que deixaria o bloco branco permanentemente. Por isso
+// a inversão fica restrita a ponteiro fino.
+@media (hover: hover) and (pointer: fine) {
+  .cta:hover {
+    --cta-surface: #{$cta-hover-surface};
+    --cta-ink: #{$cta-hover-ink};
+    --cta-ink-soft: #{$cta-hover-ink-soft};
+  }
+
+  // A .coffee-layer é irmã da .cta (vem depois do app-footer), então dá para
+  // escurecer a xícara branca que fica sobre o CTA quando ele vira branco —
+  // senão ela desapareceria junto com o fundo.
+  .cta:hover ~ .coffee-layer .coffee-layer__cup--light {
+    filter: brightness(0);
+  }
+}
+
+// Camada decorativa de xícaras ("cara de Javeiro"). Cobre a página inteira em
+// vez de uma xícara absoluta por section: assim nenhum seletor de layout
+// existente precisa ganhar position/overflow, e o único `overflow: hidden` fica
+// aqui, garantindo que nada do que vaza gere scroll horizontal.
+// Posição, tamanho, rotação e opacidade de cada xícara vêm do array
+// coffeeAccents no .ts, então acrescentar ou remover uma custa zero CSS.
+.coffee-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+
+  &__cup {
+    position: absolute;
+    // Sem isto os atributos width/height do <img> distorcem a xícara quando o
+    // width inline sobrescreve a largura.
+    height: auto;
+    filter: $coffee-tint;
+    animation: home-coffee-drift 15s ease-in-out infinite alternate;
+
+    // Dessincroniza metade das xícaras para o movimento não parecer um bloco só.
+    &:nth-child(2n) {
+      animation-duration: 19s;
+      animation-direction: alternate-reverse;
+    }
+
+    &--light {
+      filter: $coffee-tint-light;
+      transition: filter 0.25s ease;
+    }
+  }
+}
+
+@keyframes home-typewriter {
+  to {
+    left: 100%;
+  }
+}
+
+@keyframes home-caret-blink {
+  0%,
+  49% {
+    border-left-color: currentColor;
+  }
+  50%,
+  100% {
+    border-left-color: transparent;
+  }
+}
+
+@keyframes home-coffee-drift {
+  to {
+    translate: 0 -14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  // A capa some e a palavra já está inteira embaixo dela.
+  .hero__heading-accent::after {
+    display: none;
+  }
+
+  .coffee-layer__cup {
+    animation: none;
   }
 }
 
@@ -634,6 +791,12 @@ $font-body: tokens.$font-body;
     flex-direction: column;
     align-items: flex-start;
     padding: 3rem 1.5rem;
+  }
+
+  // A 390px uma xícara de 200px domina a tela, e as âncoras em % da altura
+  // perdem a referência quando as sections viram coluna única.
+  .coffee-layer {
+    display: none;
   }
 }
 
