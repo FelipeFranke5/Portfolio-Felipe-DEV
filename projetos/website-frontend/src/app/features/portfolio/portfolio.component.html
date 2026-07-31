@@ -1,3 +1,255 @@
-<section>
-  <!-- TODO: listagem pública de projetos (GET /api/projects) -->
-</section>
+<app-header class="fade-in fade-in--0"></app-header>
+
+<main class="portfolio-page">
+  <div class="portfolio-page__inner">
+    <section class="portfolio-intro fade-in fade-in--1">
+      <h1 class="portfolio-intro__heading">Projetos</h1>
+      <p class="portfolio-intro__description">
+        Projetos pessoais, profissionais e de aprendizado dos quais participei ao longo da minha
+        trajetória como desenvolvedor.
+      </p>
+    </section>
+
+    <section class="portfolio-search fade-in fade-in--2" aria-label="Busca de projetos">
+      <div class="portfolio-search__field">
+        <svg
+          class="portfolio-search__icon"
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          id="portfolio-search"
+          type="text"
+          placeholder="Pesquisar por nome do projeto…"
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+        />
+      </div>
+
+      <span class="portfolio-search__indicator">
+        @if (search().trim()) {
+          Filtrando por: <strong>{{ search() }}</strong>
+        } @else {
+          Todos os projetos
+        }
+        · {{ totalResults() }} resultado(s)
+      </span>
+    </section>
+
+    @if (isLoading()) {
+      <div class="portfolio-grid portfolio-grid--skeleton" aria-hidden="true">
+        @for (placeholder of [0, 1, 2, 3, 4, 5]; track placeholder) {
+          <div class="project-card project-card--skeleton">
+            <div class="project-card__skeleton-line project-card__skeleton-line--title"></div>
+            <div class="project-card__skeleton-line project-card__skeleton-line--desc"></div>
+            <div class="project-card__skeleton-line project-card__skeleton-line--badge"></div>
+          </div>
+        }
+      </div>
+    } @else if (errorMessage()) {
+      <div class="portfolio-state portfolio-state--error fade-in fade-in--3" role="alert">
+        <p class="portfolio-state__title">Não foi possível carregar os projetos</p>
+        <p class="portfolio-state__description">{{ errorMessage() }}</p>
+        <button type="button" class="portfolio-btn" (click)="fetchProjects()">
+          Tentar novamente
+        </button>
+      </div>
+    } @else if (!hasResults()) {
+      <div class="portfolio-state portfolio-state--empty fade-in fade-in--3">
+        <p class="portfolio-state__title">Nenhum projeto encontrado</p>
+        <p class="portfolio-state__description">
+          Não encontramos resultados para "{{ search() }}". Tente pesquisar por outro termo.
+        </p>
+      </div>
+    } @else {
+      <div class="portfolio-grid fade-in fade-in--3">
+        @for (project of filteredProjects(); track project.id) {
+          <div
+            class="project-card"
+            role="button"
+            tabindex="0"
+            aria-haspopup="dialog"
+            #cardTrigger
+            (click)="openProject(project, cardTrigger)"
+            (keydown.enter)="openProject(project, cardTrigger)"
+            (keydown.space)="$event.preventDefault(); openProject(project, cardTrigger)"
+          >
+            <div class="project-card__title">{{ project.name }}</div>
+            <p class="project-card__description">{{ project.description }}</p>
+            <div class="project-card__stack">
+              @for (tech of project.stack; track tech) {
+                <span class="project-card__chip">{{ tech }}</span>
+              }
+            </div>
+            <span class="project-card__cta">Mais Informações</span>
+          </div>
+        }
+      </div>
+    }
+
+    <section class="certificates fade-in fade-in--4" aria-label="Certificados">
+      <div class="certificates__intro">
+        <h2 class="certificates__heading">Certificados</h2>
+        <p class="certificates__description">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </p>
+      </div>
+
+      <div class="certificates__grid">
+        @for (certificate of certificates; track certificate.certificateUrl) {
+          <article class="certificate-card">
+            <div class="certificate-card__image-frame">
+              <img
+                [src]="certificate.imageSrc"
+                [alt]="'Certificado: ' + certificate.name"
+                loading="lazy"
+              />
+            </div>
+
+            <div class="certificate-card__body">
+              <span class="certificate-card__issuer">{{ certificate.issuer }}</span>
+              <h3 class="certificate-card__title">{{ certificate.name }}</h3>
+              <p class="certificate-card__description">{{ certificate.description }}</p>
+            </div>
+
+            <div class="certificate-card__footer">
+              <span class="certificate-card__date">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                Emitido em: {{ certificate.issuedAt }}
+              </span>
+
+              <a
+                class="certificate-card__link"
+                [href]="certificate.certificateUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                Ver certificado
+              </a>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+  </div>
+
+  @if (isModalOpen()) {
+    <div class="project-modal-backdrop" (click)="closeModal()">
+      <div
+        class="project-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="project-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <button
+          #closeButton
+          type="button"
+          class="project-modal__close"
+          aria-label="Fechar"
+          (click)="closeModal()"
+        >
+          ✕
+        </button>
+
+        @if (isModalLoading()) {
+          <p class="project-modal__loading">Carregando detalhes do projeto…</p>
+        } @else if (modalErrorMessage()) {
+          <p class="project-modal__error" role="alert">{{ modalErrorMessage() }}</p>
+        } @else if (activeProject(); as project) {
+          <h2 id="project-modal-title" class="project-modal__title">{{ project.name }}</h2>
+
+          <div class="project-modal__field">
+            <span class="project-modal__label">ID do Projeto</span>
+            <span class="project-modal__value project-modal__value--mono">{{ project.id }}</span>
+          </div>
+
+          <div class="project-modal__field">
+            <span class="project-modal__label">Descrição</span>
+            <span class="project-modal__value">{{ project.description }}</span>
+          </div>
+
+          <div class="project-modal__field">
+            <span class="project-modal__label">Tecnologias</span>
+            <div class="project-modal__stack">
+              @for (tech of project.stack; track tech) {
+                <span class="project-card__chip">{{ tech }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="project-modal__field">
+            <span class="project-modal__value">
+              Projeto Público: <strong>{{ project.featured ? 'Sim' : 'Não' }}</strong>
+            </span>
+            <span class="project-modal__value">
+              Cadastrado em: {{ project.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+            </span>
+          </div>
+
+          @if (project.githubURL || project.demoURL) {
+            <div class="project-modal__actions">
+              @if (project.githubURL) {
+                <a
+                  class="project-modal__action"
+                  [href]="project.githubURL"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ver Repositório GitHub
+                </a>
+              }
+              @if (project.demoURL) {
+                <a
+                  class="project-modal__action"
+                  [href]="project.demoURL"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Acessar Projeto
+                </a>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+  }
+</main>
+
+<app-footer></app-footer>
