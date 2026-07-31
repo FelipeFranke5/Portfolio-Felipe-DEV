@@ -18,9 +18,15 @@ $accent-border: tokens.$accent-border;
 $cta-hover-surface: tokens.$cta-hover-surface;
 $cta-hover-ink: tokens.$cta-hover-ink;
 $cta-hover-ink-soft: tokens.$cta-hover-ink-soft;
+$hero-accent-hover: tokens.$hero-accent-hover;
 
 $font-heading: tokens.$font-heading;
 $font-body: tokens.$font-body;
+
+// Efeito máquina de escrever do hero: começa quando o .fade-in--2 do h1 termina
+// (delay de 2 * 45ms + 0.5s de duração) e revela um caractere a cada 220ms.
+$typewriter-delay: 0.6s;
+$typewriter-duration: 2.2s;
 
 :host {
   display: block;
@@ -88,7 +94,35 @@ $font-body: tokens.$font-body;
   }
 
   &__heading-accent {
+    position: relative;
+    display: inline-block;
     color: $accent;
+    transition: color 0.2s ease, text-shadow 0.2s ease;
+
+    // Máquina de escrever: esta "capa" é pintada com a cor do fundo por cima da
+    // palavra e recua em 10 passos (um por caractere), revelando o texto. A
+    // borda esquerda da capa funciona como cursor. O texto nunca sai do DOM.
+    // Depende de $bg ser mesmo o fundo do hero (definido no :host).
+    &::after {
+      content: "";
+      position: absolute;
+      top: -0.1em;
+      right: -0.08em;
+      bottom: -0.1em;
+      left: 0;
+      background-color: $bg;
+      border-left: 2px solid currentColor;
+      animation:
+        home-typewriter $typewriter-duration steps(10, end) $typewriter-delay forwards,
+        home-caret-blink 0.7s step-end $typewriter-delay 5 forwards;
+    }
+
+    &:hover {
+      color: $hero-accent-hover;
+      // O tom pedido é escuro demais para o fundo do site; o halo mantém as
+      // bordas da palavra perceptíveis sem alterar a cor em si.
+      text-shadow: 0 0 18px rgba($text, 0.45);
+    }
   }
 
   &__description {
@@ -573,6 +607,30 @@ $font-body: tokens.$font-body;
     --cta-surface: #{$cta-hover-surface};
     --cta-ink: #{$cta-hover-ink};
     --cta-ink-soft: #{$cta-hover-ink-soft};
+  }
+}
+
+@keyframes home-typewriter {
+  to {
+    left: 100%;
+  }
+}
+
+@keyframes home-caret-blink {
+  0%,
+  49% {
+    border-left-color: currentColor;
+  }
+  50%,
+  100% {
+    border-left-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  // A capa some e a palavra já está inteira embaixo dela.
+  .hero__heading-accent::after {
+    display: none;
   }
 }
 

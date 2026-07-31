@@ -109,4 +109,10 @@ describe('HomeComponent', () => {
     expect(getComputedStyle(section).backgroundColor).toBe('rgb(59, 130, 246)');
     expect(getComputedStyle(button).color).toBe('rgb(255, 255, 255)');
   });
+
+  it('should keep the full accent word in the DOM for the typewriter animation', () => {
+    const accent: HTMLElement = fixture.nativeElement.querySelector('.hero__heading-accent');
+
+    expect(accent.textContent?.trim()).toBe('Portfólio!');
+  });
 });

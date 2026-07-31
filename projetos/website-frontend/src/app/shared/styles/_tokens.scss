@@ -21,6 +21,10 @@ $cta-hover-surface: #ffffff;
 $cta-hover-ink: #32103b;
 $cta-hover-ink-soft: rgba(50, 16, 59, 0.85);
 
+// Hover da palavra em destaque do hero. Contraste ~1.46:1 sobre $bg, abaixo do
+// mínimo WCAG (3:1 para texto grande); compensado com um halo em text-shadow.
+$hero-accent-hover: #47242b;
+
 $danger: #ff5c5c;
 
 $font-heading: "Plus Jakarta Sans", "Inter", sans-serif;
