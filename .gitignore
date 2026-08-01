@@ -29,7 +29,7 @@ typings/
 CLAUDE.md
 CLAUDE-BACK-END.md
 CLAUDE-FRONT-END.md
-.projetos/**/prompt-sistema.txt
+prompt-sistema.txt
 
 # e2e
 e2e/*.js
