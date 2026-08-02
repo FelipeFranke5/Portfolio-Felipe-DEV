@@ -28,7 +28,9 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).
 | Validação | Jakarta Bean Validation (`spring-boot-starter-validation`) | — | `@NotBlank`, `@Email`, `@Size`, `@URL`, `@Pattern` nos DTOs de request |
 | E-mail | Spring Mail (`JavaMailSender`) + `@Scheduled` | — | Envio assíncrono/agendado de notificações de contato, com retry |
 | Observabilidade | Spring Actuator | — | Expõe `/actuator/health` (usado pelo `HEALTHCHECK` do Docker) |
-| Testes | JUnit 5, Mockito, MockMvc, Testcontainers, Spring Security Test | — | Testes unitários (service) + testes de integração (controller, ponta a ponta com Postgres real) |
+| Chat em tempo real | Spring WebSocket + STOMP (`spring-boot-starter-websocket`) | — | Canal bidirecional do chatbot: o usuário envia a pergunta e a resposta da IA chega depois, sem polling |
+| IA do chatbot | Spring AI (`spring-ai-bom` + `spring-ai-starter-model-anthropic`) | 2.0.0 | Integração com o modelo Claude (Anthropic), com *tool calls* que consultam os projetos e skills reais cadastrados na API |
+| Testes | JUnit 5, Mockito, MockMvc, Testcontainers, Spring Security Test, `spring-boot-starter-websocket-test` | — | Testes unitários (service) + testes de integração (controller e STOMP, ponta a ponta com Postgres real) |
 
 ---
 
@@ -41,6 +43,7 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).
 | Skills | GET público / POST·PUT·DELETE admin | Sim (admin) | ✅ Implementado |
 | Contato | POST público, com envio de e-mail assíncrono (agendado) | Não | ✅ Implementado |
 | Log Interno (diagnóstico) | GET admin (lista dos últimos registros + detalhe por ID) | Sim (admin) | ✅ Implementado |
+| Chatbot com IA | WebSocket/STOMP em `/api/websocket` | Sim (usuário logado) | ✅ Back-end implementado (front-end ainda não) |
 | Admin Panel | /admin (Angular route) | Sim (admin) | Front-end ainda não versionado neste repositório |
 
 ---
@@ -123,8 +126,8 @@ responsabilidade:
 | `repository` | Interfaces do Spring Data JPA; queries mais específicas (filas de envio, limpeza) são nativas via `@Query` |
 | `model` | Entidades JPA — o mapeamento direto das tabelas do banco |
 | `dto` | Payloads de entrada e saída da API, desacoplados das entidades JPA (evita expor a estrutura interna do banco diretamente no contrato de API) |
-| `exception` | Exceções de negócio específicas por domínio + o `GlobalBehaviourExceptionHandler`, que centraliza a tradução dessas exceções em respostas HTTP |
-| `config` | Configuração de infraestrutura transversal: segurança (Spring Security/OAuth2), CORS, e-mail |
+| `exception` | Exceções de negócio específicas por domínio + o `GlobalBehaviourExceptionHandler` (respostas HTTP) e o `WebSocketGlobalExceptionHandler` (mensagens STOMP) |
+| `config` | Configuração de infraestrutura transversal: segurança (Spring Security/OAuth2), CORS, e-mail, WebSocket/STOMP e o cliente de IA do chatbot |
 
 Cada funcionalidade do MVP (Projetos, Skills, Contato, Log Interno) segue esse mesmo
 padrão de quatro camadas (`controller` → `service` → `repository` → `model`), o que
@@ -157,6 +160,7 @@ mesma divisão: testes unitários de `service` (com Mockito) e testes de integra
 | POST | `/api/contact` | Envia mensagem (persistida; e-mail é enviado depois, de forma assíncrona/agendada — ver seção de Jobs Agendados) | ❌ Público | 201 | 422 (validação) |
 | GET | `/api/internal_log` | Lista os 100 registros de log mais recentes (ver seção "Log Interno") | ✅ ADMIN | 200 | — |
 | GET | `/api/internal_log/{id}` | Detalha um registro de log pelo ID | ✅ ADMIN | 200 | 400 (ID não é UUID) · 404 (não encontrado) |
+| GET·POST | `/api/websocket/**` | Handshake do chatbot (SockJS/STOMP). Não é REST — ver a seção "Chatbot com IA". O handshake é público; a autenticação acontece no frame STOMP `CONNECT` | ❌ Público (handshake) | 101/200 | — |
 | GET | `/actuator/health` | Health check | ❌ Público | 200 | — |
 
 ### Padrão de resposta de erro
@@ -255,6 +259,78 @@ A configuração de segurança (`SecurityConfig`) resolve dois problemas distint
 
 A URI do JWKS do Keycloak (usada para validar a assinatura dos JWTs) é configurável
 via a variável de ambiente `KEYCLOAK_JWKS_URI`.
+
+---
+
+## Chatbot com IA (WebSocket + Spring AI)
+
+Um chat em tempo real onde uma IA responde perguntas sobre os projetos e as habilidades
+do dono do site. A IA não responde "de cabeça": ela tem *tool calls* que consultam o
+`ProjectService` e o `SkillService`, então as respostas refletem o que está realmente
+cadastrado no banco naquele momento.
+
+A comunicação é via **WebSocket com STOMP** (com fallback SockJS), e não REST, porque a
+resposta da IA leva alguns segundos: o usuário envia a pergunta e recebe a resposta
+quando ela fica pronta, sem ficar consultando o servidor.
+
+### Destinos STOMP
+
+| Destino | Direção | Descrição |
+|---------|---------|-----------|
+| `/api/websocket` | — | Endpoint do handshake (SockJS) |
+| `/chatbot/new-message` | Cliente → servidor | Envia a pergunta. Payload: `{ "message": "..." }` |
+| `/user/queue/chatbot/mensagens` | Servidor → cliente | Eco da própria mensagem do usuário |
+| `/user/queue/chatbot/respostas` | Servidor → cliente | Aviso de "processando" e, depois, a resposta da IA |
+| `/user/queue/chatbot/erros` | Servidor → cliente | Validação, cota estourada e falhas gerais |
+
+Todos os destinos de recebimento são individuais (prefixo `/user`) — o chat de cada
+pessoa é isolado.
+
+### Autenticação
+
+O chat exige usuário autenticado no Keycloak (a intenção é oferecer o Google como
+mecanismo de login). O fluxo tem uma particularidade que vale registrar:
+
+- **O handshake HTTP (`/api/websocket/**`) é liberado no `SecurityConfig`.** O navegador
+  não consegue enviar o header `Authorization` no *upgrade* de um WebSocket nativo, então
+  não há como autenticar ali.
+- **A autenticação de verdade acontece no frame STOMP `CONNECT`**, onde o cliente envia
+  `Authorization: Bearer <jwt>`. O `JwtStompChannelInterceptor` valida esse token com o
+  mesmo `JwtDecoder` e o mesmo `JwtAuthenticationConverter` já usados pela API REST, e
+  associa o `Principal` à sessão. Sem token válido, a conexão é recusada.
+- O mesmo interceptor cuida da autorização dos destinos: só permite `SEND` para
+  `/chatbot/**` e `SUBSCRIBE` para `/user/queue/**`.
+
+> O projeto **não** usa `@EnableWebSocketSecurity`. Ele acopla um interceptor de CSRF ao
+> `CONNECT` que depende de um token guardado na sessão HTTP — algo que não existe numa API
+> stateless com CSRF desabilitado, e que faria todo `CONNECT` falhar. O vetor que esse CSRF
+> protege (*cross-site WebSocket hijacking*) depende da credencial viajar em cookie; aqui
+> ela é um header `Bearer` explícito, que um site malicioso não tem como obter.
+
+### Controle de custo
+
+A IA é paga por token, e cada pergunta pode virar mais de uma chamada por causa do loop de
+*tool calling*. As barreiras são:
+
+| Barreira | Onde | Padrão |
+|----------|------|--------|
+| Login obrigatório | Frame `CONNECT` | — |
+| Mensagens por minuto, por usuário | `ChatbotRateLimiter` | 5 |
+| Mensagens por dia, por usuário | `ChatbotRateLimiter` | 40 |
+| Chamadas simultâneas à IA | pool dedicado | 2 |
+| Teto de tokens da resposta | `spring.ai.anthropic.chat.max-tokens` | 600 |
+| Modelo | `spring.ai.anthropic.chat.model` | `claude-haiku-4-5` |
+| Tamanho do frame STOMP | `WebSocketConfiguration` | 8 KB |
+
+Todos os limites são sobrescritíveis por variável de ambiente (ver a seção "Variáveis de
+Ambiente"). O rate limit é mantido em memória, ou seja, vale por instância — com uma única
+réplica na VPS isso basta, mas se houver escala horizontal ele precisa migrar para um store
+compartilhado.
+
+> ⚠️ A validação da mensagem recusa URLs e domínios, mas isso **não** é proteção contra
+> *prompt injection*. A proteção real vem de outro lugar: as tools são apenas de leitura
+> (só devolvem o que já é público em `/api/projects` e `/api/skills`), o `max-tokens`
+> limita o tamanho da resposta e a cota limita o custo.
 
 ---
 
@@ -406,6 +482,12 @@ server {
 | `MAIL_PORT` | `587` | SMTP |
 | `MAIL_USER` | `user` | SMTP (usuário e destinatário das notificações de contato) |
 | `MAIL_PASS` | `pass` | SMTP |
+| `SPRING_AI_ANTHROPIC_API_KEY` | `chave-nao-configurada` | Chave da API da Anthropic, usada pelo chatbot |
+| `CHATBOT_MODEL` | `claude-haiku-4-5` | Modelo da IA |
+| `CHATBOT_MAX_TOKENS` | `600` | Teto de tokens da resposta da IA |
+| `CHATBOT_MAX_POR_MINUTO` | `5` | Mensagens por minuto, por usuário |
+| `CHATBOT_MAX_POR_USUARIO_DIA` | `40` | Mensagens por dia, por usuário |
+| `CHATBOT_MAX_SIMULTANEAS` | `2` | Chamadas simultâneas à IA no processo |
 
 > ⚠️ Todos os defaults acima existem apenas para não quebrar o boot em dev —
 > em produção, **todas** essas variáveis devem ser sobrescritas via `.env` /
@@ -425,7 +507,12 @@ MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USER=seu@email.com
 MAIL_PASS=app_password_aqui
+SPRING_AI_ANTHROPIC_API_KEY=sk-ant-...
 ```
+
+> `SPRING_AI_ANTHROPIC_API_KEY` é obrigatória também em dev: o `docker-compose.yml` usa a
+> sintaxe `${VAR:?}`, então o `docker compose up` falha na hora se ela não estiver no `.env`
+> — melhor do que subir "funcionando" e só quebrar na primeira pergunta ao chatbot.
 
 ---
 
@@ -439,12 +526,17 @@ NGINX de dev, em `http://localhost`, junto com `/api/*` e `/auth/*`.
 ```bash
 cd projetos
 
+# 0. Criar o .env com a chave da Anthropic (obrigatória — o compose falha sem ela)
+#    Só a chave do chatbot é exigida em dev; as demais variáveis têm default.
+echo "SPRING_AI_ANTHROPIC_API_KEY=sk-ant-..." > .env
+
 # 1. Sobe todo o stack (Postgres, Keycloak, back-end, front-end, NGINX)
 #    Acesse tudo via http://localhost (front-end, API e Keycloak)
 docker compose up -d --build
 
 # 2. Alternativa: rodar o back-end fora do Docker (hot reload via devtools)
 #    Ainda depende de subir postgres + keycloak (via docker compose up -d postgres keycloak)
+#    Exporte SPRING_AI_ANTHROPIC_API_KEY antes, se for testar o chatbot.
 cd website-backend/website-backend
 ./mvnw spring-boot:run -Dspring.profiles.active=dev
 
@@ -536,3 +628,19 @@ Lista consolidada dos pontos levantados na revisão de código, para acompanhame
    dos containers, mas não protege contra perda ou corrupção do disco da própria VPS.
    Hoje não existe rotina de `pg_dump`/snapshot agendada nem processo de restore
    documentado (**PENDENTE**).
+10. **Chatbot: handshake do WebSocket liberado sem autenticação.** `/api/websocket/**`
+    é `permitAll()` no `SecurityConfig` porque o navegador não envia `Authorization` no
+    upgrade do WebSocket. A autenticação foi movida para o frame STOMP `CONNECT`
+    (`JwtStompChannelInterceptor`), que também autoriza os destinos. É uma decisão
+    consciente, não um afrouxamento: sem token válido no `CONNECT`, a sessão é recusada
+    antes de qualquer chamada paga (**CORRIGIDO**).
+11. **Chatbot: rate limit em memória, por instância.** O `ChatbotRateLimiter` guarda o
+    estado no processo. Com uma réplica só na VPS isso é suficiente; em escala horizontal
+    cada instância teria a própria cota, multiplicando o teto de gasto. Migrar para um
+    store compartilhado se houver mais de uma réplica (**PENDENTE**).
+12. **Chatbot: a validação de URL não protege contra prompt injection.** Ela evita apenas
+    que o usuário mande links no chat. A contenção real é o conjunto tools somente-leitura
+    + `max-tokens` + cota por usuário — ver a seção "Chatbot com IA" (**MANTER VERSÃO ATUAL**).
+13. **Chatbot: descrição dos projetos truncada em 400 caracteres nas tool calls.** Teto de
+    custo de token, separado do truncamento de 50 caracteres do `GET /api/projects` (item 5).
+    Projetos com descrição muito longa chegam cortados ao modelo (**MANTER VERSÃO ATUAL**).
