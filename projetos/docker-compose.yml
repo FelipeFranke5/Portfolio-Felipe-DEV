@@ -83,6 +83,16 @@ services:
       MAIL_PORT: "1025"
       MAIL_USER: dev@localhost
       MAIL_PASS: dev
+
+      # Chatbot (Spring AI / Anthropic)
+      # A sintaxe ${VAR:?msg} faz o `docker compose up` FALHAR se a chave não estiver
+      # no .env — melhor do que subir "funcionando" e só quebrar na primeira pergunta.
+      SPRING_AI_ANTHROPIC_API_KEY: ${SPRING_AI_ANTHROPIC_API_KEY:?defina SPRING_AI_ANTHROPIC_API_KEY no .env}
+      CHATBOT_MODEL:               ${CHATBOT_MODEL:-claude-haiku-4-5}
+      CHATBOT_MAX_TOKENS:          ${CHATBOT_MAX_TOKENS:-600}
+      CHATBOT_MAX_POR_MINUTO:      ${CHATBOT_MAX_POR_MINUTO:-5}
+      CHATBOT_MAX_POR_USUARIO_DIA: ${CHATBOT_MAX_POR_USUARIO_DIA:-40}
+      CHATBOT_MAX_SIMULTANEAS:     ${CHATBOT_MAX_SIMULTANEAS:-2}
     expose:
       - "8085"
     depends_on:
