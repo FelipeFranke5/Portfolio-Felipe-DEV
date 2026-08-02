@@ -21,12 +21,22 @@
 
     <properties>
         <java.version>21</java.version>
+        <spring-ai.version>2.0.0</spring-ai.version>
     </properties>
 
     <dependencies>
 
         <!-- ═══════════════════════════════════════════════ -->
-        <!--  API Layer                                       -->
+        <!--  For the ChatBOT Part                           -->
+        <!-- ═══════════════════════════════════════════════ -->
+
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-anthropic</artifactId>
+        </dependency>
+
+        <!-- ═══════════════════════════════════════════════ -->
+        <!--  API Layer                                      -->
         <!-- ═══════════════════════════════════════════════ -->
 
         <dependency>
@@ -36,7 +46,7 @@
         </dependency>
 
         <!-- ═══════════════════════════════════════════════ -->
-        <!--  Segurança / Autenticação (Keycloak / JWT)      -->
+        <!--  Segurança / Autenticação                       -->
         <!-- ═══════════════════════════════════════════════ -->
 
         <dependency>
@@ -48,11 +58,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-            <!--
-                Valida o JWT emitido pelo Keycloak automaticamente via JWKS endpoint.
-                Configura-se em application.yml com spring.security.oauth2
-                .resourceserver.jwt.jwk-set-uri apontando para o Keycloak.
-            -->
         </dependency>
 
         <!-- ═══════════════════════════════════════════════ -->
@@ -156,6 +161,15 @@
         </dependency>
 
         <!-- ═══════════════════════════════════════════════ -->
+        <!--  Websocket                                      -->
+        <!-- ═══════════════════════════════════════════════ -->
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <!-- ═══════════════════════════════════════════════ -->
         <!--  Testes                                          -->
         <!-- ═══════════════════════════════════════════════ -->
 
@@ -201,7 +215,26 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
 
     <build>
         <plugins>

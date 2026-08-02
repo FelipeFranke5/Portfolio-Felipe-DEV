@@ -8,10 +8,12 @@ import dev.franke.felipe.website_backend.service.ContactService;
 import dev.franke.felipe.website_backend.service.InternalLogService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -40,6 +42,12 @@ class ContactControllerTest {
 
     @MockitoBean
     private ContactService contactService;
+
+    @MockitoBean
+    private SimpMessagingTemplate simpMessagingTemplate;
+
+    @MockitoBean
+    private ChatClient chatClient;
 
     @MockitoBean
     private InternalLogService internalLogService;

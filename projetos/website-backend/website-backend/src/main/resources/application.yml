@@ -2,7 +2,12 @@
 #  Configurações base (todos os perfis)
 # ═══════════════════════════════════════════════════════
 
+# ─── Spring AI ─────────────────────────────────
 spring:
+  ai:
+    anthropic:
+      api-key: ${SPRING_AI_ANTHROPIC_API_KEY:1234}
+  # ─── Serializacao ─────────────────────────────────
   jackson:
     deserialization:
       fail-on-null-for-primitives: false
