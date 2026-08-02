@@ -1,129 +1,81 @@
 package dev.franke.felipe.website_backend.service;
 
-import dev.franke.felipe.website_backend.dto.ChatbotInput;
 import dev.franke.felipe.website_backend.dto.ChatbotOutput;
-import dev.franke.felipe.website_backend.exception.ChatbotGeneralException;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.util.FileCopyUtils;
-import org.springframework.web.util.HtmlUtils;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Executor;
 
+/**
+ * Regras de envio das mensagens do chat.
+ *
+ * <p>O destino é sempre derivado do {@code Principal} da sessão STOMP (o {@code sub} do JWT
+ * do Keycloak), nunca de algo vindo no payload. A versão anterior usava o nome digitado
+ * pelo próprio usuário como destino, o que além de falsificável não entregava nada: o
+ * {@code UserDestinationResolver} só entrega para sessões cujo {@code Principal} bata.
+ */
 @Service
-@Log4j2
+@Slf4j
 public class ChatbotService {
 
+    public static final String FILA_MENSAGENS = "/queue/chatbot/mensagens";
+    public static final String FILA_RESPOSTAS = "/queue/chatbot/respostas";
+    public static final String FILA_ERROS = "/queue/chatbot/erros";
+
+    private static final String REMETENTE_SISTEMA = "sistema";
+    private static final String REMETENTE_BOT = "bot";
+    private static final String AVISO_PROCESSANDO = "Mensagem em processamento..";
+    private static final String ERRO_RESPOSTA = "Não consegui responder agora. Tente novamente em instantes.";
+
     private final SimpMessagingTemplate simpMessagingTemplate;
-
-    @Value("classpath:prompt-sistema.txt")
-    private Resource aiSystemPromptResource;
-
     private final ChatClient chatClient;
-    private final ProjectService projectService;
-    private final SkillService skillService;
+    private final Executor chatbotExecutor;
 
     public ChatbotService(
-            ChatClient.Builder chatClientBuilder,
             SimpMessagingTemplate simpMessagingTemplate,
-            ProjectService projectService,
-            SkillService skillService
+            ChatClient chatClient,
+            @Qualifier("chatbotExecutor") Executor chatbotExecutor
     ) {
-        this.chatClient = chatClientBuilder.build();
         this.simpMessagingTemplate = simpMessagingTemplate;
-        this.projectService = projectService;
-        this.skillService = skillService;
+        this.chatClient = chatClient;
+        this.chatbotExecutor = chatbotExecutor;
     }
 
-    public void sendMessages(ChatbotInput input) {
-        log.info("Sending messages in sequence (through async tasks)");
-        ChatbotOutput ownMessageOutput = new ChatbotOutput(input.name(), input.message(), LocalDateTime.now());
+    /**
+     * Devolve o eco da própria mensagem e o aviso de processamento de forma síncrona (são
+     * baratos e garantem a ordem), e só a chamada paga à IA vai para o executor limitado.
+     *
+     * <p>A versão anterior abria um {@code ExecutorService} por mensagem dentro de um
+     * try-with-resources. Em Java 21 o {@code close()} espera TODAS as tasks terminarem,
+     * inclusive a chamada à Anthropic — ou seja, a thread do broker ficava travada durante
+     * toda a requisição à IA, anulando justamente o assíncrono que se queria.
+     */
+    public void enviarMensagens(String usuario, String nomeExibicao, String pergunta) {
+        LocalDateTime agora = LocalDateTime.now();
 
-        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            var ownMessageTask = executor.submit(() -> sendMessage(input, ownMessageOutput));
-            var automaticResponseTask = executor.submit(() -> sendMessage(input, true));
-            ownMessageTask.get();
-            log.info("Sent own message");
-            automaticResponseTask.get();
-            log.info("Sent automatic message");
-            log.info("Submitting task to retrieve AI Response..");
-            executor.submit(() -> sendMessage(input, false));
-        } catch (Exception exception) {
-            ChatbotOutput systemErrorOutput = new ChatbotOutput(
-                "sistema", 
-                "Erro na execução do envio de uma das mensagens!", 
-                LocalDateTime.now()
-            );
-            sendMessage(input, systemErrorOutput);
-        }
+        enviar(usuario, FILA_MENSAGENS, new ChatbotOutput(nomeExibicao, pergunta, agora));
+        enviar(usuario, FILA_RESPOSTAS, new ChatbotOutput(REMETENTE_SISTEMA, AVISO_PROCESSANDO, agora));
+
+        log.info("Submetendo a pergunta de {} para o modelo de IA", usuario);
+        chatbotExecutor.execute(() -> enviar(usuario, FILA_RESPOSTAS, obterRespostaIA(pergunta)));
     }
 
-    public String validateAndReturnMessage(String input, String inputName) {
-        if (input == null) throw  new ChatbotGeneralException(inputName + " não pode ser nulo(a)!");
-        if (input.contains("https://")) throw new ChatbotGeneralException(inputName + " não pode ter URL(s)");
-        if (input.contains("http://")) throw new ChatbotGeneralException(inputName + " não pode ter URL(s)");
-        if (input.contains(".com")) throw new ChatbotGeneralException(inputName + " não pode ter URL(s) ou domínios(s)");
-        if (input.contains(".net")) throw new ChatbotGeneralException(inputName + " não pode ter URL(s) ou domínio(s)");
-
-        if ("mensagem".equals(inputName) && !input.endsWith("?")) {
-            throw new ChatbotGeneralException(inputName + " deve terminar com '?'");
-        }
-
-        return getUnescaped(input);
-    }
-
-    private void sendMessage(ChatbotInput chatbotInput, ChatbotOutput chatbotOutput) {
-        simpMessagingTemplate.convertAndSendToUser(
-            chatbotInput.name(),
-            "/queue/messages-sent",
-            chatbotOutput
-        );
-    }
-
-    private void sendMessage(ChatbotInput chatbotInput, boolean automaticResponse) {
-        simpMessagingTemplate.convertAndSendToUser(
-            chatbotInput.name(),
-            "/queue/response-to-user",
-            automaticResponse ? getAutomaticResponse() : getAIResponse(chatbotInput)
-        );
-    }
-
-    private ChatbotOutput getAutomaticResponse() {
-        return new ChatbotOutput("sistema", "Mensagem em processamento..", LocalDateTime.now());
-    }
-
-    private ChatbotOutput getAIResponse(ChatbotInput chatbotInput) {
-        log.info("Getting AI response");
+    private ChatbotOutput obterRespostaIA(String pergunta) {
         try {
-            String aiResponse = chatClient.prompt(chatbotInput.message())
-                    .system(getSystemPrompt())
-                    .tools(new ChatbotTools(projectService, skillService))
-                    .call()
-                    .content();
-            return new ChatbotOutput("bot", aiResponse, LocalDateTime.now());
-        } catch (Exception aiResponseException) {
-            log.error("Unable to obtain AI response", aiResponseException);
-            return new ChatbotOutput("bot", "Erro ao obter resposta!", LocalDateTime.now());
+            String resposta = chatClient.prompt(pergunta).call().content();
+            return new ChatbotOutput(REMETENTE_BOT, resposta, LocalDateTime.now());
+        } catch (Exception respostaIAException) {
+            // Registrar de verdade: o catch anterior engolia o erro sem log nenhum.
+            log.error("Falha ao obter a resposta do modelo de IA", respostaIAException);
+            return new ChatbotOutput(REMETENTE_BOT, ERRO_RESPOSTA, LocalDateTime.now());
         }
     }
 
-    private String getUnescaped(String message) {
-        return HtmlUtils.htmlUnescape(message);
-    }
-
-    private String getSystemPrompt() throws IOException {
-        try (Reader reader = new InputStreamReader(aiSystemPromptResource.getInputStream(), StandardCharsets.UTF_8)) {
-            return FileCopyUtils.copyToString(reader);
-        }
+    private void enviar(String usuario, String fila, ChatbotOutput saida) {
+        simpMessagingTemplate.convertAndSendToUser(usuario, fila, saida);
     }
 }
