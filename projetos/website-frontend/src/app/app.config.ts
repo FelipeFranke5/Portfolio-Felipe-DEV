@@ -5,7 +5,6 @@ import {
   INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
   IncludeBearerTokenCondition,
   provideKeycloak,
-  withAutoRefreshToken,
 } from 'keycloak-angular';
 
 import { routes } from './app.routes';
@@ -45,7 +44,15 @@ export const appConfig: ApplicationConfig = {
         silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
         pkceMethod: 'S256',
       },
-      features: [withAutoRefreshToken({ onInactivityTimeout: 'none' })],
+      // withAutoRefreshToken ficou de fora: exige AutoRefreshTokenService e
+      // UserActivityService via DI, mas nenhum dos dois é providedIn:'root'
+      // nesta versão da lib nem é registrado por provideKeycloak — sem
+      // prover os dois manualmente, feature.configure() lança NG0201 e
+      // quebra o bootstrap da aplicação inteira (confirmado manualmente).
+      // Sem essa feature, o token ainda é renovado sob demanda: o
+      // ChatbotService chama getToken() (que faz updateToken(30)) a cada
+      // tentativa de conexão STOMP, e o includeBearerTokenInterceptor faz o
+      // mesmo antes de cada requisição REST batida pela config abaixo.
     }),
   ],
 };
