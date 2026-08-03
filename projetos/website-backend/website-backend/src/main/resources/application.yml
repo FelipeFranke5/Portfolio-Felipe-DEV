@@ -81,9 +81,9 @@ spring:
 # costuma gerar mais de uma). Estes são os tetos de gasto.
 chatbot:
   quota:
-    max-por-minuto:            ${CHATBOT_MAX_POR_MINUTO:5}
-    max-por-usuario-por-dia:   ${CHATBOT_MAX_POR_USUARIO_DIA:40}
-    max-chamadas-simultaneas:  ${CHATBOT_MAX_SIMULTANEAS:2}
+    maxPerMinute:            ${CHATBOT_MAX_PER_MINUTE:5}
+    maxPerUserPerDay:        ${CHATBOT_MAX_PER_USER_DAILY:40}
+    maxConcurrentCalls:      ${CHATBOT_MAX_CONCURRENT:2}
 
 # ─── Servidor ─────────────────────────────────────────
 server:

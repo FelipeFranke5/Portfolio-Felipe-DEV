@@ -33,6 +33,6 @@ spring:
 # Limites baixos de propósito, para o teste de cota estourar rápido.
 chatbot:
   quota:
-    max-por-minuto: 3
-    max-por-usuario-por-dia: 5
-    max-chamadas-simultaneas: 1
+    maxPerMinute: 3
+    maxPerUserPerDay: 5
+    maxConcurrentCalls: 1

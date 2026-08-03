@@ -20,11 +20,10 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
         folga suficiente para os headers e corta payloads abusivos antes de qualquer
         processamento.
      */
-    private static final int LIMITE_TAMANHO_MENSAGEM = 8 * 1024;
-
-    private static final int LIMITE_BUFFER_ENVIO = 64 * 1024;
-    private static final int LIMITE_TEMPO_ENVIO = 15 * 1000;
-    private static final int LIMITE_TEMPO_PRIMEIRA_MENSAGEM = 30 * 1000;
+    private static final int MESSAGE_SIZE_LIMIT = 8 * 1024;
+    private static final int SEND_BUFFER_LIMIT = 64 * 1024;
+    private static final int SEND_TIME_LIMIT = 15 * 1000;
+    private static final int FIRST_MESSAGE_TIME_LIMIT = 30 * 1000;
 
     private final JwtStompChannelInterceptor jwtStompChannelInterceptor;
 
@@ -48,11 +47,11 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
 
     @Override
     public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
-        registration.setMessageSizeLimit(LIMITE_TAMANHO_MENSAGEM);
-        registration.setSendBufferSizeLimit(LIMITE_BUFFER_ENVIO);
-        registration.setSendTimeLimit(LIMITE_TEMPO_ENVIO);
+        registration.setMessageSizeLimit(MESSAGE_SIZE_LIMIT);
+        registration.setSendBufferSizeLimit(SEND_BUFFER_LIMIT);
+        registration.setSendTimeLimit(SEND_TIME_LIMIT);
         // Fecha quem abre a conexão e nunca envia o CONNECT.
-        registration.setTimeToFirstMessage(LIMITE_TEMPO_PRIMEIRA_MENSAGEM);
+        registration.setTimeToFirstMessage(FIRST_MESSAGE_TIME_LIMIT);
     }
 
     @Override

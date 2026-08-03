@@ -1,8 +1,8 @@
 package dev.franke.felipe.website_backend.service;
 
 import dev.franke.felipe.website_backend.dto.SkillDTO;
+import dev.franke.felipe.website_backend.dto.SkillForAI;
 import dev.franke.felipe.website_backend.dto.SkillLevel;
-import dev.franke.felipe.website_backend.dto.SkillParaIA;
 import dev.franke.felipe.website_backend.dto.SkillRequest;
 import dev.franke.felipe.website_backend.exception.SkillException;
 import dev.franke.felipe.website_backend.exception.SkillNotFoundException;
@@ -37,14 +37,10 @@ public class SkillService {
         ).toList();
     }
 
-    /**
-     * Habilidades no formato consumido pelas tool calls do chatbot: sem o UUID, que a IA
-     * nunca usa e só consome tokens, e com o nível já em texto legível.
-     */
-    public List<SkillParaIA> getSkillsParaChatbot() {
+    public List<SkillForAI> getSkillsChatbotVersion() {
         log.info("Montando a lista de habilidades para o chatbot");
         return skillRepository.findAll().stream()
-                .map(skill -> new SkillParaIA(
+                .map(skill -> new SkillForAI(
                         skill.getName(),
                         skill.getCategory(),
                         resolveSkillLevel(skill.getLevel()).getDescription()

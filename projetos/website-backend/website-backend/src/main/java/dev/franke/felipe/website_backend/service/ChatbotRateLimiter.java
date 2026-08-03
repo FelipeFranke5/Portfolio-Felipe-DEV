@@ -22,61 +22,62 @@ import java.util.concurrent.ConcurrentHashMap;
  * costuma gerar mais de uma. Sem este limite, um único usuário logado consegue esvaziar o
  * saldo da API em um laço de repetição.
  *
- * <p>O estado vive só nesta instância. Com uma única réplica na VPS isso basta; se um dia
+ * <p>O userState vive só nesta instância. Com uma única réplica na VPS isso basta; se um day
  * houver escala horizontal, o limite precisa migrar para um store compartilhado.
  */
 @Service
 @Slf4j
 public class ChatbotRateLimiter {
 
-    static final Duration JANELA = Duration.ofMinutes(1);
-    static final Duration TTL_USUARIO_OCIOSO = Duration.ofHours(6);
+    static final Duration DURATION_WINDOW = Duration.ofMinutes(1);
+    static final Duration IDLE_USER_TIME_TO_LIVE = Duration.ofHours(6);
 
-    private final ChatbotProperties propriedades;
+    private final ChatbotProperties chatbotProperties;
     private final Clock clock;
-    private final Map<String, EstadoUsuario> porUsuario = new ConcurrentHashMap<>();
+    private final Map<String, UserState> perUserControl = new ConcurrentHashMap<>();
 
-    public ChatbotRateLimiter(ChatbotProperties propriedades, Clock clock) {
-        this.propriedades = propriedades;
+    public ChatbotRateLimiter(ChatbotProperties chatbotProperties, Clock clock) {
+        this.chatbotProperties = chatbotProperties;
         this.clock = clock;
     }
 
     /**
      * Registra uma pergunta do usuário e devolve a decisão. Os contadores só são
-     * incrementados quando a mensagem é permitida.
+     * incrementados quando a decisionMessage é permitida.
      */
-    public Decisao tentarConsumir(String usuario) {
-        Instant agora = clock.instant();
-        LocalDate hoje = LocalDate.ofInstant(agora, ZoneId.systemDefault());
+    public AllowUserDecision tryConsume(String user) {
+        Instant nowInstant = clock.instant();
+        LocalDate today = LocalDate.ofInstant(nowInstant, ZoneId.systemDefault());
 
-        EstadoUsuario estado = porUsuario.computeIfAbsent(usuario, chave -> new EstadoUsuario(hoje));
+        UserState userState = perUserControl.computeIfAbsent(user, key -> new UserState(today));
 
-        synchronized (estado) {
-            estado.ultimoAcesso = agora;
+        synchronized (userState) {
+            userState.lastAccess = nowInstant;
 
-            if (!hoje.equals(estado.dia)) {
-                estado.dia = hoje;
-                estado.contagemDia = 0;
+            if (!today.equals(userState.day)) {
+                userState.day = today;
+                userState.dailyCount = 0;
             }
 
-            Instant inicioJanela = agora.minus(JANELA);
-            while (!estado.janela.isEmpty() && estado.janela.peekFirst().isBefore(inicioJanela)) {
-                estado.janela.pollFirst();
+            Instant startWindows = nowInstant.minus(DURATION_WINDOW);
+
+            while (!userState.instantWindows.isEmpty() && userState.instantWindows.peekFirst().isBefore(startWindows)) {
+                userState.instantWindows.pollFirst();
             }
 
-            if (estado.janela.size() >= propriedades.maxPorMinuto()) {
-                log.info("Usuario {} estourou o limite por minuto do chatbot", usuario);
-                return Decisao.EXCEDEU_POR_MINUTO;
+            if (userState.instantWindows.size() >= chatbotProperties.maxPerMinute()) {
+                log.info("User {} exceeded the chatbot's per-minute limit", user);
+                return AllowUserDecision.EXCEEDED_PER_MINUTE_RATE_LIMITING;
             }
 
-            if (estado.contagemDia >= propriedades.maxPorUsuarioPorDia()) {
-                log.info("Usuario {} estourou a cota diaria do chatbot", usuario);
-                return Decisao.EXCEDEU_COTA_DIARIA;
+            if (userState.dailyCount >= chatbotProperties.maxPerUserPerDay()) {
+                log.info("User {} exceeded the chatbot's daily limit.", user);
+                return AllowUserDecision.EXCEEDED_DAILY_QUOTA;
             }
 
-            estado.janela.addLast(agora);
-            estado.contagemDia++;
-            return Decisao.PERMITIDO;
+            userState.instantWindows.addLast(nowInstant);
+            userState.dailyCount++;
+            return AllowUserDecision.USER_ALLOWED;
         }
     }
 
@@ -85,46 +86,47 @@ public class ChatbotRateLimiter {
      * o que é um vetor de exaustão de memória.
      */
     @Scheduled(fixedRate = 3_600_000)
-    public void limparUsuariosOciosos() {
-        Instant corte = clock.instant().minus(TTL_USUARIO_OCIOSO);
-        porUsuario.entrySet().removeIf(entrada -> {
-            EstadoUsuario estado = entrada.getValue();
-            synchronized (estado) {
-                return estado.ultimoAcesso.isBefore(corte);
+    public void clearIdleUsers() {
+        Instant cutoff = clock.instant().minus(IDLE_USER_TIME_TO_LIVE);
+
+        perUserControl.entrySet().removeIf(entry -> {
+            UserState userState = entry.getValue();
+            synchronized (userState) {
+                return userState.lastAccess.isBefore(cutoff);
             }
         });
     }
 
-    public enum Decisao {
+    public enum AllowUserDecision {
 
-        PERMITIDO(null),
-        EXCEDEU_POR_MINUTO("Muitas perguntas seguidas. Aguarde um instante antes de tentar novamente."),
-        EXCEDEU_COTA_DIARIA("Você atingiu o limite diário de perguntas ao assistente. Tente novamente amanhã.");
+        USER_ALLOWED(null),
+        EXCEEDED_PER_MINUTE_RATE_LIMITING("Muitas perguntas seguidas. Aguarde um instante antes de tentar novamente."),
+        EXCEEDED_DAILY_QUOTA("Você atingiu o limite diário de perguntas ao assistente. Tente novamente amanhã.");
 
-        private final String mensagem;
+        private final String decisionMessage;
 
-        Decisao(String mensagem) {
-            this.mensagem = mensagem;
+        AllowUserDecision(String decisionMessage) {
+            this.decisionMessage = decisionMessage;
         }
 
-        public String mensagem() {
-            return mensagem;
+        public String decisionMessage() {
+            return decisionMessage;
         }
 
-        public boolean permitido() {
-            return this == PERMITIDO;
+        public boolean isAllowed() {
+            return this == USER_ALLOWED;
         }
     }
 
-    private static final class EstadoUsuario {
+    private static final class UserState {
 
-        private final Deque<Instant> janela = new ArrayDeque<>();
-        private LocalDate dia;
-        private int contagemDia;
-        private Instant ultimoAcesso = Instant.EPOCH;
+        private final Deque<Instant> instantWindows = new ArrayDeque<>();
+        private LocalDate day;
+        private int dailyCount;
+        private Instant lastAccess = Instant.EPOCH;
 
-        private EstadoUsuario(LocalDate dia) {
-            this.dia = dia;
+        private UserState(LocalDate day) {
+            this.day = day;
         }
     }
 }

@@ -61,7 +61,7 @@ public class GlobalBehaviourExceptionHandler {
         Optional<InternalLog> savedInternalLog = internalLogService.getInternalLog(exception);
         Map<String, Object> responseMap = new HashMap<>();
         responseMap.put("error", GENERIC_ERROR_MESSAGE);
-        responseMap.put("reason", unhandledExceptionReason(savedInternalLog));
+        responseMap.put("reason", internalLogService.unhandledExceptionReason(savedInternalLog));
 
         // Antes de retornar, não podemos esquecer de adicionar um log para a própria aplicação
         log.error(
@@ -143,22 +143,5 @@ public class GlobalBehaviourExceptionHandler {
         return grouped.entrySet().stream()
                 .map(entry -> Map.of(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
-    }
-
-    private String unhandledExceptionReason(Optional<InternalLog> savedInternalLog) {
-        StringBuilder messageBuilder = new StringBuilder();
-
-        if (savedInternalLog.isEmpty()) {
-            messageBuilder.append("An unhandled exception occurred while processing your request.")
-                    .append(" Please try again later. The server also attempted to save the error logs,")
-                    .append(" but this process also failed.");
-        } else {
-            messageBuilder.append("An unhandled exception occurred while processing your request.")
-                    .append(" Please try again later or contact the system administrator")
-                    .append(" informing the ID: " + savedInternalLog.get().getId())
-                    .append(" to obtain support.");
-        }
-
-        return messageBuilder.toString();
     }
 }

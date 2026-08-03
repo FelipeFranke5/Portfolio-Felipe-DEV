@@ -18,7 +18,7 @@ import java.security.Principal;
 @RequiredArgsConstructor
 public class ChatbotController {
 
-    private static final String NOME_EXIBICAO_PADRAO = "você";
+    private static final String DEFAULT_DISPLAY_NAME = "você";
 
     private final ChatbotService chatbotService;
     private final ChatbotInputSanitizer chatbotInputSanitizer;
@@ -26,19 +26,24 @@ public class ChatbotController {
 
     @MessageMapping("/new-message")
     public void newMessage(@Valid @Payload ChatbotInput input, Principal principal) {
-        String usuario = principal.getName();
+        String user = principal.getName();
 
         /*
             A cota é checada antes de qualquer trabalho: nenhuma chamada paga acontece
             depois que o usuário estoura o limite.
          */
-        ChatbotRateLimiter.Decisao decisao = chatbotRateLimiter.tentarConsumir(usuario);
-        if (!decisao.permitido()) {
-            throw new ChatbotRateLimitException(decisao.mensagem());
+        ChatbotRateLimiter.AllowUserDecision decision = chatbotRateLimiter.tryConsume(user);
+
+        if (!decision.isAllowed()) {
+            throw new ChatbotRateLimitException(decision.decisionMessage());
         }
 
-        String pergunta = chatbotInputSanitizer.sanitizar(input.message());
-        chatbotService.enviarMensagens(usuario, nomeExibicao(principal), pergunta);
+        String userQuestion = chatbotInputSanitizer.sanitize(input.message());
+        chatbotService.sendMessages(
+            user, 
+            retrieveDisplayNameFromPrincipal(principal), 
+            userQuestion
+        );
     }
 
     /**
@@ -47,11 +52,12 @@ public class ChatbotController {
      * (ver a nota no {@code JwtStompChannelInterceptor}). Sem o resolver, o método sequer
      * seria invocado.
      */
-    private String nomeExibicao(Principal principal) {
-        if (!(principal instanceof JwtAuthenticationToken autenticacao)) {
-            return NOME_EXIBICAO_PADRAO;
+    private String retrieveDisplayNameFromPrincipal(Principal principal) {
+        if (!(principal instanceof JwtAuthenticationToken auth)) {
+            return DEFAULT_DISPLAY_NAME;
         }
-        String nome = autenticacao.getToken().getClaimAsString("preferred_username");
-        return nome != null && !nome.isBlank() ? nome : NOME_EXIBICAO_PADRAO;
+
+        String displayName = auth.getToken().getClaimAsString("preferred_username");
+        return displayName != null && !displayName.isBlank() ? displayName : DEFAULT_DISPLAY_NAME;
     }
 }

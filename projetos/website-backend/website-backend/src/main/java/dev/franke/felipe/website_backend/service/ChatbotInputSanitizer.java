@@ -22,34 +22,34 @@ import java.util.regex.Pattern;
 @Component
 public class ChatbotInputSanitizer {
 
-    private static final int TAMANHO_MAXIMO = 500;
+    private static final int TEXT_MAX_LENGTH = 500;
 
-    private static final Pattern URL = Pattern.compile(
+    private static final Pattern URL_PATTERN = Pattern.compile(
             "(?i)(https?://|www\\.|\\b[a-z0-9-]+\\.(com|net|org|io|dev|br|ai)\\b)"
     );
 
-    public String sanitizar(String entrada) {
-        if (entrada == null) {
+    public String sanitize(String input) {
+        if (input == null) {
             throw new ChatbotGeneralException("A mensagem não pode ser nula!");
         }
 
-        String texto = HtmlUtils.htmlUnescape(entrada);
-        texto = Normalizer.normalize(texto, Normalizer.Form.NFKC).strip();
+        String textFromInput = HtmlUtils.htmlUnescape(input);
+        textFromInput = Normalizer.normalize(textFromInput, Normalizer.Form.NFKC).strip();
 
-        if (texto.isBlank()) {
+        if (textFromInput.isBlank()) {
             throw new ChatbotGeneralException("A mensagem não pode ser vazia!");
         }
 
-        if (texto.length() > TAMANHO_MAXIMO) {
+        if (textFromInput.length() > TEXT_MAX_LENGTH) {
             throw new ChatbotGeneralException(
-                    "A mensagem não pode ter mais de " + TAMANHO_MAXIMO + " caracteres!"
+                    "A mensagem não pode ter mais de " + TEXT_MAX_LENGTH + " caracteres!"
             );
         }
 
-        if (URL.matcher(texto).find()) {
+        if (URL_PATTERN.matcher(textFromInput).find()) {
             throw new ChatbotGeneralException("A mensagem não pode conter URL(s) ou domínio(s)!");
         }
 
-        return texto;
+        return textFromInput;
     }
 }

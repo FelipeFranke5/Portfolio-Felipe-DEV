@@ -58,8 +58,8 @@ import static org.mockito.Mockito.when;
 @Testcontainers
 class ChatbotWebSocketIntegrationTest {
 
-    private static final String RESPOSTA_DA_IA = "O Felipe tem projetos em Java e Angular.";
-    private static final int TIMEOUT_SEGUNDOS = 15;
+    private static final String AI_MOCK_RESPONSE = "O Felipe tem projetos em Java e Angular.";
+    private static final int TIMEOUT_IN_SECONDS = 15;
 
     @Container
     @ServiceConnection
@@ -79,48 +79,46 @@ class ChatbotWebSocketIntegrationTest {
     @MockitoBean(answers = Answers.RETURNS_DEEP_STUBS)
     private ChatClient chatClient;
 
-    // ─────────────────────────── infraestrutura do teste ───────────────────────────
-
-    private String urlDoEndpoint() {
+    private String websocketEndpointUrl() {
         return "ws://localhost:" + port + "/api/websocket";
     }
 
-    private WebSocketStompClient clienteStomp() {
-        WebSocketStompClient cliente = new WebSocketStompClient(
+    private WebSocketStompClient stompClient() {
+        WebSocketStompClient webSocketStompClient = new WebSocketStompClient(
                 new SockJsClient(List.of(new WebSocketTransport(new StandardWebSocketClient())))
         );
-        cliente.setMessageConverter(new JacksonJsonMessageConverter());
+        webSocketStompClient.setMessageConverter(new JacksonJsonMessageConverter());
         // Sem heartbeat: evita exigir um TaskScheduler só para o teste.
-        cliente.setDefaultHeartbeat(new long[] {0, 0});
-        return cliente;
+        webSocketStompClient.setDefaultHeartbeat(new long[] {0, 0});
+        return webSocketStompClient;
     }
 
-    private String forjarTokenPara(String sub, String preferredUsername) {
-        Jwt jwt = Jwt.withTokenValue("token-de-teste")
+    private String mockToken(String sub, String preferredUsername) {
+        Jwt jwt = Jwt.withTokenValue("test-token")
                 .header("alg", "none")
                 .claim("sub", sub)
                 .claim("preferred_username", preferredUsername)
                 .claim("realm_access", Map.of("roles", List.of("USER")))
                 .build();
         when(jwtDecoder.decode(anyString())).thenReturn(jwt);
-        return "token-de-teste";
+        return "test-token";
     }
 
-    private StompHeaders headersComToken(String token) {
+    private StompHeaders getStompHeaders(String token) {
         StompHeaders headers = new StompHeaders();
         headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
         return headers;
     }
 
-    private StompSession conectar(StompHeaders connectHeaders, HandlerDeSessao handler) throws Exception {
-        return clienteStomp()
-                .connectAsync(urlDoEndpoint(), new WebSocketHttpHeaders(), connectHeaders, handler)
-                .get(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS);
+    private StompSession getStompSession(StompHeaders connectHeaders, SessionHandler handler) throws Exception {
+        return stompClient()
+                .connectAsync(websocketEndpointUrl(), new WebSocketHttpHeaders(), connectHeaders, handler)
+                .get(TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
     }
 
-    private BlockingQueue<Map<String, Object>> assinar(StompSession sessao, String destino) {
-        BlockingQueue<Map<String, Object>> fila = new LinkedBlockingQueue<>();
-        sessao.subscribe(destino, new StompFrameHandler() {
+    private BlockingQueue<Map<String, Object>> subscribeToSession(StompSession session, String destination) {
+        BlockingQueue<Map<String, Object>> queue = new LinkedBlockingQueue<>();
+        session.subscribe(destination, new StompFrameHandler() {
             @Override
             public Type getPayloadType(StompHeaders headers) {
                 return Map.class;
@@ -129,172 +127,169 @@ class ChatbotWebSocketIntegrationTest {
             @Override
             @SuppressWarnings("unchecked")
             public void handleFrame(StompHeaders headers, Object payload) {
-                fila.add((Map<String, Object>) payload);
+                queue.add((Map<String, Object>) payload);
             }
         });
-        return fila;
+        return queue;
     }
 
-    private Map<String, Object> receber(BlockingQueue<Map<String, Object>> fila) throws InterruptedException {
-        return fila.poll(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS);
+    private Map<String, Object> pollFromQueue(BlockingQueue<Map<String, Object>> queue) throws InterruptedException {
+        return queue.poll(TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
     }
-
-    // ───────────────────────────────── cenários ─────────────────────────────────
 
     @Test
-    @DisplayName("CONNECT sem token deve ser recusado")
-    void connectSemTokenDeveSerRecusado() {
-        forjarTokenPara(UUID.randomUUID().toString(), "felipe");
-
-        /*
-            Regressão: com o handshake liberado para o SockJS funcionar, a única barreira
-            é a autenticação no frame CONNECT. Se ela cair, o chat vira gasto de token
-            aberto para qualquer visitante.
-         */
+    @DisplayName("CONNECT sent without a token should be rejected")
+    void connectRequestWithoutTokenShouldBeRejected() {
         assertThrows(
                 ExecutionException.class,
-                () -> conectar(new StompHeaders(), new HandlerDeSessao())
+                () -> getStompSession(new StompHeaders(), new SessionHandler())
         );
     }
 
     @Test
-    @DisplayName("CONNECT com token invalido deve ser recusado")
-    void connectComTokenInvalidoDeveSerRecusado() {
+    @DisplayName("CONNECT sent with invalid token should be rejected")
+    void connectRequestWithInvalidTokenShouldBeRejected() {
         when(jwtDecoder.decode(anyString()))
-                .thenThrow(new org.springframework.security.oauth2.jwt.BadJwtException("token invalido"));
+                .thenThrow(new org.springframework.security.oauth2.jwt.BadJwtException("invalid token"));
 
         assertThrows(
                 ExecutionException.class,
-                () -> conectar(headersComToken("qualquer-coisa"), new HandlerDeSessao())
+                () -> getStompSession(getStompHeaders("anything"), new SessionHandler())
         );
     }
 
     @Test
-    @DisplayName("Fluxo completo: eco da propria mensagem, aviso de processamento e resposta da IA")
-    void fluxoCompletoDeveEntregarAsTresMensagens() throws Exception {
-        String token = forjarTokenPara(UUID.randomUUID().toString(), "felipe");
-        when(chatClient.prompt(anyString()).call().content()).thenReturn(RESPOSTA_DA_IA);
+    @DisplayName(
+        "When the user sends a message, 3 messages should be sent " +
+        "back (own message, automatic message and ai response)"
+    )
+    void userSendsMessageShouldReceiveAutomaticMessageAndAIResponse() throws Exception {
+        String token = mockToken(UUID.randomUUID().toString(), "felipe");
+        when(chatClient.prompt(anyString()).call().content()).thenReturn(AI_MOCK_RESPONSE);
 
-        StompSession sessao = conectar(headersComToken(token), new HandlerDeSessao());
-        BlockingQueue<Map<String, Object>> mensagens = assinar(sessao, "/user" + ChatbotService.FILA_MENSAGENS);
-        BlockingQueue<Map<String, Object>> respostas = assinar(sessao, "/user" + ChatbotService.FILA_RESPOSTAS);
+        StompSession session = getStompSession(getStompHeaders(token), new SessionHandler());
+        BlockingQueue<Map<String, Object>> messages = subscribeToSession(session, "/user" + ChatbotService.MESSAGES_QUEUE_PATH);
+        BlockingQueue<Map<String, Object>> responses = subscribeToSession(session, "/user" + ChatbotService.RESPONSES_QUEUE_PATH);
 
-        sessao.send("/chatbot/new-message", Map.of("message", "Quais projetos o Felipe tem?"));
+        session.send("/chatbot/new-message", Map.of("message", "Quais projetos o Felipe tem?"));
 
-        Map<String, Object> eco = receber(mensagens);
-        assertNotNull(eco, "A propria mensagem nao voltou para o usuario");
-        assertEquals("felipe", eco.get("name"));
-        assertEquals("Quais projetos o Felipe tem?", eco.get("message"));
+        Map<String, Object> ownMessageEcho = pollFromQueue(messages);
+        assertNotNull(ownMessageEcho, "User's own message did not return to him");
+        assertEquals("felipe", ownMessageEcho.get("name"));
+        assertEquals("Quais projetos o Felipe tem?", ownMessageEcho.get("message"));
 
-        Map<String, Object> processando = receber(respostas);
-        assertNotNull(processando);
-        assertEquals("sistema", processando.get("name"));
+        Map<String, Object> automaticMessageEcho = pollFromQueue(responses);
+        assertNotNull(automaticMessageEcho);
+        assertEquals("sistema", automaticMessageEcho.get("name"));
 
-        Map<String, Object> respostaIA = receber(respostas);
-        assertNotNull(respostaIA, "A resposta da IA nao chegou");
-        assertEquals("bot", respostaIA.get("name"));
-        assertEquals(RESPOSTA_DA_IA, respostaIA.get("message"));
+        Map<String, Object> aiResponseEcho = pollFromQueue(responses);
+        assertNotNull(aiResponseEcho, "AI response did not return to user");
+        assertEquals("bot", aiResponseEcho.get("name"));
+        assertEquals(AI_MOCK_RESPONSE, aiResponseEcho.get("message"));
 
-        sessao.disconnect();
+        session.disconnect();
     }
 
     @Test
-    @DisplayName("Payload invalido deve virar mensagem na fila de erros")
-    void payloadInvalidoDeveVirarMensagemNaFilaDeErros() throws Exception {
-        String token = forjarTokenPara(UUID.randomUUID().toString(), "felipe");
+    @DisplayName("When user sends invalid payload, error queue should receive the error message")
+    void userSendsInvalidPayloadShouldPopulateErrorQueue() throws Exception {
+        String token = mockToken(UUID.randomUUID().toString(), "felipe");
 
-        StompSession sessao = conectar(headersComToken(token), new HandlerDeSessao());
-        BlockingQueue<Map<String, Object>> erros = assinar(sessao, "/user" + ChatbotService.FILA_ERROS);
+        StompSession session = getStompSession(getStompHeaders(token), new SessionHandler());
+        BlockingQueue<Map<String, Object>> errors = subscribeToSession(session, "/user" + ChatbotService.ERRORS_QUEUE_PATH);
 
-        sessao.send("/chatbot/new-message", Map.of("message", "   "));
+        session.send("/chatbot/new-message", Map.of("message", "   "));
 
-        /*
-            Regressão: antes o handler importava a MethodArgumentNotValidException do
-            org.springframework.web.bind, que não tem relação com a lançada pelo messaging.
-            O handler nunca disparava e o cliente ficava esperando para sempre.
-         */
-        Map<String, Object> erro = receber(erros);
-        assertNotNull(erro, "A falha de validacao nao chegou ao cliente");
-        assertEquals("Mensagem inválida!", erro.get("message"));
+        Map<String, Object> errorEcho = pollFromQueue(errors);
+        assertNotNull(errorEcho, "Validation Error did NOT reach the user");
+        assertEquals("Mensagem inválida!", errorEcho.get("message"));
 
-        sessao.disconnect();
+        session.disconnect();
     }
 
     @Test
-    @DisplayName("Mensagem com URL deve virar mensagem na fila de erros")
-    void mensagemComUrlDeveVirarMensagemNaFilaDeErros() throws Exception {
-        String token = forjarTokenPara(UUID.randomUUID().toString(), "felipe");
+    @DisplayName("When user sends message with URL, error queue should receive the error message")
+    void userSendsURLShouldPopulateErrorQueue() throws Exception {
+        String token = mockToken(UUID.randomUUID().toString(), "felipe");
 
-        StompSession sessao = conectar(headersComToken(token), new HandlerDeSessao());
-        BlockingQueue<Map<String, Object>> erros = assinar(sessao, "/user" + ChatbotService.FILA_ERROS);
+        StompSession session = getStompSession(getStompHeaders(token), new SessionHandler());
+        BlockingQueue<Map<String, Object>> errors = subscribeToSession(session, "/user" + ChatbotService.ERRORS_QUEUE_PATH);
 
-        sessao.send("/chatbot/new-message", Map.of("message", "Veja &#104;ttps://site-malicioso.com"));
+        session.send("/chatbot/new-message", Map.of("message", "Veja &#104;ttps://site-malicioso.com"));
 
-        Map<String, Object> erro = receber(erros);
-        assertNotNull(erro);
-        assertTrue(String.valueOf(erro.get("message")).contains("URL"));
+        Map<String, Object> errorEcho = pollFromQueue(errors);
+        assertNotNull(errorEcho);
+        assertTrue(String.valueOf(errorEcho.get("message")).contains("URL"));
 
-        sessao.disconnect();
+        session.disconnect();
     }
 
     @Test
-    @DisplayName("SUBSCRIBE em fila crua (sem /user) deve ser recusado")
-    void subscribeEmFilaCruaDeveSerRecusado() throws Exception {
-        String token = forjarTokenPara(UUID.randomUUID().toString(), "felipe");
+    @DisplayName("SUBSCRIBE request without /user should be rejected")
+    void subscribeRequestWithoutUserPathShouldBeRejected() throws Exception {
+        String token = mockToken(UUID.randomUUID().toString(), "felipe");
 
-        HandlerDeSessao handler = new HandlerDeSessao();
-        StompSession sessao = conectar(headersComToken(token), handler);
+        SessionHandler handler = new SessionHandler();
+        StompSession session = getStompSession(getStompHeaders(token), handler);
 
-        // Sem o /user na frente, a fila é compartilhada: qualquer um leria a resposta
-        // destinada a outra pessoa.
-        assinar(sessao, ChatbotService.FILA_RESPOSTAS);
+        subscribeToSession(session, ChatbotService.RESPONSES_QUEUE_PATH);
 
         assertTrue(
-                handler.aguardarErro(TIMEOUT_SEGUNDOS),
-                "O SUBSCRIBE em fila compartilhada deveria ter sido recusado"
+                handler.waitForError(TIMEOUT_IN_SECONDS),
+                "SUBSCRIBE request without /user path was supposed to be rejected, but it wasn't"
         );
     }
 
     @Test
-    @DisplayName("Estourar a cota deve devolver erro sem derrubar a sessao")
-    void estourarACotaDeveDevolverErroSemDerrubarASessao() throws Exception {
-        String token = forjarTokenPara(UUID.randomUUID().toString(), "felipe");
-        when(chatClient.prompt(anyString()).call().content()).thenReturn(RESPOSTA_DA_IA);
+    @DisplayName(
+        "When the user exceeds rate limit, error queue should receive " +
+        "the error message without disconnecting"
+    )
+    void userExceedsQuotaShouldPopulateErrorQueue() throws Exception {
+        String token = mockToken(UUID.randomUUID().toString(), "felipe");
+        when(chatClient.prompt(anyString()).call().content()).thenReturn(AI_MOCK_RESPONSE);
 
-        HandlerDeSessao handler = new HandlerDeSessao();
-        StompSession sessao = conectar(headersComToken(token), handler);
-        BlockingQueue<Map<String, Object>> mensagens = assinar(sessao, "/user" + ChatbotService.FILA_MENSAGENS);
-        BlockingQueue<Map<String, Object>> erros = assinar(sessao, "/user" + ChatbotService.FILA_ERROS);
+        SessionHandler handler = new SessionHandler();
+        StompSession session = getStompSession(getStompHeaders(token), handler);
+        BlockingQueue<Map<String, Object>> messages = subscribeToSession(session, "/user" + ChatbotService.MESSAGES_QUEUE_PATH);
+        BlockingQueue<Map<String, Object>> errors = subscribeToSession(session, "/user" + ChatbotService.ERRORS_QUEUE_PATH);
 
-        // O application.yml de teste define max-por-minuto = 3.
-        for (int i = 0; i < 4; i++) {
-            sessao.send("/chatbot/new-message", Map.of("message", "Pergunta numero " + i));
+        // Em DEV, o maxPerMinute está definido para 3 (valor fixo)
+        int maxPerMinuteLimit = 3;
+        int maxPerMinuteLimitPlusOne = maxPerMinuteLimit + 1;
+
+        for (int mockUserMessageCount = 0; mockUserMessageCount < maxPerMinuteLimitPlusOne; mockUserMessageCount++) {
+            session.send("/chatbot/new-message", Map.of("message", "Pergunta numero " + mockUserMessageCount));
         }
 
-        for (int i = 0; i < 3; i++) {
-            assertNotNull(receber(mensagens), "A mensagem " + i + " deveria ter passado pela cota");
+        for (int mockUserMessageCount = 0; mockUserMessageCount < maxPerMinuteLimit; mockUserMessageCount++) {
+            assertNotNull(
+                pollFromQueue(messages), 
+                "Message count " + mockUserMessageCount + " did NOT reach the user's maxPerMinute " +
+                "limit, but the message is not present"
+            );
         }
 
-        Map<String, Object> erro = receber(erros);
-        assertNotNull(erro, "A quarta mensagem deveria ter sido barrada pela cota");
-        assertTrue(String.valueOf(erro.get("message")).contains("Muitas perguntas seguidas"));
+        Map<String, Object> errorEcho = pollFromQueue(errors);
+        assertNotNull(errorEcho, "4th message should be blocked - Check Rate Limit logic");
+        assertTrue(String.valueOf(errorEcho.get("message")).contains("Muitas perguntas seguidas"));
 
         // Cota estourada não pode derrubar a conexão do usuário.
-        assertNull(handler.erro.get(), "A sessao nao deveria ter sido encerrada por estouro de cota");
-        assertTrue(sessao.isConnected());
-        assertFalse(mensagens.size() > 3, "A quarta mensagem nao poderia ter sido processada");
+        assertNull(handler.error.get(), "The session is not supposed to be terminated");
+        assertTrue(session.isConnected());
+        assertFalse(messages.size() > 3, "4th message is not supposed to be processed");
 
-        sessao.disconnect();
+        session.disconnect();
     }
 
     /** Captura erro de transporte ou frame ERROR devolvido pelo servidor. */
-    private static final class HandlerDeSessao extends StompSessionHandlerAdapter {
+    private static final class SessionHandler extends StompSessionHandlerAdapter {
 
         private final CountDownLatch latch = new CountDownLatch(1);
-        private final AtomicReference<Throwable> erro = new AtomicReference<>();
+        private final AtomicReference<Throwable> error = new AtomicReference<>();
 
-        private boolean aguardarErro(long segundos) throws InterruptedException {
-            return latch.await(segundos, TimeUnit.SECONDS);
+        private boolean waitForError(long seconds) throws InterruptedException {
+            return latch.await(seconds, TimeUnit.SECONDS);
         }
 
         @Override
@@ -305,20 +300,20 @@ class ChatbotWebSocketIntegrationTest {
                 byte[] payload,
                 Throwable exception
         ) {
-            erro.set(exception);
+            error.set(exception);
             latch.countDown();
         }
 
         @Override
         public void handleTransportError(StompSession session, Throwable exception) {
-            erro.set(exception);
+            error.set(exception);
             latch.countDown();
         }
 
         @Override
         public void handleFrame(StompHeaders headers, Object payload) {
             // Frame ERROR devolvido pelo servidor cai aqui quando não há subscription.
-            erro.set(new IllegalStateException("Frame de erro recebido"));
+            error.set(new IllegalStateException("Received error Frame"));
             latch.countDown();
         }
     }

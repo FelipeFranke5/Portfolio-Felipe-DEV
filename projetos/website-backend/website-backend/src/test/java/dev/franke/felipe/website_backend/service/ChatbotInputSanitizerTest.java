@@ -12,65 +12,52 @@ class ChatbotInputSanitizerTest {
     private final ChatbotInputSanitizer sanitizer = new ChatbotInputSanitizer();
 
     @Test
-    @DisplayName("Entidade HTML nao pode furar a checagem de URL")
-    void naoDeveDeixarEntidadeHtmlFurarAChecagemDeUrl() {
-        /*
-            Regressao: a versao anterior rodava a blocklist ANTES do htmlUnescape, entao
-            este payload passava pela validacao e so virava URL depois.
-         */
-        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitizar("&#104;ttps://site-malicioso.com"));
+    @DisplayName("HTML Entity should NOT bypass URL validation")
+    void htmlEntityShouldNotBypassURLValidation() {
+        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize("&#104;ttps://site-malicioso.com"));
     }
 
     @Test
-    @DisplayName("Deve recusar URL escrita normalmente")
-    void deveRecusarUrlEscritaNormalmente() {
-        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitizar("Veja https://exemplo.com"));
-        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitizar("Acesse www.exemplo.org"));
-        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitizar("Confira exemplo.dev"));
+    @DisplayName("When a URL is sent, ChatbotGeneralException should be thrown")
+    void inputWithURLShouldThrow() {
+        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize("Veja https://exemplo.com"));
+        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize("Acesse www.exemplo.org"));
+        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize("Confira exemplo.dev"));
     }
 
     @Test
-    @DisplayName("Deve recusar dominio independente de caixa")
-    void deveRecusarDominioIndependenteDeCaixa() {
-        // A versao anterior comparava com case-sensitive, entao ".COM" escapava.
-        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitizar("Veja EXEMPLO.COM agora"));
+    @DisplayName("When domain is sent, ChatbotGeneralException should be thrown")
+    void inputWithDomainShouldThrow() {
+        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize("Veja EXEMPLO.COM agora"));
     }
 
     @Test
-    @DisplayName("Deve recusar mensagem nula, vazia ou so com espacos")
-    void deveRecusarMensagemNulaOuVazia() {
-        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitizar(null));
-        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitizar(""));
-        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitizar("     "));
+    @DisplayName("When input is null or blank, ChatbotGeneralException should be thrown")
+    void nullOrBlankInputShouldThrow() {
+        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize(null));
+        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize(""));
+        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize("     "));
     }
 
     @Test
-    @DisplayName("Deve recusar mensagem acima do tamanho maximo")
-    void deveRecusarMensagemMuitoLonga() {
-        String longa = "a".repeat(501);
-        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitizar(longa));
+    @DisplayName("When input is too long, ChatbotGeneralException should be thrown")
+    void tooLongInputShouldThrow() {
+        String longString = "a".repeat(501);
+        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize(longString));
     }
 
     @Test
-    @DisplayName("Deve aceitar pergunta valida e remover espacos das pontas")
-    void deveAceitarPerguntaValida() {
-        assertEquals("Quais projetos o Felipe tem?", sanitizer.sanitizar("  Quais projetos o Felipe tem?  "));
+    @DisplayName("When input is a valid question, the sanitizer should remove white spaces")
+    void validInputWithWhiteSpaceShouldRemoveWhiteSpace() {
+        assertEquals("Quais projetos o Felipe tem?", sanitizer.sanitize("  Quais projetos o Felipe tem?  "));
+        assertEquals("Quais projetos o Felipe tem?", sanitizer.sanitize("Quais projetos o Felipe tem? "));
+        assertEquals("Quais projetos o Felipe tem?", sanitizer.sanitize(" Quais projetos o Felipe tem?"));
+        assertEquals("Quais projetos o Felipe tem?", sanitizer.sanitize("Quais projetos o Felipe tem?"));
     }
 
     @Test
-    @DisplayName("Deve aceitar mensagem que nao seja pergunta")
-    void deveAceitarMensagemQueNaoSejaPergunta() {
-        /*
-            A regra de "tem que terminar com ?" saiu do codigo: "Me fale dos projetos" e
-            legitimo, e o proprio prompt do sistema ja instrui o modelo a recusar o que
-            estiver fora de escopo.
-         */
-        assertEquals("Me fale dos projetos", sanitizer.sanitizar("Me fale dos projetos"));
-    }
-
-    @Test
-    @DisplayName("Deve devolver o texto desescapado")
-    void deveDevolverOTextoDesescapado() {
-        assertEquals("Ele usa <Java> & Spring?", sanitizer.sanitizar("Ele usa &lt;Java&gt; &amp; Spring?"));
+    @DisplayName("When input is valid but contains escaped characters, the sanitizer should return unescaped text")
+    void validInputWithEscapedTextShouldReturnUnescapedText() {
+        assertEquals("Ele usa <Java> & Spring?", sanitizer.sanitize("Ele usa &lt;Java&gt; &amp; Spring?"));
     }
 }

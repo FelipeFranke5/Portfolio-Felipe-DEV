@@ -14,12 +14,12 @@ import org.springframework.validation.annotation.Validated;
 public record ChatbotProperties(
 
         /** Janela deslizante de 1 minuto, por usuário autenticado. Barra flood. */
-        @DefaultValue("5") @Min(1) int maxPorMinuto,
+        @DefaultValue("5") @Min(1) int maxPerMinute,
 
         /** Teto diário por usuário autenticado. */
-        @DefaultValue("40") @Min(1) int maxPorUsuarioPorDia,
+        @DefaultValue("40") @Min(1) int maxPerUserPerDay,
 
         /** Concorrência máxima de chamadas à IA no processo inteiro. */
-        @DefaultValue("2") @Min(1) int maxChamadasSimultaneas
+        @DefaultValue("2") @Min(1) int maxConcurrentCalls
 ) {
 }

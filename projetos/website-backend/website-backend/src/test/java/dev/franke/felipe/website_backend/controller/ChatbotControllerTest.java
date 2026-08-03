@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ChatbotControllerTest {
 
-    private static final String USUARIO = "sub-do-keycloak-123";
+    private static final String KEYCLOAK_MOCK_USER = "sub-do-keycloak-123";
 
     @Mock
     private ChatbotService chatbotService;
@@ -48,57 +48,58 @@ class ChatbotControllerTest {
     private Principal principal(String preferredUsername) {
         Jwt.Builder builder = Jwt.withTokenValue("token")
                 .header("alg", "none")
-                .claim("sub", USUARIO);
+                .claim("sub", KEYCLOAK_MOCK_USER);
+
         if (preferredUsername != null) {
             builder.claim("preferred_username", preferredUsername);
         }
+
         return new JwtAuthenticationToken(builder.build(), List.of());
     }
 
     @Test
-    @DisplayName("Deve sanitizar a mensagem e delegar para o service com o usuario da sessao")
-    void deveDelegarParaOService() {
-        when(chatbotRateLimiter.tentarConsumir(USUARIO)).thenReturn(ChatbotRateLimiter.Decisao.PERMITIDO);
-        when(chatbotInputSanitizer.sanitizar("  Quais projetos?  ")).thenReturn("Quais projetos?");
+    @DisplayName("Should sanitize the message and delegate it to the service using the session user")
+    void shouldDelegateMessageToChatbotService() {
+        when(chatbotRateLimiter.tryConsume(KEYCLOAK_MOCK_USER)).thenReturn(ChatbotRateLimiter.AllowUserDecision.USER_ALLOWED);
+        when(chatbotInputSanitizer.sanitize("  Quais projetos?  ")).thenReturn("Quais projetos?");
 
         chatbotController.newMessage(new ChatbotInput("  Quais projetos?  "), principal("felipe"));
 
-        verify(chatbotService).enviarMensagens(USUARIO, "felipe", "Quais projetos?");
+        verify(chatbotService).sendMessages(KEYCLOAK_MOCK_USER, "felipe", "Quais projetos?");
     }
 
     @Test
-    @DisplayName("Sem preferred_username no token, deve usar o nome de exibicao padrao")
-    void deveUsarNomeDeExibicaoPadrao() {
-        when(chatbotRateLimiter.tentarConsumir(USUARIO)).thenReturn(ChatbotRateLimiter.Decisao.PERMITIDO);
-        when(chatbotInputSanitizer.sanitizar(anyString())).thenReturn("Quais projetos?");
+    @DisplayName("When the preferred_username isn't present in the token, the default display name should be used")
+    void shouldUseDefaultDisplayName() {
+        when(chatbotRateLimiter.tryConsume(KEYCLOAK_MOCK_USER)).thenReturn(ChatbotRateLimiter.AllowUserDecision.USER_ALLOWED);
+        when(chatbotInputSanitizer.sanitize(anyString())).thenReturn("Quais projetos?");
 
         chatbotController.newMessage(new ChatbotInput("Quais projetos?"), principal(null));
 
-        verify(chatbotService).enviarMensagens(eq(USUARIO), eq("você"), anyString());
+        verify(chatbotService).sendMessages(eq(KEYCLOAK_MOCK_USER), eq("você"), anyString());
     }
 
     @Test
-    @DisplayName("Cota estourada deve barrar antes de qualquer trabalho")
-    void cotaEstouradaDeveBarrarAntesDeQualquerTrabalho() {
-        when(chatbotRateLimiter.tentarConsumir(USUARIO))
-                .thenReturn(ChatbotRateLimiter.Decisao.EXCEDEU_POR_MINUTO);
+    @DisplayName("When the 'per-minute' rate limit is exceeded, ChatbotService should NOT be called")
+    void exceededPerMinuteQuotaShouldStopChatbotServiceCall() {
+        when(chatbotRateLimiter.tryConsume(KEYCLOAK_MOCK_USER))
+                .thenReturn(ChatbotRateLimiter.AllowUserDecision.EXCEEDED_PER_MINUTE_RATE_LIMITING);
 
-        ChatbotRateLimitException excecao = assertThrows(
+        ChatbotRateLimitException exception = assertThrows(
                 ChatbotRateLimitException.class,
                 () -> chatbotController.newMessage(new ChatbotInput("Quais projetos?"), principal("felipe"))
         );
 
-        assertEquals(ChatbotRateLimiter.Decisao.EXCEDEU_POR_MINUTO.mensagem(), excecao.getMessage());
-        // Nenhuma chamada paga pode acontecer depois do limite.
+        assertEquals(ChatbotRateLimiter.AllowUserDecision.EXCEEDED_PER_MINUTE_RATE_LIMITING.decisionMessage(), exception.getMessage());
         verifyNoInteractions(chatbotService);
         verifyNoInteractions(chatbotInputSanitizer);
     }
 
     @Test
-    @DisplayName("Mensagem recusada na sanitizacao nao deve chegar ao service")
-    void mensagemRecusadaNaSanitizacaoNaoDeveChegarAoService() {
-        when(chatbotRateLimiter.tentarConsumir(USUARIO)).thenReturn(ChatbotRateLimiter.Decisao.PERMITIDO);
-        when(chatbotInputSanitizer.sanitizar(anyString()))
+    @DisplayName("When the sanitizer detects invalid input, ChatbotService should NOT be called")
+    void sanitizerDetectsInvalidInputShouldStopChatbotServiceCall() {
+        when(chatbotRateLimiter.tryConsume(KEYCLOAK_MOCK_USER)).thenReturn(ChatbotRateLimiter.AllowUserDecision.USER_ALLOWED);
+        when(chatbotInputSanitizer.sanitize(anyString()))
                 .thenThrow(new ChatbotGeneralException("A mensagem não pode conter URL(s) ou domínio(s)!"));
 
         assertThrows(
@@ -106,6 +107,6 @@ class ChatbotControllerTest {
                 () -> chatbotController.newMessage(new ChatbotInput("https://x.com"), principal("felipe"))
         );
 
-        verify(chatbotService, never()).enviarMensagens(anyString(), anyString(), anyString());
+        verify(chatbotService, never()).sendMessages(anyString(), anyString(), anyString());
     }
 }

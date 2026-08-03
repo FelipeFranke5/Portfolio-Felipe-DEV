@@ -3,7 +3,7 @@ package dev.franke.felipe.website_backend.service;
 import dev.franke.felipe.website_backend.dto.ProjectReadOnly;
 import dev.franke.felipe.website_backend.dto.ProjectReadOnlyDetailed;
 import dev.franke.felipe.website_backend.dto.ProjectRequest;
-import dev.franke.felipe.website_backend.dto.ProjetoParaIA;
+import dev.franke.felipe.website_backend.dto.ProjectForAIChatBot;
 import dev.franke.felipe.website_backend.exception.ProjectException;
 import dev.franke.felipe.website_backend.exception.ProjectNotFoundException;
 import dev.franke.felipe.website_backend.model.Project;
@@ -23,8 +23,6 @@ import java.util.UUID;
 public class ProjectService {
 
     public static final int DESCRIPTION_MAX_LENGTH = 50;
-
-    /** Teto de custo de token nas tool calls — não é o contrato da API REST. */
     public static final int DESCRIPTION_MAX_LENGTH_CHATBOT = 400;
 
     private final ProjectRepository repository;
@@ -69,22 +67,23 @@ public class ProjectService {
      * teto próprio: cada tool call devolve o payload completo de volta ao modelo, então
      * descrição sem limite vira custo de token.
      */
-    public List<ProjetoParaIA> getProjectsParaChatbot() {
-        log.info("Montando a lista de projetos para o chatbot");
+    public List<ProjectForAIChatBot> getProjectsChatbotVersion() {
+        log.info("Grouping prokects in order to send to AI");
         return repository.findAll().stream()
-                .map(project -> new ProjetoParaIA(
+                .map(project -> new ProjectForAIChatBot(
                         project.getName(),
-                        truncarParaChatbot(project.getDescription()),
+                        chatbotTruncate(project.getDescription()),
                         project.getStack()
                 ))
                 .toList();
     }
 
-    private String truncarParaChatbot(String descricao) {
-        if (descricao == null || descricao.length() <= DESCRIPTION_MAX_LENGTH_CHATBOT) {
-            return descricao;
+    private String chatbotTruncate(String description) {
+        if (description == null || description.length() <= DESCRIPTION_MAX_LENGTH_CHATBOT) {
+            return description;
         }
-        return descricao.substring(0, DESCRIPTION_MAX_LENGTH_CHATBOT) + "...";
+
+        return description.substring(0, DESCRIPTION_MAX_LENGTH_CHATBOT) + "...";
     }
 
     public ProjectReadOnlyDetailed getProjectDTO(Project project) {

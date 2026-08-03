@@ -28,8 +28,8 @@ import java.util.Map;
  * navegador NÃO consegue enviar o header {@code Authorization} no upgrade de um WebSocket nativo.
  * A autenticação de verdade acontece aqui, no frame STOMP {@code CONNECT}, onde o cliente envia
  * o token do Keycloak como header nativo. Sem isso, o chat ou fica inacessível (regra ADMIN
- * pegando o handshake) ou fica aberto para qualquer visitante — e a IA é paga.
- *
+ * pegando o handshake) ou fica aberto para qualquer visitante.
+ * 
  * <p>Também NÃO usamos {@code @EnableWebSocketSecurity}: em Spring Security 7 ele acopla um
  * {@code CsrfChannelInterceptor} ao CONNECT, que exige um token CSRF guardado na sessão HTTP.
  * Como a API é stateless e o CSRF está desabilitado no {@link SecurityConfig}, esse atributo
@@ -43,11 +43,11 @@ import java.util.Map;
 @Slf4j
 public class JwtStompChannelInterceptor implements ChannelInterceptor {
 
-    static final String ATRIBUTO_USUARIO = "chatbotAuthentication";
+    static final String USER_ATTRIBUTE = "chatbotAuthentication";
 
-    private static final String PREFIXO_BEARER = "Bearer ";
-    private static final String PREFIXO_DESTINO_APLICACAO = "/chatbot/";
-    private static final String PREFIXO_DESTINO_USUARIO = "/user/queue/";
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String CHATBOT_PATH_PREFIX = "/chatbot/";
+    private static final String USER_QUEUE_PREFIX = "/user/queue/";
 
     private final JwtDecoder jwtDecoder;
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
@@ -60,62 +60,68 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
         }
 
         return switch (accessor.getCommand()) {
-            case CONNECT, STOMP -> autenticar(message, accessor);
-            case SEND -> autorizarEnvio(message, accessor);
-            case SUBSCRIBE -> autorizarAssinatura(message, accessor);
-            default -> restaurarUsuario(message, accessor);
+            case CONNECT, STOMP -> authenticate(message, accessor);
+            case SEND -> authorizeMessage(message, accessor);
+            case SUBSCRIBE -> authorizeSignature(message, accessor);
+            default -> reloadUser(message, accessor);
         };
     }
 
-    private Message<?> autenticar(Message<?> message, StompHeaderAccessor accessor) {
-        String autorizacao = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
-        if (autorizacao == null || !autorizacao.startsWith(PREFIXO_BEARER)) {
-            log.warn("CONNECT recusado: sessao {} nao enviou token", accessor.getSessionId());
+    private Message<?> authenticate(Message<?> message, StompHeaderAccessor accessor) {
+        String authorization = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
+
+        if (authorization == null || !authorization.startsWith(BEARER_PREFIX)) {
+            log.warn("CONNECT refused: sessao {} did NOT send token", accessor.getSessionId());
             throw new MessageDeliveryException(message, "Token ausente no CONNECT");
         }
 
-        Authentication autenticacao;
+        Authentication authentication;
+
         try {
-            Jwt jwt = jwtDecoder.decode(autorizacao.substring(PREFIXO_BEARER.length()));
-            autenticacao = jwtAuthenticationConverter.convert(jwt);
-        } catch (JwtException tokenInvalidoException) {
-            log.warn("CONNECT recusado: token invalido na sessao {}", accessor.getSessionId());
+            Jwt jwt = jwtDecoder.decode(authorization.substring(BEARER_PREFIX.length()));
+            authentication = jwtAuthenticationConverter.convert(jwt);
+        } catch (JwtException invalidTokenException) {
+            log.warn("CONNECT refused: invalid token. Session ID: {}", accessor.getSessionId());
             throw new MessageDeliveryException(message, "Token invalido");
         }
 
-        if (autenticacao == null) {
+        if (authentication == null) {
             throw new MessageDeliveryException(message, "Token invalido");
         }
 
-        accessor.setUser(autenticacao);
-        guardarUsuarioNaSessao(accessor, autenticacao);
-        log.debug("Sessao STOMP {} autenticada como {}", accessor.getSessionId(), autenticacao.getName());
+        accessor.setUser(authentication);
+        saveUserSession(accessor, authentication);
+        log.debug("STOMP Session {} - Authenticated as {}", accessor.getSessionId(), authentication.getName());
         return message;
     }
 
-    private Message<?> autorizarEnvio(Message<?> message, StompHeaderAccessor accessor) {
-        restaurarUsuario(message, accessor);
-        exigirUsuario(message, accessor);
+    private Message<?> authorizeMessage(Message<?> message, StompHeaderAccessor accessor) {
+        reloadUser(message, accessor);
+        requireUserAuth(message, accessor);
 
-        String destino = accessor.getDestination();
-        if (destino == null || !destino.startsWith(PREFIXO_DESTINO_APLICACAO)) {
-            log.warn("SEND recusado para o destino '{}'", destino);
+        String destination = accessor.getDestination();
+
+        if (destination == null || !destination.startsWith(CHATBOT_PATH_PREFIX)) {
+            log.warn("SEND refused for destination '{}'", destination);
             throw new MessageDeliveryException(message, "Destino nao permitido");
         }
+
         return message;
     }
 
-    private Message<?> autorizarAssinatura(Message<?> message, StompHeaderAccessor accessor) {
-        restaurarUsuario(message, accessor);
-        exigirUsuario(message, accessor);
+    private Message<?> authorizeSignature(Message<?> message, StompHeaderAccessor accessor) {
+        reloadUser(message, accessor);
+        requireUserAuth(message, accessor);
 
         // Só filas individuais. Sem isso, um usuário poderia assinar a fila crua e ler
         // as respostas destinadas a outra pessoa.
-        String destino = accessor.getDestination();
-        if (destino == null || !destino.startsWith(PREFIXO_DESTINO_USUARIO)) {
-            log.warn("SUBSCRIBE recusado para o destino '{}'", destino);
+        String destination = accessor.getDestination();
+
+        if (destination == null || !destination.startsWith(USER_QUEUE_PREFIX)) {
+            log.warn("SUBSCRIBE recusado para o destination '{}'", destination);
             throw new MessageDeliveryException(message, "Destino nao permitido");
         }
+
         return message;
     }
 
@@ -124,27 +130,31 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
      * depende do callback interno do {@code StompSubProtocolHandler}. Reler dos atributos da
      * sessão garante o comportamento independentemente desse detalhe de implementação.
      */
-    private Message<?> restaurarUsuario(Message<?> message, StompHeaderAccessor accessor) {
+    private Message<?> reloadUser(Message<?> message, StompHeaderAccessor accessor) {
         if (accessor.getUser() != null) {
             return message;
         }
-        Map<String, Object> atributos = accessor.getSessionAttributes();
-        if (atributos != null && atributos.get(ATRIBUTO_USUARIO) instanceof Principal usuario) {
-            accessor.setUser(usuario);
+
+        Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+
+        if (sessionAttributes != null && sessionAttributes.get(USER_ATTRIBUTE) instanceof Principal userPrincipal) {
+            accessor.setUser(userPrincipal);
         }
+
         return message;
     }
 
-    private void exigirUsuario(Message<?> message, StompHeaderAccessor accessor) {
+    private void requireUserAuth(Message<?> message, StompHeaderAccessor accessor) {
         if (accessor.getUser() == null) {
             throw new MessageDeliveryException(message, "Sessao nao autenticada");
         }
     }
 
-    private void guardarUsuarioNaSessao(StompHeaderAccessor accessor, Authentication autenticacao) {
-        Map<String, Object> atributos = accessor.getSessionAttributes();
-        if (atributos != null) {
-            atributos.put(ATRIBUTO_USUARIO, autenticacao);
+    private void saveUserSession(StompHeaderAccessor accessor, Authentication autenticacao) {
+        Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+
+        if (sessionAttributes != null) {
+            sessionAttributes.put(USER_ATTRIBUTE, autenticacao);
         }
     }
 }

@@ -9,5 +9,5 @@ import java.util.List;
  * 50 caracteres (contrato de {@code GET /api/projects}) e carrega o UUID, que a IA nunca
  * usa e só consome tokens.
  */
-public record ProjetoParaIA(String nome, String descricao, List<String> stack) {
+public record ProjectForAIChatBot(String nome, String descricao, List<String> stack) {
 }

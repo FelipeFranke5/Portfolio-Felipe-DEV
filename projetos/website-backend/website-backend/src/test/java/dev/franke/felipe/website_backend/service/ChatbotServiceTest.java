@@ -28,9 +28,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ChatbotServiceTest {
 
-    private static final String USUARIO = "sub-do-keycloak-123";
-    private static final String NOME_EXIBICAO = "felipe";
-    private static final String PERGUNTA = "Quais projetos o Felipe tem?";
+    private static final String MOCK_USER = "sub-do-keycloak-123";
+    private static final String MOCK_DISPLAY_NAME = "felipe";
+    private static final String MOCK_QUESTION = "Quais projetos o Felipe tem?";
 
     @Mock
     private SimpMessagingTemplate simpMessagingTemplate;
@@ -47,70 +47,64 @@ class ChatbotServiceTest {
     }
 
     @Test
-    @DisplayName("Deve enviar eco, aviso de processamento e resposta da IA, nessa ordem")
-    void deveEnviarAsTresMensagensNaOrdem() {
+    @DisplayName("sendMessages should send messages in correct order")
+    void sendMessagesShouldSendMessagesInCorrectOrder() {
         when(chatClient.prompt(anyString()).call().content()).thenReturn("O Felipe tem 3 projetos.");
 
-        chatbotService.enviarMensagens(USUARIO, NOME_EXIBICAO, PERGUNTA);
+        chatbotService.sendMessages(MOCK_USER, MOCK_DISPLAY_NAME, MOCK_QUESTION);
 
         ArgumentCaptor<ChatbotOutput> captor = ArgumentCaptor.forClass(ChatbotOutput.class);
-        InOrder ordem = inOrder(simpMessagingTemplate);
-        ordem.verify(simpMessagingTemplate)
-                .convertAndSendToUser(eq(USUARIO), eq(ChatbotService.FILA_MENSAGENS), any(ChatbotOutput.class));
-        ordem.verify(simpMessagingTemplate, times(2))
-                .convertAndSendToUser(eq(USUARIO), eq(ChatbotService.FILA_RESPOSTAS), any(ChatbotOutput.class));
+        InOrder order = inOrder(simpMessagingTemplate);
+        order.verify(simpMessagingTemplate)
+                .convertAndSendToUser(eq(MOCK_USER), eq(ChatbotService.MESSAGES_QUEUE_PATH), any(ChatbotOutput.class));
+        order.verify(simpMessagingTemplate, times(2))
+                .convertAndSendToUser(eq(MOCK_USER), eq(ChatbotService.RESPONSES_QUEUE_PATH), any(ChatbotOutput.class));
 
         verify(simpMessagingTemplate, times(3))
-                .convertAndSendToUser(eq(USUARIO), anyString(), captor.capture());
+                .convertAndSendToUser(eq(MOCK_USER), anyString(), captor.capture());
 
-        List<ChatbotOutput> enviadas = captor.getAllValues();
-        assertEquals(NOME_EXIBICAO, enviadas.get(0).name());
-        assertEquals(PERGUNTA, enviadas.get(0).message());
-        assertEquals("sistema", enviadas.get(1).name());
-        assertEquals("bot", enviadas.get(2).name());
-        assertEquals("O Felipe tem 3 projetos.", enviadas.get(2).message());
+        List<ChatbotOutput> sentMessages = captor.getAllValues();
+        assertEquals(MOCK_DISPLAY_NAME, sentMessages.get(0).name());
+        assertEquals(MOCK_QUESTION, sentMessages.get(0).message());
+        assertEquals("sistema", sentMessages.get(1).name());
+        assertEquals("bot", sentMessages.get(2).name());
+        assertEquals("O Felipe tem 3 projetos.", sentMessages.get(2).message());
     }
 
     @Test
-    @DisplayName("Deve rotear pelo Principal da sessao, nunca por algo vindo do payload")
-    void deveRotearPeloPrincipalDaSessao() {
-        /*
-            Regressao: a versao anterior usava o nome digitado pelo usuario como destino.
-            Alem de falsificavel, nao entregava nada — o UserDestinationResolver so entrega
-            para sessoes cujo Principal bata.
-         */
+    @DisplayName("sendMessages should always rely on Principal to retrieve the User's Display Name")
+    void sendMessagesShouldAlwaysRelyOnPrincipalToRetrieveDisplayName() {
         when(chatClient.prompt(anyString()).call().content()).thenReturn("resposta");
 
-        chatbotService.enviarMensagens(USUARIO, "nome-que-o-usuario-digitou", PERGUNTA);
+        chatbotService.sendMessages(MOCK_USER, "nome-que-o-usuario-digitou", MOCK_QUESTION);
 
         verify(simpMessagingTemplate, times(3))
-                .convertAndSendToUser(eq(USUARIO), anyString(), any(ChatbotOutput.class));
+                .convertAndSendToUser(eq(MOCK_USER), anyString(), any(ChatbotOutput.class));
     }
 
     @Test
-    @DisplayName("Falha da IA nao pode derrubar o fluxo: usuario recebe aviso amigavel")
-    void falhaDaIaDeveVirarAvisoAmigavel() {
+    @DisplayName("When AI response fails, the User should receive a friendly message")
+    void whenAICallFailsUserShouldReceiveFriendlyMessage() {
         when(chatClient.prompt(anyString())).thenThrow(new IllegalStateException("provedor fora do ar"));
 
-        chatbotService.enviarMensagens(USUARIO, NOME_EXIBICAO, PERGUNTA);
+        chatbotService.sendMessages(MOCK_USER, MOCK_DISPLAY_NAME, MOCK_QUESTION);
 
         ArgumentCaptor<ChatbotOutput> captor = ArgumentCaptor.forClass(ChatbotOutput.class);
         verify(simpMessagingTemplate, times(3))
-                .convertAndSendToUser(eq(USUARIO), anyString(), captor.capture());
+                .convertAndSendToUser(eq(MOCK_USER), anyString(), captor.capture());
 
-        ChatbotOutput respostaFinal = captor.getAllValues().get(2);
-        assertEquals("bot", respostaFinal.name());
-        assertTrue(respostaFinal.message().contains("Não consegui responder agora"));
+        ChatbotOutput finalResponse = captor.getAllValues().get(2);
+        assertEquals("bot", finalResponse.name());
+        assertTrue(finalResponse.message().contains("Não consegui responder agora! Por favor, tente novamente mais tarde."));
     }
 
     @Test
-    @DisplayName("Deve chamar a IA exatamente uma vez por mensagem")
-    void deveChamarAIaUmaUnicaVez() {
-        // Trava de custo: cada pergunta e uma chamada paga.
+    @DisplayName("When the User sends a message, the AI should be called only once")
+    void whenUserSendsMessageAIShouldBeCalledOnce() {
         when(chatClient.prompt(anyString()).call().content()).thenReturn("resposta");
 
-        chatbotService.enviarMensagens(USUARIO, NOME_EXIBICAO, PERGUNTA);
+        chatbotService.sendMessages(MOCK_USER, MOCK_DISPLAY_NAME, MOCK_QUESTION);
 
-        verify(chatClient, times(1)).prompt(PERGUNTA);
+        verify(chatClient, times(1)).prompt(MOCK_QUESTION);
     }
 }

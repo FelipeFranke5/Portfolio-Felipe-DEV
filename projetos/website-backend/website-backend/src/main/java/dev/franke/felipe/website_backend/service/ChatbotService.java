@@ -10,26 +10,18 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.concurrent.Executor;
 
-/**
- * Regras de envio das mensagens do chat.
- *
- * <p>O destino é sempre derivado do {@code Principal} da sessão STOMP (o {@code sub} do JWT
- * do Keycloak), nunca de algo vindo no payload. A versão anterior usava o nome digitado
- * pelo próprio usuário como destino, o que além de falsificável não entregava nada: o
- * {@code UserDestinationResolver} só entrega para sessões cujo {@code Principal} bata.
- */
 @Service
 @Slf4j
 public class ChatbotService {
 
-    public static final String FILA_MENSAGENS = "/queue/chatbot/mensagens";
-    public static final String FILA_RESPOSTAS = "/queue/chatbot/respostas";
-    public static final String FILA_ERROS = "/queue/chatbot/erros";
+    public static final String MESSAGES_QUEUE_PATH = "/queue/chatbot/mensagens";
+    public static final String RESPONSES_QUEUE_PATH = "/queue/chatbot/respostas";
+    public static final String ERRORS_QUEUE_PATH = "/queue/chatbot/erros";
 
-    private static final String REMETENTE_SISTEMA = "sistema";
-    private static final String REMETENTE_BOT = "bot";
-    private static final String AVISO_PROCESSANDO = "Mensagem em processamento..";
-    private static final String ERRO_RESPOSTA = "Não consegui responder agora. Tente novamente em instantes.";
+    private static final String SYSTEM_AS_SENDER = "sistema";
+    private static final String BOT_AS_SENDER = "bot";
+    private static final String MESSAGE_BEING_PROCESSED_INDICATOR = "Mensagem em processamento..";
+    private static final String MESSAGE_FAILED_INDICATOR = "Não consegui responder agora! Por favor, tente novamente mais tarde.";
 
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final ChatClient chatClient;
@@ -45,37 +37,28 @@ public class ChatbotService {
         this.chatbotExecutor = chatbotExecutor;
     }
 
-    /**
-     * Devolve o eco da própria mensagem e o aviso de processamento de forma síncrona (são
-     * baratos e garantem a ordem), e só a chamada paga à IA vai para o executor limitado.
-     *
-     * <p>A versão anterior abria um {@code ExecutorService} por mensagem dentro de um
-     * try-with-resources. Em Java 21 o {@code close()} espera TODAS as tasks terminarem,
-     * inclusive a chamada à Anthropic — ou seja, a thread do broker ficava travada durante
-     * toda a requisição à IA, anulando justamente o assíncrono que se queria.
-     */
-    public void enviarMensagens(String usuario, String nomeExibicao, String pergunta) {
-        LocalDateTime agora = LocalDateTime.now();
+    public void sendMessages(String user, String userDisplayName, String userQuestion) {
+        LocalDateTime timeNow = LocalDateTime.now();
 
-        enviar(usuario, FILA_MENSAGENS, new ChatbotOutput(nomeExibicao, pergunta, agora));
-        enviar(usuario, FILA_RESPOSTAS, new ChatbotOutput(REMETENTE_SISTEMA, AVISO_PROCESSANDO, agora));
+        send(user, MESSAGES_QUEUE_PATH, new ChatbotOutput(userDisplayName, userQuestion, timeNow));
+        send(user, RESPONSES_QUEUE_PATH, new ChatbotOutput(SYSTEM_AS_SENDER, MESSAGE_BEING_PROCESSED_INDICATOR, timeNow));
 
-        log.info("Submetendo a pergunta de {} para o modelo de IA", usuario);
-        chatbotExecutor.execute(() -> enviar(usuario, FILA_RESPOSTAS, obterRespostaIA(pergunta)));
+        log.info("Sending userQuestion from {} to AI", user);
+        chatbotExecutor.execute(() -> send(user, RESPONSES_QUEUE_PATH, retrieveAIResponse(userQuestion)));
     }
 
-    private ChatbotOutput obterRespostaIA(String pergunta) {
+    private ChatbotOutput retrieveAIResponse(String userQuestion) {
         try {
-            String resposta = chatClient.prompt(pergunta).call().content();
-            return new ChatbotOutput(REMETENTE_BOT, resposta, LocalDateTime.now());
-        } catch (Exception respostaIAException) {
+            String aiResponse = chatClient.prompt(userQuestion).call().content();
+            return new ChatbotOutput(BOT_AS_SENDER, aiResponse, LocalDateTime.now());
+        } catch (Exception aiResponseException) {
             // Registrar de verdade: o catch anterior engolia o erro sem log nenhum.
-            log.error("Falha ao obter a resposta do modelo de IA", respostaIAException);
-            return new ChatbotOutput(REMETENTE_BOT, ERRO_RESPOSTA, LocalDateTime.now());
+            log.error("Unable to obtain response from AI", aiResponseException);
+            return new ChatbotOutput(BOT_AS_SENDER, MESSAGE_FAILED_INDICATOR, LocalDateTime.now());
         }
     }
 
-    private void enviar(String usuario, String fila, ChatbotOutput saida) {
-        simpMessagingTemplate.convertAndSendToUser(usuario, fila, saida);
+    private void send(String user, String queue_path, ChatbotOutput whatToSend) {
+        simpMessagingTemplate.convertAndSendToUser(user, queue_path, whatToSend);
     }
 }

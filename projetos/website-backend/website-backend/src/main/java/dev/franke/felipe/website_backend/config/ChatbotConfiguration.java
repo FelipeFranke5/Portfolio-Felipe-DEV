@@ -31,16 +31,16 @@ public class ChatbotConfiguration {
     public ChatClient chatbotChatClient(
             ChatClient.Builder chatClientBuilder,
             ChatbotTools chatbotTools,
-            @Value("classpath:prompt-sistema.txt") Resource promptSistema
+            @Value("classpath:prompt-sistema.txt") Resource systemPromptResource
     ) {
-        if (!promptSistema.exists()) {
+        if (!systemPromptResource.exists()) {
             throw new IllegalStateException(
-                    "prompt-sistema.txt nao encontrado no classpath. "
-                            + "O arquivo deve existir em src/main/resources."
+                    "prompt-sistema.txt not found in the classpath. "
+                            + "The file should live in src/main/resources."
             );
         }
         return chatClientBuilder
-                .defaultSystem(promptSistema)
+                .defaultSystem(systemPromptResource)
                 .defaultTools(chatbotTools)
                 .build();
     }
@@ -50,14 +50,14 @@ public class ChatbotConfiguration {
      * dispararem N requisições à Anthropic ao mesmo tempo.
      */
     @Bean(destroyMethod = "shutdown")
-    public ExecutorService chatbotExecutor(ChatbotProperties propriedades) {
-        AtomicInteger contador = new AtomicInteger();
-        ThreadFactory fabrica = tarefa -> {
-            Thread thread = new Thread(tarefa, "chatbot-" + contador.incrementAndGet());
+    public ExecutorService chatbotExecutor(ChatbotProperties chatbotProperties) {
+        AtomicInteger atomiCounter = new AtomicInteger();
+        ThreadFactory threadFactory = task -> {
+            Thread thread = new Thread(task, "chatbot-" + atomiCounter.incrementAndGet());
             thread.setDaemon(true);
             return thread;
         };
-        return Executors.newFixedThreadPool(propriedades.maxChamadasSimultaneas(), fabrica);
+        return Executors.newFixedThreadPool(chatbotProperties.maxConcurrentCalls(), threadFactory);
     }
 
     /**
