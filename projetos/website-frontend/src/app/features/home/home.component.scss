@@ -64,7 +64,8 @@ $coffee-tint-light: brightness(0) invert(1);
 }
 
 .about__quote-cta,
-.cta__button {
+.cta__button,
+.hero__chat-cta {
   display: inline-flex;
   align-items: center;
   color: #fff;
@@ -143,6 +144,24 @@ $coffee-tint-light: brightness(0) invert(1);
     font-size: 1.125rem;
     line-height: 1.6;
     color: $text-muted;
+  }
+
+  &__chat-cta {
+    gap: 0.75rem;
+    align-self: flex-start;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    background-color: $accent;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.1rem;
+    text-transform: uppercase;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+      background-color: $accent-hover;
+      transform: translateY(-1px);
+    }
   }
 
   &__scroll-hint {
