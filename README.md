@@ -43,7 +43,7 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).
 | Skills | GET público / POST·PUT·DELETE admin | Sim (admin) | ✅ Implementado |
 | Contato | POST público, com envio de e-mail assíncrono (agendado) | Não | ✅ Implementado |
 | Log Interno (diagnóstico) | GET admin (lista dos últimos registros + detalhe por ID) | Sim (admin) | ✅ Implementado |
-| Chatbot com IA | WebSocket/STOMP em `/api/websocket` | Sim (usuário logado) | ✅ Back-end implementado (front-end ainda não) |
+| Chatbot com IA | WebSocket/STOMP em `/api/websocket` | Sim (usuário logado) | ✅ Implementado |
 | Admin Panel | /admin (Angular route) | Sim (admin) | Front-end ainda não versionado neste repositório |
 
 ---
@@ -102,11 +102,15 @@ Esta seção descreve como cada parte do projeto está organizada.
 ### Front-End (Angular)
 
 - **`core`** — tudo que é transversal à aplicação e não pertence a nenhuma feature
-  específica: o guard de rota que protege `/admin`, o interceptor HTTP que injeta o
-  token Bearer nas requisições autenticadas, e os serviços de baixo nível (cliente da
-  API, wrapper de autenticação sobre o `keycloak-angular`).
-- **`features`** — cada seção pública do site (hero/about, portfólio, skills, contato)
-  como um módulo próprio, e uma área `admin` separada para os formulários de
+  específica: os guards de rota (`admin.guard.ts` protege `/admin` exigindo a role
+  `ADMIN`; `auth.guard.ts` protege `/chat` exigindo apenas usuário logado), o
+  interceptor HTTP que injeta o token Bearer nas requisições autenticadas (delega
+  para `includeBearerTokenInterceptor` do `keycloak-angular`), e os serviços de
+  baixo nível (cliente da API, `AuthService` — wrapper de autenticação sobre o
+  `keycloak-angular`, usado tanto pelos guards quanto pelo chat para obter o token
+  JWT enviado no frame STOMP `CONNECT`).
+- **`features`** — cada seção pública do site (hero/about, portfólio, skills, contato,
+  chat) como um módulo próprio, e uma área `admin` separada para os formulários de
   CRUD protegidos por autenticação.
 - **`shared`** — componentes, pipes e diretivas reaproveitáveis entre features.
   Inclui os componentes padrão `HeaderComponent` (`app-header`) e `FooterComponent`
@@ -300,6 +304,19 @@ mecanismo de login). O fluxo tem uma particularidade que vale registrar:
   associa o `Principal` à sessão. Sem token válido, a conexão é recusada.
 - O mesmo interceptor cuida da autorização dos destinos: só permite `SEND` para
   `/chatbot/**` e `SUBSCRIBE` para `/user/queue/**`.
+
+### Front-End
+
+A rota `/chat` (`features/chat/`) implementa esse contrato com `@stomp/stompjs` +
+`sockjs-client` (o endpoint do back-end é SockJS, não WebSocket nativo). `ChatbotService`
+conecta automaticamente ao entrar na página (usuário já autenticado pelo `authGuard`),
+assina as três filas `/user/queue/chatbot/*` antes de habilitar o envio de mensagens, e
+usa `AuthService.getToken()` no `beforeConnect` do STOMP para montar o header nativo
+`Authorization: Bearer <jwt>` a cada tentativa de conexão (inclusive reconexões
+automáticas, mantendo o token sempre renovado). Como `sockjs-client` referencia o global
+`global` do Node sem checar a existência antes, um polyfill (`src/polyfills.ts`,
+`globalThis.global = globalThis`) foi necessário — o bundler esbuild do Angular CLI, ao
+contrário do antigo builder webpack, não faz esse shim automaticamente.
 
 > O projeto **não** usa `@EnableWebSocketSecurity`. Ele acopla um interceptor de CSRF ao
 > `CONNECT` que depende de um token guardado na sessão HTTP — algo que não existe numa API
