@@ -334,13 +334,16 @@ A IA é paga por token, e cada pergunta pode virar mais de uma chamada por causa
 | Login obrigatório | Frame `CONNECT` | — |
 | Mensagens por minuto, por usuário | `ChatbotRateLimiter` | 5 |
 | Mensagens por dia, por usuário | `ChatbotRateLimiter` | 40 |
-| Chamadas simultâneas à IA | pool dedicado | 2 |
+| Chamadas simultâneas à IA | pool dedicado (fila limitada, com rejeição explícita) | 2 |
 | Teto de tokens da resposta | `spring.ai.anthropic.chat.max-tokens` | 600 |
+| Timeout da chamada à IA | `spring.ai.anthropic.timeout` | 30s |
 | Modelo | `spring.ai.anthropic.chat.model` | `claude-haiku-4-5` |
 | Tamanho do frame STOMP | `WebSocketConfiguration` | 8 KB |
 
-Todos os limites são sobrescritíveis por variável de ambiente (ver a seção "Variáveis de
-Ambiente"). O rate limit é mantido em memória, ou seja, vale por instância — com uma única
+Os limites de uso (mensagens por minuto/dia, chamadas simultâneas, tokens e modelo) são
+sobrescritíveis por variável de ambiente (ver a seção "Variáveis de Ambiente"); o tamanho do
+frame STOMP é o único fixo no código (`WebSocketConfiguration`), sem variável de ambiente
+correspondente. O rate limit é mantido em memória, ou seja, vale por instância — com uma única
 réplica na VPS isso basta, mas se houver escala horizontal ele precisa migrar para um store
 compartilhado.
 
@@ -500,6 +503,7 @@ server {
 | `MAIL_USER` | `user` | SMTP (usuário e destinatário das notificações de contato) |
 | `MAIL_PASS` | `pass` | SMTP |
 | `SPRING_AI_ANTHROPIC_API_KEY` | `chave-nao-configurada` | Chave da API da Anthropic, usada pelo chatbot |
+| `CHATBOT_TIMEOUT` | `30s` | Timeout da chamada à API da Anthropic |
 | `CHATBOT_MODEL` | `claude-haiku-4-5` | Modelo da IA |
 | `CHATBOT_MAX_TOKENS` | `600` | Teto de tokens da resposta da IA |
 | `CHATBOT_MAX_POR_MINUTO` | `5` | Mensagens por minuto, por usuário |
@@ -545,7 +549,9 @@ cd projetos
 
 # 0. Criar o .env com a chave da Anthropic (obrigatória — o compose falha sem ela)
 #    Só a chave do chatbot é exigida em dev; as demais variáveis têm default.
-echo "SPRING_AI_ANTHROPIC_API_KEY=sk-ant-..." > .env
+#    O comando só cria o arquivo se ele não existir, para não truncar um .env já
+#    configurado — se já existir, adicione a linha manualmente.
+[ -f .env ] || echo "SPRING_AI_ANTHROPIC_API_KEY=sk-ant-..." > .env
 
 # 1. Sobe todo o stack (Postgres, Keycloak, back-end, front-end, NGINX)
 #    Acesse tudo via http://localhost (front-end, API e Keycloak)
@@ -553,7 +559,8 @@ docker compose up -d --build
 
 # 2. Alternativa: rodar o back-end fora do Docker (hot reload via devtools)
 #    Ainda depende de subir postgres + keycloak (via docker compose up -d postgres keycloak)
-#    Exporte SPRING_AI_ANTHROPIC_API_KEY antes, se for testar o chatbot.
+#    O Maven NÃO lê o .env sozinho — exporte a chave antes, se for testar o chatbot.
+export SPRING_AI_ANTHROPIC_API_KEY=sk-ant-...
 cd website-backend/website-backend
 ./mvnw spring-boot:run -Dspring.profiles.active=dev
 
