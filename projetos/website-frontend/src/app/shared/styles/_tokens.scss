@@ -16,6 +16,12 @@ $accent-soft: rgba(59, 130, 246, 0.1);
 $accent-softer: rgba(59, 130, 246, 0.05);
 $accent-border: rgba(59, 130, 246, 0.2);
 
+// $accent como fundo sólido com texto branco em 1rem/700 (CTAs "Chat ao Vivo")
+// não atinge 4.5:1 do WCAG AA (fica em ~3.7:1) — só os dois tons abaixo, mais
+// escuros, passam. Não são usados como cor de texto/borda, só de fundo dessas CTAs.
+$accent-cta: #2563eb;
+$accent-cta-hover: #1d4ed8;
+
 // Hover da seção CTA da home: a seção inteira inverte para fundo claro.
 $cta-hover-surface: #ffffff;
 $cta-hover-ink: #32103b;

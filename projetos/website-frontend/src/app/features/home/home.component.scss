@@ -15,6 +15,8 @@ $accent-circle: tokens.$accent-circle;
 $accent-soft: tokens.$accent-soft;
 $accent-softer: tokens.$accent-softer;
 $accent-border: tokens.$accent-border;
+$accent-cta: tokens.$accent-cta;
+$accent-cta-hover: tokens.$accent-cta-hover;
 $cta-hover-surface: tokens.$cta-hover-surface;
 $cta-hover-ink: tokens.$cta-hover-ink;
 $cta-hover-ink-soft: tokens.$cta-hover-ink-soft;
@@ -151,7 +153,9 @@ $coffee-tint-light: brightness(0) invert(1);
     align-self: flex-start;
     padding: 1rem 2rem;
     border-radius: 8px;
-    background-color: $accent;
+    // $accent teria só ~3.7:1 de contraste com o texto branco em 1rem/700,
+    // abaixo do mínimo AA (4.5:1) — $accent-cta é o mesmo azul, mais escuro.
+    background-color: $accent-cta;
     font-weight: 700;
     font-size: 1rem;
     letter-spacing: 0.1rem;
@@ -159,7 +163,7 @@ $coffee-tint-light: brightness(0) invert(1);
     transition: background-color 0.2s ease, transform 0.2s ease;
 
     &:hover {
-      background-color: $accent-hover;
+      background-color: $accent-cta-hover;
       transform: translateY(-1px);
     }
   }
@@ -361,7 +365,9 @@ $coffee-tint-light: brightness(0) invert(1);
     gap: 0.75rem;
     padding: 1rem 2rem;
     border-radius: 8px;
-    background-color: $accent;
+    // Mesmo motivo do .hero__chat-cta: $accent não atinge 4.5:1 (WCAG AA) com
+    // texto branco em 1rem/700.
+    background-color: $accent-cta;
     font-weight: 700;
     font-size: 1rem;
     letter-spacing: 0.1rem;
@@ -369,7 +375,7 @@ $coffee-tint-light: brightness(0) invert(1);
     transition: background-color 0.2s ease, transform 0.2s ease;
 
     &:hover {
-      background-color: $accent-hover;
+      background-color: $accent-cta-hover;
       transform: translateY(-1px);
     }
   }
