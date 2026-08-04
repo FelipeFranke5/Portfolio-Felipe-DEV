@@ -52,7 +52,12 @@
     </div>
 
     <section class="chat-window fade-in fade-in--4">
-      <div class="chat-window__messages" #messagesContainer>
+      <div
+        class="chat-window__messages"
+        #messagesContainer
+        aria-live="polite"
+        aria-atomic="false"
+      >
         @if (messages().length === 0) {
           <p class="chat-window__empty">
             Envie uma pergunta para começar a conversa.
@@ -73,6 +78,7 @@
       <div class="chat-composer">
         <textarea
           class="chat-composer__input"
+          aria-label="Mensagem para o assistente"
           placeholder="Digite sua pergunta... (Enter para enviar, Shift+Enter para quebrar linha)"
           [attr.maxlength]="maxMessageLength"
           [value]="draftMessage()"
