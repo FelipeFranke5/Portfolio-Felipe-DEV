@@ -1,6 +1,6 @@
 package dev.franke.felipe.website_backend.dto;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-public record ChatbotErrorResponse(LocalDateTime currentTime, String message) {
+public record ChatbotErrorResponse(Instant currentTime, String message) {
 }

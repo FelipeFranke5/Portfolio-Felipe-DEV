@@ -17,7 +17,7 @@ import org.springframework.messaging.handler.annotation.support.MethodArgumentNo
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 
 /**
@@ -37,19 +37,19 @@ public class WebSocketGlobalExceptionHandler {
     @SendToUser(destinations = ChatbotService.ERRORS_QUEUE_PATH, broadcast = false)
     public ChatbotErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
         log.info("Received invalid payload from chatbot");
-        return new ChatbotErrorResponse(LocalDateTime.now(), "Mensagem inválida!");
+        return new ChatbotErrorResponse(Instant.now(), "Mensagem inválida!");
     }
 
     @MessageExceptionHandler(ChatbotRateLimitException.class)
     @SendToUser(destinations = ChatbotService.ERRORS_QUEUE_PATH, broadcast = false)
     public ChatbotErrorResponse handleChatbotRateLimitException(ChatbotRateLimitException exception) {
-        return new ChatbotErrorResponse(LocalDateTime.now(), exception.getMessage());
+        return new ChatbotErrorResponse(Instant.now(), exception.getMessage());
     }
 
     @MessageExceptionHandler(ChatbotGeneralException.class)
     @SendToUser(destinations = ChatbotService.ERRORS_QUEUE_PATH, broadcast = false)
     public ChatbotErrorResponse handleChatbotGeneralException(ChatbotGeneralException exception) {
-        return new ChatbotErrorResponse(LocalDateTime.now(), exception.getMessage());
+        return new ChatbotErrorResponse(Instant.now(), exception.getMessage());
     }
 
     /*
@@ -62,7 +62,7 @@ public class WebSocketGlobalExceptionHandler {
         log.error("Unhandled exception from chatbot (STOMP level)", exception);
         Optional<InternalLog> savedInternalLog = internalLogService.getInternalLog(exception);
         return new ChatbotErrorResponse(
-                LocalDateTime.now(),
+                Instant.now(),
                 getGenericMessage(savedInternalLog)
         );
     }

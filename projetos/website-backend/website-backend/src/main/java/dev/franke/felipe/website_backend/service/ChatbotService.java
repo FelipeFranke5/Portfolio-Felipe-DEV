@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.concurrent.Executor;
 
 @Service
@@ -38,7 +38,7 @@ public class ChatbotService {
     }
 
     public void sendMessages(String user, String userDisplayName, String userQuestion) {
-        LocalDateTime timeNow = LocalDateTime.now();
+        Instant timeNow = Instant.now();
 
         send(user, MESSAGES_QUEUE_PATH, new ChatbotOutput(userDisplayName, userQuestion, timeNow));
         send(user, RESPONSES_QUEUE_PATH, new ChatbotOutput(SYSTEM_AS_SENDER, MESSAGE_BEING_PROCESSED_INDICATOR, timeNow));
@@ -50,11 +50,11 @@ public class ChatbotService {
     private ChatbotOutput retrieveAIResponse(String userQuestion) {
         try {
             String aiResponse = chatClient.prompt(userQuestion).call().content();
-            return new ChatbotOutput(BOT_AS_SENDER, aiResponse, LocalDateTime.now());
+            return new ChatbotOutput(BOT_AS_SENDER, aiResponse, Instant.now());
         } catch (Exception aiResponseException) {
             // Registrar de verdade: o catch anterior engolia o erro sem log nenhum.
             log.error("Unable to obtain response from AI", aiResponseException);
-            return new ChatbotOutput(BOT_AS_SENDER, MESSAGE_FAILED_INDICATOR, LocalDateTime.now());
+            return new ChatbotOutput(BOT_AS_SENDER, MESSAGE_FAILED_INDICATOR, Instant.now());
         }
     }
 
