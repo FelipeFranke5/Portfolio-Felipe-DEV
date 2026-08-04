@@ -113,6 +113,20 @@ class JwtStompChannelInterceptorTest {
     }
 
     @Test
+    @DisplayName("When token has the same Instant as the expiresAt, MessageDeliveryException should be thrown")
+    void sendWithTokenThatHasSameInstantAsExpiresAtTokenShouldRejectAuthentication() {
+        JwtAuthenticationToken authentication =
+                new JwtAuthenticationToken(jwtExpiringAt(clock.instant()), List.of());
+
+        StompHeaderAccessor accessor = accessorFor(StompCommand.SEND);
+        accessor.getSessionAttributes().put(USER_ATTRIBUTE, authentication);
+        accessor.setDestination("/chatbot/new-message");
+        Message<byte[]> message = messageFor(accessor);
+
+        assertThrows(MessageDeliveryException.class, () -> interceptor.preSend(message, noOpChannel()));
+    }
+
+    @Test
     @DisplayName("SEND with a still-valid cached token should be authorized to /chatbot/**")
     void sendWithValidCachedTokenShouldBeAuthorized() {
         JwtAuthenticationToken authentication =

@@ -167,13 +167,18 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
         return null;
     }
 
+    private boolean isSentTokenBeforeOrEqualsExpiresAt(Instant expiresAt) {
+        Instant currentTime = clock.instant();
+        return expiresAt.isBefore(currentTime) || expiresAt.equals(currentTime);
+    }
+
     private boolean isExpired(Authentication authentication) {
         if (!(authentication instanceof JwtAuthenticationToken jwtAuthenticationToken)) {
             return false;
         }
 
         Instant expiresAt = jwtAuthenticationToken.getToken().getExpiresAt();
-        return expiresAt != null && expiresAt.isBefore(clock.instant());
+        return expiresAt != null && isSentTokenBeforeOrEqualsExpiresAt(expiresAt);
     }
 
     private void requireUserAuth(Message<?> message, StompHeaderAccessor accessor) {
