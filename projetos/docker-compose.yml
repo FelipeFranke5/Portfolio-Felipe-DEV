@@ -38,8 +38,13 @@ services:
     container_name: website_keycloak_dev
     command: start-dev
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      # KEYCLOAK_ADMIN e KEYCLOAK_ADMIN_PASSWORD foram deprecados
+      # Novo uso deve ser: KC_BOOTSTRAP_ADMIN_USERNAME e KC_BOOTSTRAP_ADMIN_PASSWORD
+      # Doc https://www.keycloak.org/server/all-config
+      #KEYCLOAK_ADMIN: admin
+      #KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HTTP_RELATIVE_PATH: /auth
       # Habilita /auth/health/ready, usado no healthcheck abaixo
       KC_HEALTH_ENABLED: "true"
