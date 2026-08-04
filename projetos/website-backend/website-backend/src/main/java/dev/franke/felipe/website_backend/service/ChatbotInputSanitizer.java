@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.HtmlUtils;
 
 import java.text.Normalizer;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -31,7 +32,7 @@ public class ChatbotInputSanitizer {
         menções legítimas como "Node.js" num chat sobre um dev back-end.
      */
     private static final String NON_DOMAIN_SUFFIXES =
-            "js|ts|jsx|tsx|py|rb|go|cs|cpp|java|html|css|json|xml|yml|yaml|md|sql|php|rs|kt|swift";
+            "js|ts|jsx|tsx|py|rb|go|cs|cpp|java|html|css|json|xml|yml|yaml|sql|php|kt|swift";
 
     private static final Pattern URL_PATTERN = Pattern.compile(
             "(?i)(https?://|www\\.|\\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+"

@@ -44,9 +44,10 @@ class ChatbotInputSanitizerTest {
     }
 
     @Test
-    @DisplayName("When input mentions a tech name that looks like a domain, it should NOT be blocked")
-    void inputWithTechNameShouldNotBeBlocked() {
-        assertEquals("Você usa Node.js?", sanitizer.sanitize("Você usa Node.js?"));
+    @DisplayName("When domain contains md or rs extenstions, ChatbotGeneralException should be thrown")
+    void inputWithRsOrMdExtentionShouldThrow() {
+        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize("Carregar arq.md"));
+        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize("Carregar arq.rs"));
     }
 
     @Test
