@@ -137,7 +137,7 @@ class ChatbotRateLimiterTest {
 
     @Test
     @DisplayName("When user is idle, limits are reset")
-    void deveEsquecerUsuariosOciosos() {
+    void whenUserIsIdleLimitsAreReset() {
         for (int simulatedAttemptCount = 0; simulatedAttemptCount < MAX_PER_MINUTE; simulatedAttemptCount++) {
             rateLimiter.tryConsume(USER1);
         }
@@ -149,6 +149,15 @@ class ChatbotRateLimiterTest {
 
         // Estado zerado: volta a aceitar as 3 do minuto.
         assertEquals(ChatbotRateLimiter.AllowUserDecision.USER_ALLOWED, rateLimiter.tryConsume(USER1));
+
+        for (int attempt = 0; attempt < MAX_PER_MINUTE; attempt++) {
+            assertEquals(ChatbotRateLimiter.AllowUserDecision.USER_ALLOWED, rateLimiter.tryConsume(USER1));
+        }
+        
+        assertEquals(
+            ChatbotRateLimiter.AllowUserDecision.EXCEEDED_PER_MINUTE_RATE_LIMITING,
+            rateLimiter.tryConsume(USER1)
+        );
     }
 
     @Test
