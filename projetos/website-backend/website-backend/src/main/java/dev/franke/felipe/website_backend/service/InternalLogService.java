@@ -100,4 +100,21 @@ public class InternalLogService {
         }
     }
 
+    public String unhandledExceptionReason(Optional<InternalLog> savedInternalLog) {
+        StringBuilder messageBuilder = new StringBuilder();
+
+        if (savedInternalLog.isEmpty()) {
+            messageBuilder.append("An unhandled exception occurred while processing your request.")
+                    .append(" Please try again later. The server also attempted to save the error logs,")
+                    .append(" but this process also failed.");
+        } else {
+            messageBuilder.append("An unhandled exception occurred while processing your request.")
+                    .append(" Please try again later or contact the system administrator")
+                    .append(" informing the ID: " + savedInternalLog.get().getId())
+                    .append(" to obtain support.");
+        }
+
+        return messageBuilder.toString();
+    }
+
 }

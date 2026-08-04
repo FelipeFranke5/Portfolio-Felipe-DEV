@@ -65,6 +65,16 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/actuator/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/contact").permitAll()
+                    /*
+                        Handshake do WebSocket/SockJS.
+
+                        Liberado sem método porque o SockJS usa GET e POST (/info, /xhr,
+                        /xhr_send, ...). Isso NÃO deixa o chatbot aberto: a autenticação
+                        acontece no frame STOMP CONNECT, no JwtStompChannelInterceptor,
+                        já que o navegador não envia o header Authorization no upgrade
+                        de um WebSocket nativo.
+                     */
+                    .requestMatchers("/api/websocket", "/api/websocket/**").permitAll()
                     .anyRequest().hasRole("ADMIN")
 
                 );

@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -27,6 +28,12 @@ export const routes: Routes = [
       import('./features/contact/contact.component').then(
         (m) => m.ContactComponent
       ),
+  },
+  {
+    path: 'chat',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/chat/chat.component').then((m) => m.ChatComponent),
   },
   {
     path: 'admin',

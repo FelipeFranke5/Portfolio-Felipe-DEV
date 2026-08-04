@@ -1,0 +1,105 @@
+<app-header class="fade-in fade-in--0"></app-header>
+
+<main class="chat-page">
+  <div class="chat-page__inner">
+    <section class="chat-page__intro">
+      <p class="chat-page__eyebrow fade-in fade-in--1">Desenvolvedor Back-End</p>
+      <h1 class="chat-page__heading fade-in fade-in--2">Chat ao Vivo</h1>
+      <p class="chat-page__description fade-in fade-in--3">
+        Converse com um assistente de IA treinado no meu perfil. Pergunte sobre meus projetos,
+        tecnologias e habilidades.
+      </p>
+    </section>
+
+    <div class="chat-page__notice fade-in fade-in--4">
+      <p class="chat-page__notice-title">Aviso importante</p>
+      <p class="chat-page__notice-text">
+        Este chat utiliza Inteligência Artificial e possui limites de uso: <strong>cota diária</strong> de
+        mensagens e um número máximo de perguntas por minuto. Recomendo enviar no máximo
+        <strong>duas perguntas por sessão</strong>. Para detalhes adicionais, entre em contato
+        diretamente pela <a routerLink="/contact">página de contato</a>.
+      </p>
+    </div>
+
+    @if (lastError()) {
+      <p class="chat-page__feedback fade-in">{{ lastError() }}</p>
+    }
+
+    <div class="chat-page__controls fade-in fade-in--4">
+      <div class="chat-page__status">
+        <span class="chat-page__status-dot chat-page__status-dot--{{ connectionStatus() }}"></span>
+        <span>{{ statusLabel() }}</span>
+      </div>
+
+      <div class="chat-page__control-buttons">
+        <button
+          type="button"
+          class="chat-page__control-button"
+          [disabled]="!canConnect()"
+          (click)="connect()"
+        >
+          Conectar
+        </button>
+        <button
+          type="button"
+          class="chat-page__control-button"
+          [disabled]="!canDisconnect()"
+          (click)="disconnect()"
+        >
+          Desconectar
+        </button>
+      </div>
+    </div>
+
+    <section class="chat-window fade-in fade-in--4">
+      <div
+        class="chat-window__messages"
+        #messagesContainer
+        aria-live="polite"
+        aria-atomic="false"
+      >
+        @if (messages().length === 0) {
+          <p class="chat-window__empty">
+            Envie uma pergunta para começar a conversa.
+          </p>
+        }
+
+        @for (message of messages(); track message.id) {
+          <div class="chat-message chat-message--{{ message.kind }}">
+            <div class="chat-message__meta">
+              <span class="chat-message__sender">{{ message.sender }}</span>
+              <span class="chat-message__time">{{ message.timestamp | date: 'HH:mm' }}</span>
+            </div>
+            <p class="chat-message__text">{{ message.text }}</p>
+          </div>
+        }
+      </div>
+
+      <div class="chat-composer">
+        <textarea
+          class="chat-composer__input"
+          aria-label="Mensagem para o assistente"
+          placeholder="Digite sua pergunta... (Enter para enviar, Shift+Enter para quebrar linha)"
+          [attr.maxlength]="maxMessageLength"
+          [value]="draftMessage()"
+          (input)="onDraftChange($any($event.target).value)"
+          (keydown)="onTextareaKeydown($event)"
+        ></textarea>
+
+        <div class="chat-composer__footer">
+          <span class="chat-composer__counter">{{ charCount() }}/{{ maxMessageLength }}</span>
+          <button
+            type="button"
+            class="chat-composer__send"
+            [disabled]="!canSend()"
+            (click)="send()"
+          >
+            Enviar
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<app-footer></app-footer>

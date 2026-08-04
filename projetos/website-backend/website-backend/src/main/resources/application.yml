@@ -2,7 +2,26 @@
 #  Configurações base (todos os perfis)
 # ═══════════════════════════════════════════════════════
 
+# ─── Spring AI (chatbot) ────────────────────────────
 spring:
+  ai:
+    anthropic:
+      api-key: ${SPRING_AI_ANTHROPIC_API_KEY:chave-nao-configurada}
+      # Sem isto o timeout fica a critério do default do SDK da Anthropic — uma chamada
+      # travada seguraria uma thread do pool (CHATBOT_MAX_SIMULTANEAS) indefinidamente.
+      timeout: ${CHATBOT_TIMEOUT:30s}
+      chat:
+        # ATENÇÃO: no Spring AI 2.0 o prefixo é spring.ai.anthropic.chat.*
+        # O aninhado spring.ai.anthropic.chat.options.* está @Deprecated(forRemoval).
+        #
+        # A IA é paga por token: o modelo e o teto de resposta ficam fixos aqui (e
+        # sobrescritíveis por variável de ambiente) para o custo por pergunta não
+        # depender do default do starter, que pode mudar de versão para versão.
+        model:       ${CHATBOT_MODEL:claude-haiku-4-5}
+        max-tokens:  ${CHATBOT_MAX_TOKENS:600}
+        temperature: 0.2
+
+  # ─── Serializacao ─────────────────────────────────
   jackson:
     deserialization:
       fail-on-null-for-primitives: false
@@ -59,6 +78,15 @@ spring:
           starttls:
             enable: true
             required: true
+
+# ─── Chatbot — cota de uso por usuário autenticado ────
+# Cada pergunta vira ao menos uma chamada paga à Anthropic (o loop de tool calling
+# costuma gerar mais de uma). Estes são os tetos de gasto.
+chatbot:
+  quota:
+    maxPerMinute:            ${CHATBOT_MAX_PER_MINUTE:5}
+    maxPerUserPerDay:        ${CHATBOT_MAX_PER_USER_DAILY:40}
+    maxConcurrentCalls:      ${CHATBOT_MAX_CONCURRENT:2}
 
 # ─── Servidor ─────────────────────────────────────────
 server:

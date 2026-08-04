@@ -1,6 +1,7 @@
 package dev.franke.felipe.website_backend.service;
 
 import dev.franke.felipe.website_backend.dto.SkillDTO;
+import dev.franke.felipe.website_backend.dto.SkillForAI;
 import dev.franke.felipe.website_backend.dto.SkillLevel;
 import dev.franke.felipe.website_backend.dto.SkillRequest;
 import dev.franke.felipe.website_backend.exception.SkillException;
@@ -34,6 +35,17 @@ public class SkillService {
                         resolveSkillLevel(skill.getLevel())
                 )
         ).toList();
+    }
+
+    public List<SkillForAI> getSkillsChatbotVersion() {
+        log.info("Montando a lista de habilidades para o chatbot");
+        return skillRepository.findAll().stream()
+                .map(skill -> new SkillForAI(
+                        skill.getName(),
+                        skill.getCategory(),
+                        resolveSkillLevel(skill.getLevel()).getDescription()
+                ))
+                .toList();
     }
 
     public SkillDTO getSkillById(String skillId) {

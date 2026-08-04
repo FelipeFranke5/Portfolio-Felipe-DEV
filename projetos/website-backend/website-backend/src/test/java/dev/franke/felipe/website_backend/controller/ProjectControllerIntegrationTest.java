@@ -7,6 +7,7 @@ import dev.franke.felipe.website_backend.dto.UnprocessableEntityResponse;
 import dev.franke.felipe.website_backend.model.Project;
 import dev.franke.felipe.website_backend.repository.ProjectRepository;
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -56,6 +57,9 @@ class ProjectControllerIntegrationTest {
 
     @MockitoBean
     private JwtDecoder jwtDecoder;
+
+    @MockitoBean
+    private ChatClient chatClient;
 
     @Autowired
     private MockMvc mockMvc;
