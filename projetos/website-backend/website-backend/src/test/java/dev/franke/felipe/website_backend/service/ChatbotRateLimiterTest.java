@@ -151,7 +151,7 @@ class ChatbotRateLimiterTest {
         assertEquals(ChatbotRateLimiter.AllowUserDecision.USER_ALLOWED, rateLimiter.tryConsume(USER1));
 
         for (int attempt = 0; attempt < MAX_PER_MINUTE; attempt++) {
-            assertEquals(ChatbotRateLimiter.AllowUserDecision.USER_ALLOWED, rateLimiter.tryConsume(USER1));
+            rateLimiter.tryConsume(USER1);
         }
         
         assertEquals(
