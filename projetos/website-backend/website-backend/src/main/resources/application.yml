@@ -7,6 +7,9 @@ spring:
   ai:
     anthropic:
       api-key: ${SPRING_AI_ANTHROPIC_API_KEY:chave-nao-configurada}
+      # Sem isto o timeout fica a critério do default do SDK da Anthropic — uma chamada
+      # travada seguraria uma thread do pool (CHATBOT_MAX_SIMULTANEAS) indefinidamente.
+      timeout: ${CHATBOT_TIMEOUT:30s}
       chat:
         # ATENÇÃO: no Spring AI 2.0 o prefixo é spring.ai.anthropic.chat.*
         # O aninhado spring.ai.anthropic.chat.options.* está @Deprecated(forRemoval).
