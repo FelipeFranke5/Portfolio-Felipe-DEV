@@ -24,8 +24,18 @@ public class ChatbotInputSanitizer {
 
     private static final int TEXT_MAX_LENGTH = 500;
 
+    /*
+        Domínio genérico em vez de uma lista fixa de TLDs: "example.xyz" ou "portal.co.uk"
+        passavam batido na versão anterior, que só reconhecia com|net|org|io|dev|br|ai.
+        A exclusão de extensões de arquivo/tecnologia comuns (js, ts, py...) evita bloquear
+        menções legítimas como "Node.js" num chat sobre um dev back-end.
+     */
+    private static final String NON_DOMAIN_SUFFIXES =
+            "js|ts|jsx|tsx|py|rb|go|cs|cpp|java|html|css|json|xml|yml|yaml|md|sql|php|rs|kt|swift";
+
     private static final Pattern URL_PATTERN = Pattern.compile(
-            "(?i)(https?://|www\\.|\\b[a-z0-9-]+\\.(com|net|org|io|dev|br|ai)\\b)"
+            "(?i)(https?://|www\\.|\\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+"
+                    + "(?!(?:" + NON_DOMAIN_SUFFIXES + ")\\b)[a-z]{2,24}\\b)"
     );
 
     public String sanitize(String input) {

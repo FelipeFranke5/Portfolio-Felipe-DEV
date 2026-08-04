@@ -32,6 +32,24 @@ class ChatbotInputSanitizerTest {
     }
 
     @Test
+    @DisplayName("When domain has a TLD outside the old fixed list, ChatbotGeneralException should be thrown")
+    void inputWithArbitraryTldDomainShouldThrow() {
+        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize("Confira example.xyz"));
+    }
+
+    @Test
+    @DisplayName("When domain has a multi-label hostname, ChatbotGeneralException should be thrown")
+    void inputWithMultiLabelHostnameShouldThrow() {
+        assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize("Visite portal.co.uk"));
+    }
+
+    @Test
+    @DisplayName("When input mentions a tech name that looks like a domain, it should NOT be blocked")
+    void inputWithTechNameShouldNotBeBlocked() {
+        assertEquals("Você usa Node.js?", sanitizer.sanitize("Você usa Node.js?"));
+    }
+
+    @Test
     @DisplayName("When input is null or blank, ChatbotGeneralException should be thrown")
     void nullOrBlankInputShouldThrow() {
         assertThrows(ChatbotGeneralException.class, () -> sanitizer.sanitize(null));
