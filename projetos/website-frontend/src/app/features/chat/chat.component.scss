@@ -13,7 +13,6 @@ $accent-soft: tokens.$accent-soft;
 $accent-softer: tokens.$accent-softer;
 $danger: tokens.$danger;
 $success: tokens.$success;
-
 $font-heading: tokens.$font-heading;
 $font-body: tokens.$font-body;
 
@@ -95,7 +94,7 @@ $font-body: tokens.$font-body;
     margin: 0;
     padding: 0.875rem 1rem;
     border-radius: 4px;
-    background-color: rgba(255, 92, 92, 0.1);
+    background-color: rgba($danger, 0.1);
     color: $danger;
     font-size: 0.875rem;
     text-align: center;
@@ -285,7 +284,7 @@ $font-body: tokens.$font-body;
 
     .chat-message__text {
       border-left: 3px solid $danger;
-      background-color: rgba(255, 92, 92, 0.1);
+      background-color: rgba($danger, 0.1);
       color: $danger;
     }
   }
