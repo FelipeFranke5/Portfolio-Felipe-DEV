@@ -3,7 +3,7 @@ import { Client, IMessage, StompConfig } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
 import { environment } from '../../../environments/environment';
-import { AuthService } from '../../core/services/auth.service';
+import { AuthService, SessionExpiredError } from '../../core/services/auth.service';
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
 export type ChatMessageKind = 'user' | 'system' | 'ai' | 'error';
@@ -33,7 +33,7 @@ const RESPONSES_QUEUE = '/user/queue/chatbot/respostas';
 const ERRORS_QUEUE = '/user/queue/chatbot/erros';
 const SYSTEM_SENDER = 'sistema';
 const AI_SENDER = 'bot';
-const MAX_MESSAGE_LENGTH = 500;
+export const MAX_MESSAGE_LENGTH = 500;
 
 /**
  * Fábrica injetável em volta de `new Client(...)` — costura de testabilidade
@@ -83,8 +83,23 @@ export class ChatbotService {
       beforeConnect: async () => {
         // Roda a cada tentativa de conexão, inclusive reconexões automáticas
         // — garante um token sempre fresco numa sessão de chat longa.
-        const token = await this.authService.getToken();
-        client.connectHeaders = { Authorization: `Bearer ${token}` };
+        try {
+          const token = await this.authService.getToken();
+          client.connectHeaders = { Authorization: `Bearer ${token}` };
+        } catch (error) {
+          // Se beforeConnect lança, o stompjs não chega a abrir o socket nem a
+          // invocar onWebSocketClose/onStompError — sem tratar aqui, connectionStatus
+          // ficaria travado em 'connecting' para sempre.
+          this.lastError.set(
+            error instanceof Error ? error.message : 'Não foi possível autenticar. Faça login novamente.'
+          );
+          this.connectionStatus.set('disconnected');
+          void client.deactivate();
+
+          if (error instanceof SessionExpiredError) {
+            void this.authService.login();
+          }
+        }
       },
       onConnect: () => {
         this.hasConnectedOnce = true;
@@ -132,6 +147,9 @@ export class ChatbotService {
       this.lastError.set(
         'Não foi possível conectar. Verifique se você está logado ou tente novamente em instantes.'
       );
+      // Sem isto o cliente continuaria tentando reconectar sozinho em segundo
+      // plano (reconnectDelay do stompjs) mesmo já mostrando 'disconnected' na UI.
+      void client.deactivate();
       return;
     }
 
@@ -165,9 +183,8 @@ export class ChatbotService {
       kind: this.deriveKind(payload.name),
       sender: payload.name,
       text: payload.message,
-      // Jackson serializa LocalDateTime sem timezone; o Date do navegador
-      // interpreta como horário local, aproximação aceitável para uma
-      // exibição discreta de horário (imprecisão conhecida e aceita).
+      // Backend serializa Instant como ISO-8601 UTC (sufixo 'Z'); o Date do
+      // navegador converte corretamente para o horário local.
       timestamp: new Date(payload.timestamp),
     });
   }

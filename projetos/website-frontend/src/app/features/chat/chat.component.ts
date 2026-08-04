@@ -13,9 +13,7 @@ import { RouterLink } from '@angular/router';
 
 import { HeaderComponent } from '../../shared/components/header/header.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
-import { ChatbotService, ConnectionStatus } from './chatbot.service';
-
-const MAX_MESSAGE_LENGTH = 500;
+import { ChatbotService, ConnectionStatus, MAX_MESSAGE_LENGTH } from './chatbot.service';
 
 const STATUS_LABELS: Record<ConnectionStatus, string> = {
   connected: 'Conectado',

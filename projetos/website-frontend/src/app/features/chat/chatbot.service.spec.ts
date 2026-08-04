@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Client, IFrame, IMessage, StompConfig } from '@stomp/stompjs';
 
-import { AuthService } from '../../core/services/auth.service';
+import { AuthService, SessionExpiredError } from '../../core/services/auth.service';
 import { ChatbotService, StompClientFactory } from './chatbot.service';
 
 class FakeClient {
@@ -68,8 +68,9 @@ describe('ChatbotService', () => {
 
   beforeEach(() => {
     factory = new FakeStompClientFactory();
-    authServiceSpy = jasmine.createSpyObj<AuthService>('AuthService', ['getToken']);
+    authServiceSpy = jasmine.createSpyObj<AuthService>('AuthService', ['getToken', 'login']);
     authServiceSpy.getToken.and.resolveTo('token-123');
+    authServiceSpy.login.and.resolveTo();
 
     TestBed.configureTestingModule({
       providers: [
@@ -174,6 +175,44 @@ describe('ChatbotService', () => {
     );
     expect(service.connectionStatus()).toBe('connected');
     expect(client.deactivateCalls).toBe(0);
+  });
+
+  it('should end at disconnected with lastError set when beforeConnect fails to get a token', async () => {
+    authServiceSpy.getToken.and.rejectWith(new Error('rede fora do ar'));
+
+    service.connect();
+    const client = factory.lastClient!;
+    await client.triggerBeforeConnect();
+
+    expect(service.connectionStatus()).toBe('disconnected');
+    expect(service.lastError()).toBe('rede fora do ar');
+    expect(client.deactivateCalls).toBe(1);
+    expect(authServiceSpy.login).not.toHaveBeenCalled();
+  });
+
+  it('should redirect to login when beforeConnect fails because the session expired', async () => {
+    authServiceSpy.getToken.and.rejectWith(new SessionExpiredError(new Error('refresh falhou')));
+
+    service.connect();
+    const client = factory.lastClient!;
+    await client.triggerBeforeConnect();
+
+    expect(service.connectionStatus()).toBe('disconnected');
+    expect(client.deactivateCalls).toBe(1);
+    expect(authServiceSpy.login).toHaveBeenCalled();
+  });
+
+  it('should allow connect() to open a new client after a failed first attempt', async () => {
+    authServiceSpy.getToken.and.rejectWith(new Error('rede fora do ar'));
+
+    service.connect();
+    await factory.lastClient!.triggerBeforeConnect();
+    expect(factory.createCalls).toBe(1);
+
+    authServiceSpy.getToken.and.resolveTo('token-123');
+    service.connect();
+
+    expect(factory.createCalls).toBe(2);
   });
 
   it('should end at disconnected with lastError set when the initial connection attempt fails', () => {

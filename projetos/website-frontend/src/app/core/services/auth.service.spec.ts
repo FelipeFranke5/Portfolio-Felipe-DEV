@@ -3,7 +3,7 @@ import { signal } from '@angular/core';
 import Keycloak from 'keycloak-js';
 import { KEYCLOAK_EVENT_SIGNAL, KeycloakEventType } from 'keycloak-angular';
 
-import { AuthService } from './auth.service';
+import { AuthService, SessionExpiredError } from './auth.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -75,5 +75,18 @@ describe('AuthService', () => {
     await expectAsync(service.getToken()).toBeRejectedWithError(
       'Nenhum token disponível — usuário não autenticado.'
     );
+  });
+
+  it('should wrap a failed updateToken() as a SessionExpiredError, preserving the original cause', async () => {
+    const refreshFailure = new Error('refresh token expired');
+    keycloakMock.updateToken.and.rejectWith(refreshFailure);
+
+    const error = await service.getToken().then(
+      () => null,
+      (rejection: unknown) => rejection
+    );
+
+    expect(error).toBeInstanceOf(SessionExpiredError);
+    expect((error as SessionExpiredError).cause).toBe(refreshFailure);
   });
 });

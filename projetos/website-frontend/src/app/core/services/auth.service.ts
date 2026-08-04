@@ -3,6 +3,20 @@ import Keycloak from 'keycloak-js';
 import { KEYCLOAK_EVENT_SIGNAL } from 'keycloak-angular';
 
 /**
+ * Lançado quando `keycloak.updateToken()` falha — o refresh token também expirou
+ * e não há como renovar a sessão em silêncio. Distinto de um `Error` genérico para
+ * que consumidores (ex.: `beforeConnect` do STOMP) possam redirecionar para o login
+ * em vez de tratar como uma falha de rede transitória e tentar de novo.
+ */
+export class SessionExpiredError extends Error {
+  constructor(cause: unknown) {
+    super('Sessão expirada. Faça login novamente.');
+    this.name = 'SessionExpiredError';
+    this.cause = cause;
+  }
+}
+
+/**
  * Wrapper de autenticação sobre o keycloak-angular, conforme descrito
  * na seção "core" do README.md.
  */
@@ -40,7 +54,11 @@ export class AuthService {
    * garantindo token sempre fresco numa sessão de chat longa.
    */
   async getToken(): Promise<string> {
-    await this.keycloak.updateToken(30);
+    try {
+      await this.keycloak.updateToken(30);
+    } catch (error) {
+      throw new SessionExpiredError(error);
+    }
     if (!this.keycloak.token) {
       throw new Error('Nenhum token disponível — usuário não autenticado.');
     }
