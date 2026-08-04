@@ -506,9 +506,9 @@ server {
 | `CHATBOT_TIMEOUT` | `30s` | Timeout da chamada à API da Anthropic |
 | `CHATBOT_MODEL` | `claude-haiku-4-5` | Modelo da IA |
 | `CHATBOT_MAX_TOKENS` | `600` | Teto de tokens da resposta da IA |
-| `CHATBOT_MAX_POR_MINUTO` | `5` | Mensagens por minuto, por usuário |
-| `CHATBOT_MAX_POR_USUARIO_DIA` | `40` | Mensagens por dia, por usuário |
-| `CHATBOT_MAX_SIMULTANEAS` | `2` | Chamadas simultâneas à IA no processo |
+| `CHATBOT_MAX_PER_MINUTE` | `5` | Mensagens por minuto, por usuário |
+| `CHATBOT_MAX_PER_USER_DAILY` | `40` | Mensagens por dia, por usuário |
+| `CHATBOT_MAX_CONCURRENT` | `2` | Chamadas simultâneas à IA no processo |
 
 > ⚠️ Todos os defaults acima existem apenas para não quebrar o boot em dev —
 > em produção, **todas** essas variáveis devem ser sobrescritas via `.env` /
