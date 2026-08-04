@@ -14,9 +14,11 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
-import java.security.Principal;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -51,6 +53,7 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
 
     private final JwtDecoder jwtDecoder;
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
+    private final Clock clock;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -62,7 +65,7 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
         return switch (accessor.getCommand()) {
             case CONNECT, STOMP -> authenticate(message, accessor);
             case SEND -> authorizeMessage(message, accessor);
-            case SUBSCRIBE -> authorizeSignature(message, accessor);
+            case SUBSCRIBE -> authorizeSubscription(message, accessor);
             default -> reloadUser(message, accessor);
         };
     }
@@ -109,7 +112,7 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
         return message;
     }
 
-    private Message<?> authorizeSignature(Message<?> message, StompHeaderAccessor accessor) {
+    private Message<?> authorizeSubscription(Message<?> message, StompHeaderAccessor accessor) {
         reloadUser(message, accessor);
         requireUserAuth(message, accessor);
 
@@ -118,7 +121,7 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
         String destination = accessor.getDestination();
 
         if (destination == null || !destination.startsWith(USER_QUEUE_PREFIX)) {
-            log.warn("SUBSCRIBE recusado para o destination '{}'", destination);
+            log.warn("SUBSCRIBE refused for destination '{}'", destination);
             throw new MessageDeliveryException(message, "Destino nao permitido");
         }
 
@@ -129,19 +132,48 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
      * O Spring repõe o {@code Principal} da sessão nos frames seguintes ao CONNECT, mas isso
      * depende do callback interno do {@code StompSubProtocolHandler}. Reler dos atributos da
      * sessão garante o comportamento independentemente desse detalhe de implementação.
+     *
+     * <p>Além de repor, revalida a expiração do JWT em TODO frame pós-CONNECT: sem isso, um
+     * token que expira no meio de uma sessão STOMP longa continuava sendo aceito até o
+     * cliente desconectar, já que a autenticação original ficava só guardada na sessão.
      */
     private Message<?> reloadUser(Message<?> message, StompHeaderAccessor accessor) {
-        if (accessor.getUser() != null) {
+        Authentication authentication = resolveAuthentication(accessor);
+
+        if (authentication == null) {
             return message;
+        }
+
+        if (isExpired(authentication)) {
+            log.warn("Frame refused: session {} token expired", accessor.getSessionId());
+            throw new MessageDeliveryException(message, "Token expirado");
+        }
+
+        accessor.setUser(authentication);
+        return message;
+    }
+
+    private Authentication resolveAuthentication(StompHeaderAccessor accessor) {
+        if (accessor.getUser() instanceof Authentication authentication) {
+            return authentication;
         }
 
         Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
 
-        if (sessionAttributes != null && sessionAttributes.get(USER_ATTRIBUTE) instanceof Principal userPrincipal) {
-            accessor.setUser(userPrincipal);
+        if (sessionAttributes != null && sessionAttributes.get(USER_ATTRIBUTE) instanceof Authentication authentication) {
+            return authentication;
         }
 
-        return message;
+        return null;
+    }
+
+    private boolean isExpired(Authentication authentication) {
+        if (!(authentication instanceof JwtAuthenticationToken jwtAuthenticationToken)) {
+            return false;
+        }
+
+        Instant expiresAt = jwtAuthenticationToken.getToken().getExpiresAt();
+        return expiresAt != null && expiresAt.isBefore(clock.instant());
     }
 
     private void requireUserAuth(Message<?> message, StompHeaderAccessor accessor) {
