@@ -5,12 +5,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class ChatbotRateLimiterTest {
 
@@ -146,6 +149,27 @@ class ChatbotRateLimiterTest {
 
         // Estado zerado: volta a aceitar as 3 do minuto.
         assertEquals(ChatbotRateLimiter.AllowUserDecision.USER_ALLOWED, rateLimiter.tryConsume(USER1));
+    }
+
+    @Test
+    @DisplayName(
+        "A freshly created user entry should NOT start with a stale (EPOCH) lastAccess, " +
+        "or clearIdleUsers could remove it before tryConsume ever gets to update it"
+    )
+    void freshUserEntryShouldNotStartAsIdle() throws ReflectiveOperationException {
+        rateLimiter.tryConsume(USER1);
+
+        Field perUserControlField = ChatbotRateLimiter.class.getDeclaredField("perUserControl");
+        perUserControlField.setAccessible(true);
+        Map<?, ?> perUserControl = (Map<?, ?>) perUserControlField.get(rateLimiter);
+        Object userState = perUserControl.get(USER1);
+
+        Field lastAccessField = userState.getClass().getDeclaredField("lastAccess");
+        lastAccessField.setAccessible(true);
+        Instant lastAccess = (Instant) lastAccessField.get(userState);
+
+        assertEquals(customClock.instant(), lastAccess);
+        assertNotEquals(Instant.EPOCH, lastAccess);
     }
 
     private static final class CustomClockImplementation extends Clock {

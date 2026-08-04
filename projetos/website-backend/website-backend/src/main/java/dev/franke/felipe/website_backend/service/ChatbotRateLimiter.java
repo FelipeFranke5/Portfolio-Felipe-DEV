@@ -9,7 +9,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Map;
@@ -47,9 +46,9 @@ public class ChatbotRateLimiter {
      */
     public AllowUserDecision tryConsume(String user) {
         Instant nowInstant = clock.instant();
-        LocalDate today = LocalDate.ofInstant(nowInstant, ZoneId.systemDefault());
+        LocalDate today = LocalDate.ofInstant(nowInstant, clock.getZone());
 
-        UserState userState = perUserControl.computeIfAbsent(user, key -> new UserState(today));
+        UserState userState = perUserControl.computeIfAbsent(user, key -> new UserState(today, nowInstant));
 
         synchronized (userState) {
             userState.lastAccess = nowInstant;
@@ -123,10 +122,11 @@ public class ChatbotRateLimiter {
         private final Deque<Instant> instantWindows = new ArrayDeque<>();
         private LocalDate day;
         private int dailyCount;
-        private Instant lastAccess = Instant.EPOCH;
+        private Instant lastAccess;
 
-        private UserState(LocalDate day) {
+        private UserState(LocalDate day, Instant lastAccess) {
             this.day = day;
+            this.lastAccess = lastAccess;
         }
     }
 }
