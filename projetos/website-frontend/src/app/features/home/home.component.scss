@@ -36,7 +36,8 @@ $typewriter-duration: 2.2s;
 // origem e o resto tinge no alvo. Conferido por screenshot contra o $accent.
 $coffee-tint: brightness(0) saturate(100%) invert(46%) sepia(51%) saturate(3134%)
   hue-rotate(203deg) brightness(99%) contrast(93%);
-// Sobre o azul do CTA uma xícara azul sumiria, então lá ela vai de branco.
+// Sobre o azul do CTA uma xícara azul sumiria, então lá ela vai de branco. O
+// mesmo vale para o robô do .hero__chat-cta, que tem fill preto cravado no SVG.
 $coffee-tint-light: brightness(0) invert(1);
 
 :host {
@@ -166,6 +167,16 @@ $coffee-tint-light: brightness(0) invert(1);
       background-color: $accent-cta-hover;
       transform: translateY(-1px);
     }
+  }
+
+  // O robô tem `fill="#000000"` cravado no root do SVG e, via <img>, o CSS não
+  // alcança o `fill` (mesma limitação das xícaras) — sobre o azul do CTA ele
+  // precisa ir de branco, então reusa o filtro já definido para elas.
+  &__chat-cta-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+    filter: $coffee-tint-light;
   }
 
   &__scroll-hint {
@@ -358,25 +369,6 @@ $coffee-tint-light: brightness(0) invert(1);
       font-size: 1.25rem;
       line-height: 1.5;
       color: $text-muted;
-    }
-  }
-
-  &__quote-cta {
-    gap: 0.75rem;
-    padding: 1rem 2rem;
-    border-radius: 8px;
-    // Mesmo motivo do .hero__chat-cta: $accent não atinge 4.5:1 (WCAG AA) com
-    // texto branco em 1rem/700.
-    background-color: $accent-cta;
-    font-weight: 700;
-    font-size: 1rem;
-    letter-spacing: 0.1rem;
-    text-transform: uppercase;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-
-    &:hover {
-      background-color: $accent-cta-hover;
-      transform: translateY(-1px);
     }
   }
 }
