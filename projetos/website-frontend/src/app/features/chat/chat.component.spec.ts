@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { WritableSignal, signal } from '@angular/core';
 
 import { ChatComponent } from './chat.component';
+import { AuthService } from '../../core/services/auth.service';
 import { ChatMessage, ChatbotService, ConnectionStatus } from './chatbot.service';
 
 describe('ChatComponent', () => {
@@ -16,6 +17,7 @@ describe('ChatComponent', () => {
     disconnect: jasmine.Spy;
     send: jasmine.Spy;
   };
+  let authServiceMock: jasmine.SpyObj<AuthService>;
 
   beforeEach(async () => {
     chatbotServiceMock = {
@@ -27,9 +29,16 @@ describe('ChatComponent', () => {
       send: jasmine.createSpy('send'),
     };
 
+    authServiceMock = jasmine.createSpyObj<AuthService>('AuthService', ['logout']);
+    authServiceMock.logout.and.returnValue(Promise.resolve());
+
     await TestBed.configureTestingModule({
       imports: [ChatComponent],
-      providers: [provideRouter([]), { provide: ChatbotService, useValue: chatbotServiceMock }],
+      providers: [
+        provideRouter([]),
+        { provide: ChatbotService, useValue: chatbotServiceMock },
+        { provide: AuthService, useValue: authServiceMock },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ChatComponent);
@@ -149,20 +158,50 @@ describe('ChatComponent', () => {
     });
   });
 
-  it('should disable Conectar only when already connecting/connected, and Desconectar only when disconnected', () => {
+  it('should disable Conectar only when already connecting/connected', () => {
     chatbotServiceMock.connectionStatus.set('disconnected');
     fixture.detectChanges();
     expect(component.canConnect()).toBeTrue();
-    expect(component.canDisconnect()).toBeFalse();
 
     chatbotServiceMock.connectionStatus.set('connected');
     fixture.detectChanges();
     expect(component.canConnect()).toBeFalse();
-    expect(component.canDisconnect()).toBeTrue();
   });
 
-  it('should call chatbotService.disconnect() on destroy', () => {
+  it('should never disable the disconnect button, whatever the connection status', () => {
+    const statuses: ConnectionStatus[] = [
+      'connected',
+      'connecting',
+      'disconnected',
+      'reconnecting',
+    ];
+
+    statuses.forEach((status) => {
+      chatbotServiceMock.connectionStatus.set(status);
+      fixture.detectChanges();
+
+      const buttons: NodeListOf<HTMLButtonElement> = fixture.nativeElement.querySelectorAll(
+        '.chat-page__control-button',
+      );
+      const disconnectButton = Array.from(buttons).find((button) =>
+        button.textContent?.includes('Desconectar e sair'),
+      );
+
+      expect(disconnectButton).toBeTruthy();
+      expect(disconnectButton!.disabled).toBeFalse();
+    });
+  });
+
+  it('should disconnect and log the user out with a redirect to the home page', () => {
+    component.disconnect();
+
+    expect(chatbotServiceMock.disconnect).toHaveBeenCalled();
+    expect(authServiceMock.logout).toHaveBeenCalledWith(window.location.origin + '/');
+  });
+
+  it('should call chatbotService.disconnect() on destroy without logging out', () => {
     fixture.destroy();
     expect(chatbotServiceMock.disconnect).toHaveBeenCalled();
+    expect(authServiceMock.logout).not.toHaveBeenCalled();
   });
 });
