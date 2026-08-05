@@ -47,7 +47,6 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HTTP_RELATIVE_PATH: /auth
       # Habilita /auth/health/ready, usado no healthcheck abaixo
-      KC_HEALTH_ENABLED: "true"
       KC_DB: postgres
       KC_DB_CONNECT_TIMEOUT: 20s
       KC_DB_USERNAME: website_user
@@ -58,12 +57,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/auth/health/ready || exit 1"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 20s
     restart: unless-stopped
     networks:
       - website_dev_net
@@ -108,10 +101,9 @@ services:
       CHATBOT_MAX_CONCURRENT:      ${CHATBOT_MAX_CONCURRENT:-2}
     expose:
       - "8085"
-    # Podemos depender só do keycloak aqui e o keycloak depender do banco
     depends_on:
-    #  postgres:
-    #    condition: service_healthy
+      postgres:
+        condition: service_healthy
       keycloak:
         condition: service_started
     restart: unless-stopped
