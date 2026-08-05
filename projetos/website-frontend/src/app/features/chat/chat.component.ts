@@ -39,7 +39,9 @@ export class ChatComponent {
 
   readonly connectionStatus = this.chatbotService.connectionStatus;
   readonly messages = this.chatbotService.messages;
-  readonly lastError = this.chatbotService.lastError;
+
+  private readonly logoutError = signal<string | null>(null);
+  readonly lastError = computed(() => this.logoutError() ?? this.chatbotService.lastError());
 
   readonly draftMessage = signal('');
   readonly charCount = computed(() => this.draftMessage().length);
@@ -78,7 +80,12 @@ export class ChatComponent {
 
   disconnect(): void {
     this.chatbotService.disconnect();
-    void this.authService.logout(window.location.origin + '/');
+    this.logoutError.set(null);
+    void this.authService.logout(window.location.origin + '/').catch(() => {
+      this.logoutError.set(
+        'Não foi possível encerrar a sessão. A conexão com o chat foi fechada; tente novamente.',
+      );
+    });
   }
 
   onDraftChange(value: string): void {

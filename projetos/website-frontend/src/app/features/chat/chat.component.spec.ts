@@ -199,6 +199,40 @@ describe('ChatComponent', () => {
     expect(authServiceMock.logout).toHaveBeenCalledWith(window.location.origin + '/');
   });
 
+  it('should show a feedback message and allow a retry when logout fails', async () => {
+    authServiceMock.logout.and.returnValue(Promise.reject(new Error('keycloak offline')));
+
+    component.disconnect();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const feedback: HTMLElement = fixture.nativeElement.querySelector('.chat-page__feedback');
+    expect(feedback.textContent).toContain('Não foi possível encerrar a sessão');
+
+    const buttons: NodeListOf<HTMLButtonElement> = fixture.nativeElement.querySelectorAll(
+      '.chat-page__control-button',
+    );
+    const disconnectButton = Array.from(buttons).find((button) =>
+      button.textContent?.includes('Desconectar e sair'),
+    );
+    expect(disconnectButton!.disabled).toBeFalse();
+
+    authServiceMock.logout.and.returnValue(Promise.resolve());
+    disconnectButton!.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(authServiceMock.logout).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.querySelector('.chat-page__feedback')).toBeNull();
+  });
+
+  it('should keep showing the chatbot error when there is no logout error', () => {
+    chatbotServiceMock.lastError.set('Falha ao conectar.');
+    fixture.detectChanges();
+
+    expect(component.lastError()).toBe('Falha ao conectar.');
+  });
+
   it('should call chatbotService.disconnect() on destroy without logging out', () => {
     fixture.destroy();
     expect(chatbotServiceMock.disconnect).toHaveBeenCalled();
