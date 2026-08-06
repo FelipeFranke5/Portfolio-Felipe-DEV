@@ -58,10 +58,11 @@ describe('HomeComponent', () => {
     expect(entries.length).toBe(component.aboutTimeline.length);
   });
 
-  it('should render a "Fale comigo" link pointing to /contact', () => {
-    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.about__quote-cta');
+  it('should render a "Contato" link pointing to /contact', () => {
+    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.cta__button');
 
-    expect(link.textContent).toContain('Fale comigo');
+    expect(link).not.toBeNull();
+    expect(link.textContent).toContain('Contato');
     expect(link.getAttribute('href')).toBe('/contact');
   });
 

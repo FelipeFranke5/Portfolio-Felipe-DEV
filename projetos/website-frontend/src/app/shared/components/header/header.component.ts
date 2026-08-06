@@ -9,5 +9,5 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './header.component.scss',
 })
 export class HeaderComponent {
-  siteName: string = 'Felipe DEV';
+  siteName = 'Felipe DEV';
 }
