@@ -13,6 +13,7 @@ import { RouterLink } from '@angular/router';
 
 import { HeaderComponent } from '../../shared/components/header/header.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
+import { AuthService } from '../../core/services/auth.service';
 import { ChatbotService, ConnectionStatus, MAX_MESSAGE_LENGTH } from './chatbot.service';
 
 const STATUS_LABELS: Record<ConnectionStatus, string> = {
@@ -31,13 +32,16 @@ const STATUS_LABELS: Record<ConnectionStatus, string> = {
 })
 export class ChatComponent {
   private readonly chatbotService = inject(ChatbotService);
+  private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly maxMessageLength = MAX_MESSAGE_LENGTH;
 
   readonly connectionStatus = this.chatbotService.connectionStatus;
   readonly messages = this.chatbotService.messages;
-  readonly lastError = this.chatbotService.lastError;
+
+  private readonly logoutError = signal<string | null>(null);
+  readonly lastError = computed(() => this.logoutError() ?? this.chatbotService.lastError());
 
   readonly draftMessage = signal('');
   readonly charCount = computed(() => this.draftMessage().length);
@@ -51,7 +55,6 @@ export class ChatComponent {
   });
 
   readonly canConnect = computed(() => this.connectionStatus() === 'disconnected');
-  readonly canDisconnect = computed(() => this.connectionStatus() !== 'disconnected');
 
   readonly statusLabel = computed(() => STATUS_LABELS[this.connectionStatus()]);
 
@@ -77,6 +80,12 @@ export class ChatComponent {
 
   disconnect(): void {
     this.chatbotService.disconnect();
+    this.logoutError.set(null);
+    void this.authService.logout(window.location.origin + '/').catch(() => {
+      this.logoutError.set(
+        'Não foi possível encerrar a sessão. A conexão com o chat foi fechada; tente novamente.',
+      );
+    });
   }
 
   onDraftChange(value: string): void {
