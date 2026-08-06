@@ -112,6 +112,12 @@ export class PortfolioComponent {
     });
   }
 
+  onBackdropClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.closeModal();
+    }
+  }
+
   closeModal(): void {
     this.isModalOpen.set(false);
     this.lastFocusedElement?.focus();

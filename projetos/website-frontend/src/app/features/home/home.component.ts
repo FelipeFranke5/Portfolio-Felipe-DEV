@@ -58,9 +58,9 @@ interface CoffeeAccent {
   styleUrl: './home.component.scss',
 })
 export class HomeComponent {
-  fullName: string = 'Felipe';
-  currentJobTitle: string = 'Analista de Ongoing Júnior';
-  currentJobCompany: string = 'NetBR by SEK';
+  fullName = 'Felipe';
+  currentJobTitle = 'Analista de Ongoing Júnior';
+  currentJobCompany = 'NetBR by SEK';
   currentAge: number = this.calculateAge();
 
   readonly trailSteps: TrailStep[] = [

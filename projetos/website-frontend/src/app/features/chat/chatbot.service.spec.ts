@@ -25,7 +25,10 @@ class FakeClient {
 
   subscribe(destination: string, callback: (frame: IMessage) => void) {
     this.subscriptions.push({ destination, callback });
-    return { id: `sub-${this.subscriptions.length}`, unsubscribe: () => {} };
+    return {
+      id: `sub-${this.subscriptions.length}`,
+      unsubscribe: jasmine.createSpy('unsubscribe'),
+    };
   }
 
   async triggerBeforeConnect(): Promise<void> {

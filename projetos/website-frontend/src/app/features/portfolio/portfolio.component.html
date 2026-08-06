@@ -99,13 +99,12 @@
   </div>
 
   @if (isModalOpen()) {
-    <div class="project-modal-backdrop" (click)="closeModal()">
+    <div class="project-modal-backdrop" role="presentation" (click)="onBackdropClick($event)">
       <div
         class="project-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="project-modal-title"
-        (click)="$event.stopPropagation()"
       >
         <button
           #closeButton

@@ -41,13 +41,12 @@
 </section>
 
 @if (isModalOpen()) {
-  <div class="certificate-modal-backdrop" (click)="closeModal()">
+  <div class="certificate-modal-backdrop" role="presentation" (click)="onBackdropClick($event)">
     <div
       class="certificate-modal"
       role="dialog"
       aria-modal="true"
       aria-labelledby="certificate-modal-title"
-      (click)="$event.stopPropagation()"
     >
       <button
         #closeButton
