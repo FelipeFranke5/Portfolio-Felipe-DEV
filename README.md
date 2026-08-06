@@ -38,13 +38,13 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).
 
 | Funcionalidade | Endpoints | Auth? | Status |
 |---------------|-----------|-------|--------|
-| About / Hero | — (dados estáticos) | Não | Não implementado no back-end (estático no front) |
+| About | — (dados estáticos) | Não | Não implementado no back-end (estático no front) |
 | Portfólio / Projetos | GET público / POST·PUT·DELETE admin | Sim (admin) | ✅ Implementado |
 | Skills | GET público / POST·PUT·DELETE admin | Sim (admin) | ✅ Implementado |
 | Contato | POST público, com envio de e-mail assíncrono (agendado) | Não | ✅ Implementado |
 | Log Interno (diagnóstico) | GET admin (lista dos últimos registros + detalhe por ID) | Sim (admin) | ✅ Implementado |
 | Chatbot com IA | WebSocket/STOMP em `/api/websocket` | Sim (usuário logado) | ✅ Implementado |
-| Admin Panel | /admin (Angular route) | Sim (admin) | Front-end ainda não versionado neste repositório |
+| Admin Panel | /admin (Angular route) | Sim (admin) | Ainda não versionado neste repositório |
 
 ---
 
@@ -53,7 +53,7 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).
 ```
 Browser (Angular SPA)
     │
-    │  HTTPS :443
+    │  HTTPS :443 (prod) e somente :80 (dev)
     ▼
 ┌──────────── VPS (Hostinger) ───────────────────────────────────────┐
 │                                                                      │
@@ -70,11 +70,11 @@ Browser (Angular SPA)
 │                                                                      │
 └──────────────────────────────────────────────────────────────────────┘
          │
-         ├──► SMTP (Gmail / SendGrid) — envio de e-mails
+         ├──► SMTP (Gmail) — envio de e-mails
          └──► Browser ◄──► Keycloak  — fluxo OAuth2/OIDC para login
 ```
 
-### Fluxo de autenticação (admin)
+### Fluxo de autenticação (admin e chat)
 
 1. Usuário acessa `/admin` no Angular
 2. Angular Guard detecta que não há token — redireciona para Keycloak
@@ -83,15 +83,9 @@ Browser (Angular SPA)
 5. Spring Security valida o JWT consultando o JWKS endpoint do Keycloak
 6. Endpoints `POST/PUT/DELETE` verificam o role `ADMIN` no JWT
 
-**Detalhe de implementação — extração das roles do Keycloak:**
-o Keycloak não expõe as roles no claim padrão `scope`/`scp` (que o
-`JwtAuthenticationConverter` padrão do Spring Security lê), e sim em um claim
-customizado `realm_access.roles`. Por isso o projeto define um bean próprio de
-`JwtAuthenticationConverter` (em `SecurityConfig`) que lê `realm_access.roles`
-e converte cada role em uma `SimpleGrantedAuthority` prefixada com `ROLE_`
-(ex.: `ADMIN` → `ROLE_ADMIN`). Sem essa customização, requisições autenticadas
-com um token válido do Keycloak retornariam `403 Forbidden`, mesmo tendo a
-role correta.
+> Para o endpoint /chat, não é necessário ter a role `ADMIN`.
+> O usuário conseguirá realizar autenticação pelo Google (ou com login e senha do Keycloak).
+> O fluxo é o mesmo conforme descrito acima, exceto que os comandos CONNECT, SEND e SUBSCRIBE do STOMP FRAME relacionado à conexão WebSocket são interceptados para solicitar autenticação.
 
 ---
 
@@ -347,8 +341,8 @@ correspondente. O rate limit é mantido em memória, ou seja, vale por instânci
 réplica na VPS isso basta, mas se houver escala horizontal ele precisa migrar para um store
 compartilhado.
 
-> ⚠️ A validação da mensagem recusa URLs e domínios, mas isso **não** é proteção contra
-> *prompt injection*. A proteção real vem de outro lugar: as tools são apenas de leitura
+> ⚠️ A validação da mensagem via `sanitizer` recusa URLs e domínios, mas isso **não** é proteção contra
+> *prompt injection*. A proteção real vem de outro lugar (dependência de validação presente no projeto e uso do `@Valid`): as tools são apenas de leitura
 > (só devolvem o que já é público em `/api/projects` e `/api/skills`), o `max-tokens`
 > limita o tamanho da resposta e a cota limita o custo.
 
@@ -383,7 +377,8 @@ Tabelas principais:
 A implementação atual **persiste a mensagem imediatamente** e delega o envio do
 e-mail de notificação para jobs agendados (`@Scheduled`, habilitados via
 `@EnableScheduling` na classe principal). Isso evita que uma falha temporária
-de SMTP quebre a requisição do usuário do formulário de contato.
+de SMTP quebre a requisição do usuário do formulário de contato. Alternativa
+mais simples do que um broker do Kafka ou sistema de mensageria.
 
 `ContactService` roda três jobs, todos usando queries nativas no
 `ContactRepository`:
@@ -423,21 +418,38 @@ limit_req_zone $binary_remote_addr zone=api_limit:10m rate=1r/s;
 # Responde 429 (Too Many Requests) em vez do 503 padrão quando o limite estoura
 limit_req_status 429;
 
+# ============================================================
+# Definir se o valor de 'Connection' será
+# 'upgrade' ou 'close', dependendo do que for
+# Enviado no 'http_upgrade'. Necessário
+# Para diferenciar as chamadas de API vs
+# As chamadas de WebSocket
+# ============================================================
+
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
 server {
     listen 80;
     server_name localhost;
 
-    # Spring Boot API
-    # proxy_pass sem path no final => repassa a URI original (/api/...) sem
-    # reescrever, igual ao nginx.conf de produção do ARCHITECTURE.md.
     location /api/ {
         limit_req zone=api_limit burst=20 nodelay;
         
         proxy_pass         http://backend:8085;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        $connection_upgrade;
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
         proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header   X-Forwarded-Proto $scheme;
+
+        # Adicionando timeout de leitura e escrita
+        proxy_read_timeout 3600;
+        proxy_send_timeout 3600;
     }
 
     # Actuator (health check)
@@ -522,8 +534,8 @@ DB_USER=website_user
 DB_PASS=senha_segura_aqui
 KEYCLOAK_JWKS_URI=http://keycloak:8080/auth/realms/website/protocol/openid-connect/certs
 FRONT_END_URL=https://seusite.dev
-KEYCLOAK_ADMIN=admin
-KEYCLOAK_ADMIN_PASSWORD=senha_keycloak_aqui
+KC_BOOTSTRAP_ADMIN_USERNAME=admin
+KC_BOOTSTRAP_ADMIN_PASSWORD=senha_keycloak_aqui
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USER=seu@email.com
