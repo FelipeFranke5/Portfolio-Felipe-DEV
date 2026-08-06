@@ -1,3 +1,5 @@
+@use "../../styles/tokens";
+
 :host {
   --loading-overlay-size: 64px;
   --loading-overlay-thickness: 3px;
@@ -7,7 +9,7 @@
 .loading-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: tokens.$z-overlay;
   display: flex;
   align-items: center;
   justify-content: center;

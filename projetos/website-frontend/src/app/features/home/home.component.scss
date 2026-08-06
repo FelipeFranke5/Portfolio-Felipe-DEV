@@ -666,7 +666,7 @@ $coffee-tint-light: brightness(0) invert(1);
 .coffee-layer {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: tokens.$z-decoration;
   overflow: hidden;
   pointer-events: none;
 
