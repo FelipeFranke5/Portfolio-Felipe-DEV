@@ -1,8 +1,45 @@
+@use "tokens";
+
 // Animação de fade-in usada no carregamento de página (Home, Contact, etc).
 // Ajustar aqui em vez de duplicar a keyframe pelos componentes.
 $fade-in-duration: 0.5s;
 $fade-in-step: 45ms;
-$fade-in-count: 4;
+// 6 (e não mais 4) porque o dashboard do /admin escalona mais blocos do que as
+// páginas públicas. Índices não usados por uma página não custam nada.
+$fade-in-count: 6;
+
+// Placeholder de carregamento com brilho deslizante, usado enquanto os
+// indicadores do dashboard ainda não têm valor. Ao contrário do skeleton
+// pulsante do portfólio, mantém a altura final do elemento — o requisito do
+// design é justamente não haver layout shift quando o número chega.
+$shimmer-duration: 1.5s;
+
+// Elevação discreta no hover dos cards do painel.
+$card-lift-duration: 0.3s;
+$card-lift-distance: 4px;
+
+// Entrada dos modais como bottom-sheet no mobile.
+$slide-up-duration: 0.3s;
+
+// Transição de cor do número do indicador quando a contagem crescente termina
+// (estado "carregando" -> estado "carregado").
+$count-up-color-duration: 1s;
+
+// Revelação de imagem no hover (galeria da Home, cards de Certificados): a
+// imagem nasce em preto e branco e recupera a cor com um leve zoom. Ajustar aqui
+// em vez de duplicar filter/transform pelos componentes.
+$image-reveal-duration: 0.35s;
+$image-reveal-scale: 1.04;
+
+@mixin image-reveal-idle {
+  filter: grayscale(1);
+  transition: filter $image-reveal-duration ease, transform $image-reveal-duration ease;
+}
+
+@mixin image-reveal-active {
+  filter: grayscale(0);
+  transform: scale($image-reveal-scale);
+}
 
 @mixin fade-in-utility {
   .fade-in {
@@ -35,6 +72,80 @@ $fade-in-count: 4;
     .fade-in {
       opacity: 1;
       animation: none;
+    }
+  }
+}
+
+// Os mixins abaixo vêm em pares: um aplica as propriedades no seletor onde é
+// incluído, o outro emite a `@keyframes` correspondente. A separação existe
+// porque a keyframe precisa sair uma única vez por arquivo, enquanto as
+// propriedades podem ser aplicadas em vários seletores.
+
+@mixin shimmer($duration: $shimmer-duration) {
+  background-image: linear-gradient(
+    90deg,
+    tokens.$border 25%,
+    color-mix(in srgb, tokens.$text 14%, tokens.$border) 50%,
+    tokens.$border 75%
+  );
+  background-size: 200% 100%;
+  animation: shared-shimmer $duration linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@mixin shimmer-keyframes {
+  @keyframes shared-shimmer {
+    from {
+      background-position: 200% 0;
+    }
+
+    to {
+      background-position: -200% 0;
+    }
+  }
+}
+
+@mixin slide-up-sheet($duration: $slide-up-duration) {
+  animation: shared-slide-up $duration ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@mixin slide-up-keyframes {
+  @keyframes shared-slide-up {
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
+  }
+}
+
+// Elevação no hover/foco dos cards. Recebe a cor da sombra porque cada família
+// de card do painel (projetos, skills, logs) tem o próprio tom de destaque.
+@mixin card-hover-lift($glow: transparent, $duration: $card-lift-duration) {
+  transition: transform $duration ease, box-shadow $duration ease, border-color $duration ease,
+    background-color $duration ease;
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-$card-lift-distance);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 22px $glow;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:hover,
+    &:focus-visible {
+      transform: none;
     }
   }
 }
