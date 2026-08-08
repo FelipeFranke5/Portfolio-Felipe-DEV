@@ -1,0 +1,34 @@
+name: Rodar Testes BackEnd
+
+on:
+  pull_request:
+    paths:
+      - 'projetos/website-backend/website-backend/**'
+      - '!**.md'
+
+defaults:
+  run:
+    working-directory: projetos/website-backend/website-backend
+
+jobs:
+  testes-spring-boot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Baixar Código do Projeto
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Confirmar Instalação Docker
+        run: docker version
+      - name: Instalar Java + Maven
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          force-download: true
+          verify-signature: true
+        run: java --version && mvn -v
+      - name: Rodar Compile e Testes
+        run: mvn clean test-compile && mvn clean test
