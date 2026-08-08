@@ -26,8 +26,6 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: projetos/website-frontend/package-lock.json
-      - name: Aprovar Execução de Lifecycle Scripts
-        run: npm approve-scripts --all
       # OBS: npm ci vs npm install: npm ci é mais
       # adequado para pipelines automatizadas
       - name: Realizar Clean Install das Dependências
