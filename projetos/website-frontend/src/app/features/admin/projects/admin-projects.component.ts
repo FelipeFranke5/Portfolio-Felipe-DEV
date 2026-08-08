@@ -70,6 +70,7 @@ export class AdminProjectsComponent {
   readonly editingProjectId = signal<string | null>(null);
   readonly editingProjectName = signal<string>('');
   readonly isFormLoading = signal(false);
+  readonly hasFormLoadError = signal(false);
   readonly isSubmitting = signal(false);
   readonly formErrorMessage = signal<string | null>(null);
   /** Erros por campo devolvidos pelo back-end no 422. */
@@ -205,6 +206,7 @@ export class AdminProjectsComponent {
     this.editingProjectName.set(project.name);
     this.formMode.set('edit');
     this.isFormLoading.set(true);
+    this.hasFormLoadError.set(false);
 
     this.projectsService.getProjectByIdForAdmin(project.id).subscribe({
       next: (detail) => {
@@ -220,6 +222,7 @@ export class AdminProjectsComponent {
       },
       error: (error: HttpErrorResponse) => {
         this.isFormLoading.set(false);
+        this.hasFormLoadError.set(true);
         this.handleAuthError(error);
         this.formErrorMessage.set(resolveApiErrorMessage(error, this.listErrorMessage));
       },
@@ -229,6 +232,8 @@ export class AdminProjectsComponent {
   closeForm(): void {
     this.formMode.set(null);
     this.isFormLoading.set(false);
+    this.hasFormLoadError.set(false);
+    this.editingProjectId.set(null);
     this.restoreFocus();
   }
 

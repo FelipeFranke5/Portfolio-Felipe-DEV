@@ -60,6 +60,8 @@
           </div>
         }
       </div>
+    } @else if (hasFormLoadError()) {
+      <p class="admin-feedback admin-feedback--error" role="alert">{{ formErrorMessage() }}</p>
     } @else if (errorMessage(); as message) {
       <div class="admin-state admin-state--error fade-in fade-in--3" role="alert">
         <h2 class="admin-state__title">Não foi possível carregar os projetos</h2>
