@@ -8,11 +8,12 @@ on:
     # essa pipeline de novo.
     branches-ignore:
       - 'main'
-    paths-ignore:
-      - '**.md'
+    paths:
+      - 'projetos/website-frontend/**'
+      - '!**.md'
 
 jobs:
-  run-angular-tests:
+  testes-angular:
     runs-on: ubuntu-latest
     steps:
       - name: Baixar Código do Projeto
@@ -24,6 +25,8 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
+      - name: Aprovar Execução de Lifecycle Scripts
+        run: npm approve-scripts --all
       # OBS: npm ci vs npm install: npm ci é mais
       # adequado para pipelines automatizadas
       - name: Realizar Clean Install das Dependências
