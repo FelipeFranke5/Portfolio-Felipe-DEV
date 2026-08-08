@@ -10,18 +10,18 @@ describe('AuthService', () => {
   let keycloakMock: {
     authenticated: boolean;
     token: string | undefined;
-    login: jasmine.Spy;
-    logout: jasmine.Spy;
-    updateToken: jasmine.Spy;
+    login: ReturnType<typeof vi.fn>;
+    logout: ReturnType<typeof vi.fn>;
+    updateToken: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
     keycloakMock = {
       authenticated: false,
       token: undefined,
-      login: jasmine.createSpy('login').and.resolveTo(),
-      logout: jasmine.createSpy('logout').and.resolveTo(),
-      updateToken: jasmine.createSpy('updateToken').and.resolveTo(true),
+      login: vi.fn().mockResolvedValue(undefined),
+      logout: vi.fn().mockResolvedValue(undefined),
+      updateToken: vi.fn().mockResolvedValue(true),
     };
 
     TestBed.configureTestingModule({
@@ -43,11 +43,11 @@ describe('AuthService', () => {
 
   it('should reflect keycloak.authenticated', () => {
     keycloakMock.authenticated = true;
-    expect(service.isAuthenticated()).toBeTrue();
+    expect(service.isAuthenticated()).toBe(true);
   });
 
   it('should report not authenticated when keycloak.authenticated is undefined', () => {
-    expect(service.isAuthenticated()).toBeFalse();
+    expect(service.isAuthenticated()).toBe(false);
   });
 
   it('should delegate login to keycloak.login with the redirect uri', () => {
@@ -72,14 +72,14 @@ describe('AuthService', () => {
   it('should reject when there is no token after refreshing', async () => {
     keycloakMock.token = undefined;
 
-    await expectAsync(service.getToken()).toBeRejectedWithError(
+    await expect(service.getToken()).rejects.toThrow(
       'Nenhum token disponível — usuário não autenticado.'
     );
   });
 
   it('should wrap a failed updateToken() as a SessionExpiredError, preserving the original cause', async () => {
     const refreshFailure = new Error('refresh token expired');
-    keycloakMock.updateToken.and.rejectWith(refreshFailure);
+    keycloakMock.updateToken.mockRejectedValueOnce(refreshFailure);
 
     const error = await service.getToken().then(
       () => null,

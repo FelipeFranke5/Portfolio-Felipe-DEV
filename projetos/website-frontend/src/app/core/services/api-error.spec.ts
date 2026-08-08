@@ -98,12 +98,12 @@ describe('resolveApiErrorMessage', () => {
 
 describe('isAuthError', () => {
   it('should flag 401 and 403 as authentication problems', () => {
-    expect(isAuthError(buildError(401, null))).toBeTrue();
-    expect(isAuthError(buildError(403, null))).toBeTrue();
+    expect(isAuthError(buildError(401, null))).toBe(true);
+    expect(isAuthError(buildError(403, null))).toBe(true);
   });
 
   it('should not flag other statuses', () => {
-    expect(isAuthError(buildError(400, null))).toBeFalse();
-    expect(isAuthError(buildError(500, null))).toBeFalse();
+    expect(isAuthError(buildError(400, null))).toBe(false);
+    expect(isAuthError(buildError(500, null))).toBe(false);
   });
 });

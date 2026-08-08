@@ -1,4 +1,4 @@
-import { Component, DOCUMENT, OnDestroy, computed, inject, signal } from '@angular/core';
+import { Component, DOCUMENT, OnDestroy, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -32,6 +32,7 @@ const COUNT_UP_DURATION_MS = 2000;
   standalone: true,
   imports: [RouterLink],
   templateUrl: './admin-dashboard.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './admin-dashboard.component.scss',
 })
 export class AdminDashboardComponent implements OnDestroy {

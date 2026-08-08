@@ -13,24 +13,23 @@ describe('ChatComponent', () => {
     connectionStatus: WritableSignal<ConnectionStatus>;
     messages: WritableSignal<ChatMessage[]>;
     lastError: WritableSignal<string | null>;
-    connect: jasmine.Spy;
-    disconnect: jasmine.Spy;
-    send: jasmine.Spy;
+    connect: ReturnType<typeof vi.fn>;
+    disconnect: ReturnType<typeof vi.fn>;
+    send: ReturnType<typeof vi.fn>;
   };
-  let authServiceMock: jasmine.SpyObj<AuthService>;
+  let authServiceMock: { logout: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     chatbotServiceMock = {
       connectionStatus: signal<ConnectionStatus>('disconnected'),
       messages: signal<ChatMessage[]>([]),
       lastError: signal<string | null>(null),
-      connect: jasmine.createSpy('connect'),
-      disconnect: jasmine.createSpy('disconnect'),
-      send: jasmine.createSpy('send'),
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      send: vi.fn(),
     };
 
-    authServiceMock = jasmine.createSpyObj<AuthService>('AuthService', ['logout']);
-    authServiceMock.logout.and.returnValue(Promise.resolve());
+    authServiceMock = { logout: vi.fn().mockReturnValue(Promise.resolve()) };
 
     await TestBed.configureTestingModule({
       imports: [ChatComponent],
@@ -70,8 +69,8 @@ describe('ChatComponent', () => {
       fixture.nativeElement.querySelectorAll('.chat-message');
 
     expect(messages.length).toBe(2);
-    expect(messages[0].classList.contains('chat-message--user')).toBeTrue();
-    expect(messages[1].classList.contains('chat-message--ai')).toBeTrue();
+    expect(messages[0].classList.contains('chat-message--user')).toBe(true);
+    expect(messages[1].classList.contains('chat-message--ai')).toBe(true);
   });
 
   it('should reflect the char counter as the draft message changes', () => {
@@ -88,17 +87,17 @@ describe('ChatComponent', () => {
     component.onDraftChange('Uma pergunta válida');
     fixture.detectChanges();
 
-    expect(component.canSend()).toBeFalse();
+    expect(component.canSend()).toBe(false);
     const sendButton: HTMLButtonElement =
       fixture.nativeElement.querySelector('.chat-composer__send');
-    expect(sendButton.disabled).toBeTrue();
+    expect(sendButton.disabled).toBe(true);
   });
 
   it('should disable the send button when the draft is empty, even if connected', () => {
     chatbotServiceMock.connectionStatus.set('connected');
     fixture.detectChanges();
 
-    expect(component.canSend()).toBeFalse();
+    expect(component.canSend()).toBe(false);
   });
 
   it('should disable the send button when the draft exceeds 500 characters', () => {
@@ -106,7 +105,7 @@ describe('ChatComponent', () => {
     component.draftMessage.set('a'.repeat(501));
     fixture.detectChanges();
 
-    expect(component.canSend()).toBeFalse();
+    expect(component.canSend()).toBe(false);
   });
 
   it('should enable the send button and call chatbotService.send() with the draft when connected and valid', () => {
@@ -114,7 +113,7 @@ describe('ChatComponent', () => {
     component.onDraftChange('Quais projetos você tem?');
     fixture.detectChanges();
 
-    expect(component.canSend()).toBeTrue();
+    expect(component.canSend()).toBe(true);
 
     component.send();
 
@@ -127,16 +126,16 @@ describe('ChatComponent', () => {
     component.onDraftChange('Pergunta');
 
     const enterEvent = new KeyboardEvent('keydown', { key: 'Enter' });
-    spyOn(enterEvent, 'preventDefault');
+    vi.spyOn(enterEvent, 'preventDefault');
     component.onTextareaKeydown(enterEvent);
 
     expect(enterEvent.preventDefault).toHaveBeenCalled();
     expect(chatbotServiceMock.send).toHaveBeenCalledWith('Pergunta');
 
-    chatbotServiceMock.send.calls.reset();
+    chatbotServiceMock.send.mockClear();
     component.onDraftChange('Outra pergunta');
     const shiftEnterEvent = new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true });
-    spyOn(shiftEnterEvent, 'preventDefault');
+    vi.spyOn(shiftEnterEvent, 'preventDefault');
     component.onTextareaKeydown(shiftEnterEvent);
 
     expect(shiftEnterEvent.preventDefault).not.toHaveBeenCalled();
@@ -161,11 +160,11 @@ describe('ChatComponent', () => {
   it('should disable Conectar only when already connecting/connected', () => {
     chatbotServiceMock.connectionStatus.set('disconnected');
     fixture.detectChanges();
-    expect(component.canConnect()).toBeTrue();
+    expect(component.canConnect()).toBe(true);
 
     chatbotServiceMock.connectionStatus.set('connected');
     fixture.detectChanges();
-    expect(component.canConnect()).toBeFalse();
+    expect(component.canConnect()).toBe(false);
   });
 
   it('should never disable the disconnect button, whatever the connection status', () => {
@@ -188,7 +187,7 @@ describe('ChatComponent', () => {
       );
 
       expect(disconnectButton).toBeTruthy();
-      expect(disconnectButton!.disabled).toBeFalse();
+      expect(disconnectButton!.disabled).toBe(false);
     });
   });
 
@@ -200,7 +199,7 @@ describe('ChatComponent', () => {
   });
 
   it('should show a feedback message and allow a retry when logout fails', async () => {
-    authServiceMock.logout.and.returnValue(Promise.reject(new Error('keycloak offline')));
+    authServiceMock.logout.mockReturnValue(Promise.reject(new Error('keycloak offline')));
 
     component.disconnect();
     await fixture.whenStable();
@@ -215,9 +214,9 @@ describe('ChatComponent', () => {
     const disconnectButton = Array.from(buttons).find((button) =>
       button.textContent?.includes('Desconectar e sair'),
     );
-    expect(disconnectButton!.disabled).toBeFalse();
+    expect(disconnectButton!.disabled).toBe(false);
 
-    authServiceMock.logout.and.returnValue(Promise.resolve());
+    authServiceMock.logout.mockReturnValue(Promise.resolve());
     disconnectButton!.click();
     await fixture.whenStable();
     fixture.detectChanges();

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import {
@@ -19,7 +19,7 @@ describe('ProjectsService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(withXhr()), provideHttpClientTesting()],
     });
 
     service = TestBed.inject(ProjectsService);
@@ -148,8 +148,8 @@ describe('ProjectsService', () => {
     const requests = httpTestingController.match(`${environment.apiUrl}/projects`);
 
     expect(requests.length).toBe(2);
-    expect(requests[0].request.context.get(SKIP_GLOBAL_LOADING)).toBeFalse();
-    expect(requests[1].request.context.get(SKIP_GLOBAL_LOADING)).toBeTrue();
+    expect(requests[0].request.context.get(SKIP_GLOBAL_LOADING)).toBe(false);
+    expect(requests[1].request.context.get(SKIP_GLOBAL_LOADING)).toBe(true);
 
     requests.forEach((request) => request.flush([]));
   });

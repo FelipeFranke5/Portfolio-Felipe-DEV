@@ -6,6 +6,7 @@ import {
   effect,
   signal,
   viewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 
 const MODAL_CLOSE_ANIMATION_MS = 180;
@@ -24,6 +25,7 @@ export interface Certificate {
   standalone: true,
   imports: [],
   templateUrl: './certificates.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './certificates.component.scss',
 })
 export class CertificatesComponent implements OnDestroy {

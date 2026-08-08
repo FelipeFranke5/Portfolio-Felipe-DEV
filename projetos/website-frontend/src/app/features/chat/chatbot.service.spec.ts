@@ -9,7 +9,7 @@ class FakeClient {
   active = false;
   deactivateCalls = 0;
   subscriptions: { destination: string; callback: (frame: IMessage) => void }[] = [];
-  publish = jasmine.createSpy('publish');
+  publish = vi.fn();
 
   constructor(private readonly config: StompConfig) {}
 
@@ -27,7 +27,7 @@ class FakeClient {
     this.subscriptions.push({ destination, callback });
     return {
       id: `sub-${this.subscriptions.length}`,
-      unsubscribe: jasmine.createSpy('unsubscribe'),
+      unsubscribe: vi.fn(),
     };
   }
 
@@ -67,13 +67,13 @@ class FakeStompClientFactory {
 describe('ChatbotService', () => {
   let service: ChatbotService;
   let factory: FakeStompClientFactory;
-  let authServiceSpy: jasmine.SpyObj<AuthService>;
+  let authServiceSpy: { getToken: ReturnType<typeof vi.fn>; login: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     factory = new FakeStompClientFactory();
-    authServiceSpy = jasmine.createSpyObj<AuthService>('AuthService', ['getToken', 'login']);
-    authServiceSpy.getToken.and.resolveTo('token-123');
-    authServiceSpy.login.and.resolveTo();
+    authServiceSpy = { getToken: vi.fn(), login: vi.fn() };
+    authServiceSpy.getToken.mockResolvedValue('token-123');
+    authServiceSpy.login.mockResolvedValue(undefined);
 
     TestBed.configureTestingModule({
       providers: [
@@ -181,7 +181,7 @@ describe('ChatbotService', () => {
   });
 
   it('should end at disconnected with lastError set when beforeConnect fails to get a token', async () => {
-    authServiceSpy.getToken.and.rejectWith(new Error('rede fora do ar'));
+    authServiceSpy.getToken.mockRejectedValue(new Error('rede fora do ar'));
 
     service.connect();
     const client = factory.lastClient!;
@@ -194,7 +194,7 @@ describe('ChatbotService', () => {
   });
 
   it('should redirect to login when beforeConnect fails because the session expired', async () => {
-    authServiceSpy.getToken.and.rejectWith(new SessionExpiredError(new Error('refresh falhou')));
+    authServiceSpy.getToken.mockRejectedValue(new SessionExpiredError(new Error('refresh falhou')));
 
     service.connect();
     const client = factory.lastClient!;
@@ -206,13 +206,13 @@ describe('ChatbotService', () => {
   });
 
   it('should allow connect() to open a new client after a failed first attempt', async () => {
-    authServiceSpy.getToken.and.rejectWith(new Error('rede fora do ar'));
+    authServiceSpy.getToken.mockRejectedValue(new Error('rede fora do ar'));
 
     service.connect();
     await factory.lastClient!.triggerBeforeConnect();
     expect(factory.createCalls).toBe(1);
 
-    authServiceSpy.getToken.and.resolveTo('token-123');
+    authServiceSpy.getToken.mockResolvedValue('token-123');
     service.connect();
 
     expect(factory.createCalls).toBe(2);

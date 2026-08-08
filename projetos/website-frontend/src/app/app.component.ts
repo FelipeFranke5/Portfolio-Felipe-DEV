@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { LoadingOverlayComponent } from './shared/components/loading-overlay/loading-overlay.component';
@@ -8,6 +8,7 @@ import { LoadingOverlayComponent } from './shared/components/loading-overlay/loa
   standalone: true,
   imports: [RouterOutlet, LoadingOverlayComponent],
   templateUrl: './app.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.component.scss',
 })
 export class AppComponent {}

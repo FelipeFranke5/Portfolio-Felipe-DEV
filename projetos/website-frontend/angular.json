@@ -64,6 +64,16 @@
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true
+            },
+            "testing": {
+              "aot": false,
+              "optimization": false,
+              "extractLicenses": false,
+              "polyfills": [
+                "src/polyfills.ts",
+                "zone.js",
+                "zone.js/testing"
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -81,24 +91,17 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:karma",
+          "builder": "@angular/build:unit-test",
           "options": {
-            "polyfills": [
-              "src/polyfills.ts",
-              "zone.js",
-              "zone.js/testing"
-            ],
             "tsConfig": "tsconfig.spec.json",
-            "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              }
+            "buildTarget": ":build:testing",
+            "runner": "vitest",
+            "setupFiles": [
+              "src/test-setup.ts"
             ],
-            "styles": [
-              "src/styles.scss"
-            ],
-            "scripts": []
+            "browsers": [
+              "ChromiumHeadless"
+            ]
           }
         },
         "lint": {

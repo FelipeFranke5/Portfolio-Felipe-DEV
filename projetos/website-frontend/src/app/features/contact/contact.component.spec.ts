@@ -9,10 +9,10 @@ import { ContactService, ContactResponse } from './contact.service';
 describe('ContactComponent', () => {
   let component: ContactComponent;
   let fixture: ComponentFixture<ContactComponent>;
-  let contactServiceSpy: jasmine.SpyObj<ContactService>;
+  let contactServiceSpy: { sendMessage: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
-    contactServiceSpy = jasmine.createSpyObj<ContactService>('ContactService', ['sendMessage']);
+    contactServiceSpy = { sendMessage: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [ContactComponent],
@@ -38,14 +38,14 @@ describe('ContactComponent', () => {
 
   it('should start on step 1 with the "Continuar" button disabled while the name is empty', () => {
     expect(component.currentStep()).toBe(1);
-    expect(component.isStepButtonDisabled('name')).toBeTrue();
+    expect(component.isStepButtonDisabled('name')).toBe(true);
   });
 
   it('should not advance to step 2 and should mark the name field as touched when it is empty', () => {
     component.continueFromName();
 
     expect(component.currentStep()).toBe(1);
-    expect(component.isFieldInvalid('name')).toBeTrue();
+    expect(component.isFieldInvalid('name')).toBe(true);
   });
 
   it('should advance to step 2 when the name is valid', () => {
@@ -64,7 +64,7 @@ describe('ContactComponent', () => {
     component.continueFromEmail();
 
     expect(component.currentStep()).toBe(2);
-    expect(component.isFieldInvalid('email')).toBeTrue();
+    expect(component.isFieldInvalid('email')).toBe(true);
   });
 
   it('should advance to step 3 when the email is valid', () => {
@@ -96,18 +96,18 @@ describe('ContactComponent', () => {
     component.submit();
 
     expect(contactServiceSpy.sendMessage).not.toHaveBeenCalled();
-    expect(component.contactForm.invalid).toBeTrue();
-    expect(component.isFieldInvalid('name')).toBeTrue();
-    expect(component.isFieldInvalid('email')).toBeTrue();
-    expect(component.isFieldInvalid('message')).toBeTrue();
+    expect(component.contactForm.invalid).toBe(true);
+    expect(component.isFieldInvalid('name')).toBe(true);
+    expect(component.isFieldInvalid('email')).toBe(true);
+    expect(component.isFieldInvalid('message')).toBe(true);
   });
 
   it('should mark the email field invalid when the value is not a valid email', () => {
     component.contactForm.controls.email.setValue('not-an-email');
     component.contactForm.controls.email.markAsTouched();
 
-    expect(component.isFieldInvalid('email')).toBeTrue();
-    expect(component.contactForm.controls.email.hasError('email')).toBeTrue();
+    expect(component.isFieldInvalid('email')).toBe(true);
+    expect(component.contactForm.controls.email.hasError('email')).toBe(true);
   });
 
   it('should send the message, show a success message and reset back to step 1 when the form is valid', () => {
@@ -115,7 +115,7 @@ describe('ContactComponent', () => {
       messageId: '11111111-1111-1111-1111-111111111111',
       createdAt: '2026-07-23T10:00:00',
     };
-    contactServiceSpy.sendMessage.and.returnValue(of(contactResponse));
+    contactServiceSpy.sendMessage.mockReturnValue(of(contactResponse));
 
     const filledContact = {
       name: 'Felipe',
@@ -128,7 +128,7 @@ describe('ContactComponent', () => {
     component.submit();
 
     expect(contactServiceSpy.sendMessage).toHaveBeenCalledWith(filledContact);
-    expect(component.submitSucceeded()).toBeTrue();
+    expect(component.submitSucceeded()).toBe(true);
     expect(component.contactForm.controls.name.value).toBe('');
     expect(component.currentStep()).toBe(1);
   });
@@ -138,7 +138,7 @@ describe('ContactComponent', () => {
       error: { message: 'Falha ao processar a requisição.' },
       status: 500,
     });
-    contactServiceSpy.sendMessage.and.returnValue(throwError(() => errorResponse));
+    contactServiceSpy.sendMessage.mockReturnValue(throwError(() => errorResponse));
 
     component.contactForm.setValue({
       name: 'Felipe',
@@ -149,12 +149,12 @@ describe('ContactComponent', () => {
     component.submit();
 
     expect(component.submitErrorMessage()).toBe('Falha ao processar a requisição.');
-    expect(component.submitSucceeded()).toBeFalse();
+    expect(component.submitSucceeded()).toBe(false);
   });
 
   it('should show a generic error message when the backend response has no message', () => {
     const errorResponse = new HttpErrorResponse({ status: 0 });
-    contactServiceSpy.sendMessage.and.returnValue(throwError(() => errorResponse));
+    contactServiceSpy.sendMessage.mockReturnValue(throwError(() => errorResponse));
 
     component.contactForm.setValue({
       name: 'Felipe',

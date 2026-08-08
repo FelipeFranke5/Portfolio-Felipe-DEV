@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, effect, inject, viewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, effect, inject, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { HeaderComponent } from '../../shared/components/header/header.component';
@@ -25,6 +25,7 @@ interface AdminNavLink {
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, HeaderComponent, FooterComponent],
   templateUrl: './admin-shell.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './admin-shell.component.scss',
 })
 export class AdminShellComponent implements OnDestroy {

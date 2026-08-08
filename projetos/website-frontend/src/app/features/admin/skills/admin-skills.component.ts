@@ -7,6 +7,7 @@ import {
   inject,
   signal,
   viewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -43,6 +44,7 @@ interface SkillGroup {
   standalone: true,
   imports: [ReactiveFormsModule],
   templateUrl: './admin-skills.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './admin-skills.component.scss',
 })
 export class AdminSkillsComponent {

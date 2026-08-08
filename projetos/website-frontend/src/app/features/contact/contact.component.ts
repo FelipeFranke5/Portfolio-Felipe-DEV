@@ -6,6 +6,7 @@ import {
   inject,
   signal,
   viewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -31,6 +32,7 @@ interface CompletedField {
   standalone: true,
   imports: [ReactiveFormsModule, HeaderComponent, FooterComponent],
   templateUrl: './contact.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './contact.component.scss',
 })
 export class ContactComponent {

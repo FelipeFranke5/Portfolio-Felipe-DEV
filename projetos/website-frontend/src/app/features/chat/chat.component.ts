@@ -7,6 +7,7 @@ import {
   inject,
   signal,
   viewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -28,6 +29,7 @@ const STATUS_LABELS: Record<ConnectionStatus, string> = {
   standalone: true,
   imports: [DatePipe, RouterLink, HeaderComponent, FooterComponent],
   templateUrl: './chat.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './chat.component.scss',
 })
 export class ChatComponent {

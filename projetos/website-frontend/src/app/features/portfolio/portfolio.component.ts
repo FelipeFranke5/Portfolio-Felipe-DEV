@@ -7,6 +7,7 @@ import {
   inject,
   signal,
   viewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -23,6 +24,7 @@ const MODAL_CLOSE_ANIMATION_MS = 180;
   standalone: true,
   imports: [HeaderComponent, FooterComponent, CertificatesComponent, DatePipe],
   templateUrl: './portfolio.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './portfolio.component.scss',
 })
 export class PortfolioComponent {

@@ -7,6 +7,7 @@ import {
   inject,
   signal,
   viewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -33,6 +34,7 @@ const MODAL_CLOSE_ANIMATION_MS = 180;
   standalone: true,
   imports: [HeaderComponent, FooterComponent],
   templateUrl: './skills.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './skills.component.scss',
 })
 export class SkillsComponent {
