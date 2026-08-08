@@ -116,7 +116,7 @@ services:
       # NGINX termina TLS e repassa para o Keycloak em HTTP puro
       # dentro da rede interna do Docker.
       KC_HTTP_ENABLED: "true"
-      KC_HOSTNAME: ${DOMAIN:?defina DOMAIN no .env}
+      KC_HOSTNAME: frankefelipe-dev.tech
       KC_HOSTNAME_STRICT: "false"
       KC_PROXY_HEADERS: xforwarded
 
