@@ -209,8 +209,14 @@ export class AdminSkillsComponent {
     this.skillForm.setValue({
       name: skill.name,
       category: skill.category,
-      level: resolveSkillLevel(skill.skillLevel)?.level ?? 1,
+      level: resolveSkillLevel(skill.skillLevel)?.level ?? 0,
     });
+
+    if (!resolveSkillLevel(skill.skillLevel)) {
+      this.formErrorMessage.set(
+        "O nível atual desta habilidade (Skill) não foi reconhecida. Por favor, escolha um nível antes de salvar."
+      );
+    }
   }
 
   closeForm(): void {
