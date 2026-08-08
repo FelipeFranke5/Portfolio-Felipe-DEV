@@ -25,7 +25,7 @@ interface AdminNavLink {
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, HeaderComponent, FooterComponent],
   templateUrl: './admin-shell.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './admin-shell.component.scss',
 })
 export class AdminShellComponent implements OnDestroy {

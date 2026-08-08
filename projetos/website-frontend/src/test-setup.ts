@@ -3,7 +3,9 @@
 // que dispare o efeito de auto-scroll lança "container.scrollTo is not a
 // function" durante os testes.
 if (typeof Element !== 'undefined' && !Element.prototype.scrollTo) {
-  Element.prototype.scrollTo = function (): void {};
+  Element.prototype.scrollTo = function (): void {
+    // no-op shim
+  };
 }
 
 // sockjs-client (usado pelo ChatbotService) carrega, no nível do módulo, uma

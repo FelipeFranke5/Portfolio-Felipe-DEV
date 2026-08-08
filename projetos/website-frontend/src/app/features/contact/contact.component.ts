@@ -32,7 +32,7 @@ interface CompletedField {
   standalone: true,
   imports: [ReactiveFormsModule, HeaderComponent, FooterComponent],
   templateUrl: './contact.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './contact.component.scss',
 })
 export class ContactComponent {

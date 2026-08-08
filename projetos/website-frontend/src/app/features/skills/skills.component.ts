@@ -34,7 +34,7 @@ const MODAL_CLOSE_ANIMATION_MS = 180;
   standalone: true,
   imports: [HeaderComponent, FooterComponent],
   templateUrl: './skills.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './skills.component.scss',
 })
 export class SkillsComponent {

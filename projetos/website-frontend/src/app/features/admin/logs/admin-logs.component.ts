@@ -33,7 +33,7 @@ import { isAuthError, resolveApiErrorMessage } from '../../../core/services/api-
   standalone: true,
   imports: [DatePipe],
   templateUrl: './admin-logs.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './admin-logs.component.scss',
 })
 export class AdminLogsComponent {

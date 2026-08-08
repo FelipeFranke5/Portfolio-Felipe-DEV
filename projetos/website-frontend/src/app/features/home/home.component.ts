@@ -55,7 +55,7 @@ interface CoffeeAccent {
   standalone: true,
   imports: [HeaderComponent, FooterComponent, RouterLink],
   templateUrl: './home.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './home.component.scss',
 })
 export class HomeComponent {

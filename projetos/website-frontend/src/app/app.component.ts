@@ -8,7 +8,7 @@ import { LoadingOverlayComponent } from './shared/components/loading-overlay/loa
   standalone: true,
   imports: [RouterOutlet, LoadingOverlayComponent],
   templateUrl: './app.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './app.component.scss',
 })
 export class AppComponent {}

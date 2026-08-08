@@ -29,7 +29,7 @@ const STATUS_LABELS: Record<ConnectionStatus, string> = {
   standalone: true,
   imports: [DatePipe, RouterLink, HeaderComponent, FooterComponent],
   templateUrl: './chat.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './chat.component.scss',
 })
 export class ChatComponent {

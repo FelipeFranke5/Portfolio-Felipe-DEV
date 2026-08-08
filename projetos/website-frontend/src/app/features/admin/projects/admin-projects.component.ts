@@ -42,7 +42,7 @@ const DEMO_URL_PATTERN = /^https?:\/\/.+/;
   standalone: true,
   imports: [ReactiveFormsModule],
   templateUrl: './admin-projects.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './admin-projects.component.scss',
 })
 export class AdminProjectsComponent {

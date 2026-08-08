@@ -25,7 +25,7 @@ export interface Certificate {
   standalone: true,
   imports: [],
   templateUrl: './certificates.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './certificates.component.scss',
 })
 export class CertificatesComponent implements OnDestroy {

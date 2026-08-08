@@ -32,7 +32,7 @@ const COUNT_UP_DURATION_MS = 2000;
   standalone: true,
   imports: [RouterLink],
   templateUrl: './admin-dashboard.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './admin-dashboard.component.scss',
 })
 export class AdminDashboardComponent implements OnDestroy {

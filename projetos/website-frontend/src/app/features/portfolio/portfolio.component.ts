@@ -24,7 +24,7 @@ const MODAL_CLOSE_ANIMATION_MS = 180;
   standalone: true,
   imports: [HeaderComponent, FooterComponent, CertificatesComponent, DatePipe],
   templateUrl: './portfolio.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './portfolio.component.scss',
 })
 export class PortfolioComponent {

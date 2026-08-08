@@ -44,7 +44,7 @@ interface SkillGroup {
   standalone: true,
   imports: [ReactiveFormsModule],
   templateUrl: './admin-skills.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './admin-skills.component.scss',
 })
 export class AdminSkillsComponent {
