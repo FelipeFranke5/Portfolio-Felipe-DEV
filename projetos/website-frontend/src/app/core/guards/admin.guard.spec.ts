@@ -10,7 +10,7 @@ describe('isAdminAccessAllowed', () => {
   function buildAuthData(
     authenticated: boolean,
     realmRoles: string[],
-    loginSpy: jasmine.Spy
+    loginSpy: ReturnType<typeof vi.fn>
   ): AuthGuardData {
     return {
       authenticated,
@@ -20,31 +20,31 @@ describe('isAdminAccessAllowed', () => {
   }
 
   it('should allow access when the user is authenticated and has the ADMIN realm role', async () => {
-    const loginSpy = jasmine.createSpy('login');
+    const loginSpy = vi.fn();
     const authData = buildAuthData(true, ['ADMIN'], loginSpy);
     const state = { url: '/admin' } as RouterStateSnapshot;
 
     const result = await isAdminAccessAllowed(route, state, authData, deniedRedirect);
 
-    expect(result).toBeTrue();
+    expect(result).toBe(true);
     expect(loginSpy).not.toHaveBeenCalled();
   });
 
   it('should redirect to Keycloak login and deny access when the user is not authenticated', async () => {
-    const loginSpy = jasmine.createSpy('login').and.resolveTo();
+    const loginSpy = vi.fn().mockResolvedValue(undefined);
     const authData = buildAuthData(false, [], loginSpy);
     const state = { url: '/admin' } as RouterStateSnapshot;
 
     const result = await isAdminAccessAllowed(route, state, authData, deniedRedirect);
 
-    expect(result).toBeFalse();
+    expect(result).toBe(false);
     expect(loginSpy).toHaveBeenCalledWith({
       redirectUri: window.location.origin + '/admin',
     });
   });
 
   it('should redirect home WITHOUT calling login when authenticated but missing the ADMIN role', async () => {
-    const loginSpy = jasmine.createSpy('login');
+    const loginSpy = vi.fn();
     const authData = buildAuthData(true, ['USER'], loginSpy);
     const state = { url: '/admin' } as RouterStateSnapshot;
 

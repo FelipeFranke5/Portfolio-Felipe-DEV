@@ -9,7 +9,10 @@ import { Project, ProjectDetail, ProjectsService } from './projects.service';
 describe('PortfolioComponent', () => {
   let component: PortfolioComponent;
   let fixture: ComponentFixture<PortfolioComponent>;
-  let projectsServiceSpy: jasmine.SpyObj<ProjectsService>;
+  let projectsServiceSpy: {
+    getProjects: ReturnType<typeof vi.fn>;
+    getProjectById: ReturnType<typeof vi.fn>;
+  };
 
   const mockProjects: Project[] = [
     {
@@ -38,11 +41,8 @@ describe('PortfolioComponent', () => {
   };
 
   beforeEach(async () => {
-    projectsServiceSpy = jasmine.createSpyObj<ProjectsService>('ProjectsService', [
-      'getProjects',
-      'getProjectById',
-    ]);
-    projectsServiceSpy.getProjects.and.returnValue(of(mockProjects));
+    projectsServiceSpy = { getProjects: vi.fn(), getProjectById: vi.fn() };
+    projectsServiceSpy.getProjects.mockReturnValue(of(mockProjects));
 
     await TestBed.configureTestingModule({
       imports: [PortfolioComponent],
@@ -92,7 +92,7 @@ describe('PortfolioComponent', () => {
 
   it('should show the error state and allow retrying when the request fails', () => {
     const errorResponse = new HttpErrorResponse({ status: 0 });
-    projectsServiceSpy.getProjects.and.returnValue(throwError(() => errorResponse));
+    projectsServiceSpy.getProjects.mockReturnValue(throwError(() => errorResponse));
 
     component.fetchProjects();
     fixture.detectChanges();
@@ -103,26 +103,26 @@ describe('PortfolioComponent', () => {
       'Houve uma falha ao consultar /api/projects. Tente novamente.'
     );
 
-    projectsServiceSpy.getProjects.and.returnValue(of(mockProjects));
+    projectsServiceSpy.getProjects.mockReturnValue(of(mockProjects));
     fixture.nativeElement.querySelector('.portfolio-state--error button').click();
     fixture.detectChanges();
 
-    expect(component.hasResults()).toBeTrue();
+    expect(component.hasResults()).toBe(true);
   });
 
   it('should open the modal and load the project detail when a card is activated', () => {
-    projectsServiceSpy.getProjectById.and.returnValue(of(mockProjectDetail));
+    projectsServiceSpy.getProjectById.mockReturnValue(of(mockProjectDetail));
 
     component.openProject(mockProjects[0], document.createElement('div'));
     fixture.detectChanges();
 
     expect(projectsServiceSpy.getProjectById).toHaveBeenCalledWith(mockProjects[0].id);
-    expect(component.isModalOpen()).toBeTrue();
+    expect(component.isModalOpen()).toBe(true);
     expect(component.activeProject()).toEqual(mockProjectDetail);
   });
 
   it('should show the GitHub link but not the demo link when only githubURL is present', () => {
-    projectsServiceSpy.getProjectById.and.returnValue(of(mockProjectDetail));
+    projectsServiceSpy.getProjectById.mockReturnValue(of(mockProjectDetail));
 
     component.openProject(mockProjects[0], document.createElement('div'));
     fixture.detectChanges();
@@ -133,7 +133,7 @@ describe('PortfolioComponent', () => {
   });
 
   it('should hide both action links when neither githubURL nor demoURL are present', () => {
-    projectsServiceSpy.getProjectById.and.returnValue(
+    projectsServiceSpy.getProjectById.mockReturnValue(
       of({ ...mockProjectDetail, githubURL: null, demoURL: null })
     );
 
@@ -149,7 +149,7 @@ describe('PortfolioComponent', () => {
       status: 500,
       error: { reason: 'log-id-123' },
     });
-    projectsServiceSpy.getProjectById.and.returnValue(throwError(() => errorResponse));
+    projectsServiceSpy.getProjectById.mockReturnValue(throwError(() => errorResponse));
 
     component.openProject(mockProjects[0], document.createElement('div'));
     fixture.detectChanges();
@@ -158,7 +158,7 @@ describe('PortfolioComponent', () => {
   });
 
   it('should close the modal when closeModal is called', () => {
-    projectsServiceSpy.getProjectById.and.returnValue(of(mockProjectDetail));
+    projectsServiceSpy.getProjectById.mockReturnValue(of(mockProjectDetail));
 
     component.openProject(mockProjects[0], document.createElement('div'));
     fixture.detectChanges();
@@ -166,7 +166,7 @@ describe('PortfolioComponent', () => {
     component.closeModal();
     fixture.detectChanges();
 
-    expect(component.isModalOpen()).toBeFalse();
+    expect(component.isModalOpen()).toBe(false);
   });
 
   it('should render the certificates section below the projects grid', () => {

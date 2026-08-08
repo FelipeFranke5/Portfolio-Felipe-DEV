@@ -7,6 +7,7 @@ import {
   inject,
   signal,
   viewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -41,6 +42,7 @@ const DEMO_URL_PATTERN = /^https?:\/\/.+/;
   standalone: true,
   imports: [ReactiveFormsModule],
   templateUrl: './admin-projects.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './admin-projects.component.scss',
 })
 export class AdminProjectsComponent {

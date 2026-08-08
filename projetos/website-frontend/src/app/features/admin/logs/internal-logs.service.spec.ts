@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { InternalLog, InternalLogsService } from './internal-logs.service';
@@ -20,7 +20,7 @@ describe('InternalLogsService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(withXhr()), provideHttpClientTesting()],
     });
 
     service = TestBed.inject(InternalLogsService);
@@ -74,7 +74,7 @@ describe('InternalLogsService', () => {
 
     const request = httpTestingController.expectOne(`${environment.apiUrl}/internal_log`);
 
-    expect(request.request.context.get(SKIP_GLOBAL_LOADING)).toBeTrue();
+    expect(request.request.context.get(SKIP_GLOBAL_LOADING)).toBe(true);
 
     request.flush([]);
   });

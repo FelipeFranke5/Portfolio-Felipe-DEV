@@ -80,7 +80,7 @@ describe('CertificatesComponent', () => {
   it('should open the modal when a card is clicked', () => {
     openFirstCard();
 
-    expect(component.isModalOpen()).toBeTrue();
+    expect(component.isModalOpen()).toBe(true);
     expect(component.activeCertificate()).toBe(component.certificates[0]);
 
     const dialog = fixture.nativeElement.querySelector('.certificate-modal');
@@ -93,14 +93,14 @@ describe('CertificatesComponent', () => {
     firstCard().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     fixture.detectChanges();
 
-    expect(component.isModalOpen()).toBeTrue();
+    expect(component.isModalOpen()).toBe(true);
   });
 
   it('should open the modal when Space is pressed on a card', () => {
     firstCard().dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
     fixture.detectChanges();
 
-    expect(component.isModalOpen()).toBeTrue();
+    expect(component.isModalOpen()).toBe(true);
   });
 
   it('should show the issue date and the complete description in the modal', () => {
@@ -131,7 +131,7 @@ describe('CertificatesComponent', () => {
     component.onEscapePressed();
     fixture.detectChanges();
 
-    expect(component.isModalOpen()).toBeFalse();
+    expect(component.isModalOpen()).toBe(false);
     expect(fixture.nativeElement.querySelector('.certificate-modal')).toBeNull();
   });
 

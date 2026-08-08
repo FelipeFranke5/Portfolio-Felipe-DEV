@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { LoadingService } from '../../../core/services/loading.service';
 
@@ -23,6 +23,7 @@ import { LoadingService } from '../../../core/services/loading.service';
   selector: 'app-loading-overlay',
   standalone: true,
   templateUrl: './loading-overlay.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './loading-overlay.component.scss',
 })
 export class LoadingOverlayComponent {

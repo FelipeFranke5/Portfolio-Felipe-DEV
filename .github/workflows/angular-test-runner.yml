@@ -1,0 +1,38 @@
+name: Rodar Testes FrontEnd
+
+on:
+  pull_request:
+    paths:
+      - 'projetos/website-frontend/**'
+      - '!**.md'
+
+defaults:
+  run:
+    working-directory: projetos/website-frontend
+
+jobs:
+  testes-angular:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Baixar Código do Projeto
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Instalar e Configurar Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: projetos/website-frontend/package-lock.json
+      # OBS: npm ci vs npm install: npm ci é mais
+      # adequado para pipelines automatizadas
+      - name: Realizar Clean Install das Dependências
+        run: npm ci
+      - name: Instalar Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Rodar Lint
+        run: npm run lint --if-present
+      - name: Rodar Testes
+        run: npm run test:ci

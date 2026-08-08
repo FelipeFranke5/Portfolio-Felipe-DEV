@@ -1,5 +1,5 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { TestBed } from '@angular/core/testing';
+import { HttpClient, provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import Keycloak from 'keycloak-js';
 import {
@@ -21,7 +21,7 @@ describe('authInterceptor', () => {
     beforeEach(() => {
       TestBed.configureTestingModule({
         providers: [
-          provideHttpClient(withInterceptors([authInterceptor])),
+          provideHttpClient(withXhr(), withInterceptors([authInterceptor])),
           provideHttpClientTesting(),
           {
             provide: Keycloak,
@@ -44,21 +44,21 @@ describe('authInterceptor', () => {
 
     afterEach(() => httpTestingController.verify());
 
-    it('should attach the Bearer token to requests matching the configured URL pattern', fakeAsync(() => {
+    it('should attach the Bearer token to requests matching the configured URL pattern', async () => {
       httpClient.get('http://localhost/api/projects').subscribe();
       // includeBearerTokenInterceptor awaits keycloak.updateToken() before
       // calling next() for matching URLs — flush that microtask.
-      tick();
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       const request = httpTestingController.expectOne('http://localhost/api/projects');
       expect(request.request.headers.get('Authorization')).toBe('Bearer abc123');
-    }));
+    });
 
     it('should not attach the Bearer token to requests outside the configured URL pattern', () => {
       httpClient.get('https://external.example.com/data').subscribe();
 
       const request = httpTestingController.expectOne('https://external.example.com/data');
-      expect(request.request.headers.has('Authorization')).toBeFalse();
+      expect(request.request.headers.has('Authorization')).toBe(false);
     });
   });
 });

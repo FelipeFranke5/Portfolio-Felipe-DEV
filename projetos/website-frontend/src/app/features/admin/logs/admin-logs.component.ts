@@ -7,6 +7,7 @@ import {
   inject,
   signal,
   viewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -32,6 +33,7 @@ import { isAuthError, resolveApiErrorMessage } from '../../../core/services/api-
   standalone: true,
   imports: [DatePipe],
   templateUrl: './admin-logs.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './admin-logs.component.scss',
 })
 export class AdminLogsComponent {
