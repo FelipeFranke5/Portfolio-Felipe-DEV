@@ -1,6 +1,9 @@
-<app-header class="fade-in fade-in--0"></app-header>
+<app-header
+  class="fade-in fade-in--0"
+  [attr.inert]="sessionIdle.isExpired() ? '' : null"
+></app-header>
 
-<div class="admin-shell" [class.admin-shell--locked]="sessionIdle.isExpired()">
+<div class="admin-shell" [class.admin-shell--locked]="sessionIdle.isExpired()" [attr.inert]="sessionIdle.isExpired() ? '' : null">
   <nav class="admin-nav fade-in fade-in--1" aria-label="Navegação do painel administrativo">
     <div class="admin-nav__inner">
       <span class="admin-nav__badge">
@@ -64,4 +67,4 @@
   </div>
 }
 
-<app-footer></app-footer>
+<app-footer [attr.inert]="sessionIdle.isExpired() ? '' : null"></app-footer>
