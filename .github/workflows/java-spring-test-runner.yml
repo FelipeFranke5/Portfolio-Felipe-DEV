@@ -27,7 +27,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          force-download: true
           verify-signature: true
       - name: Rodar Compile e Testes
         run: mvn clean test-compile && mvn clean test
