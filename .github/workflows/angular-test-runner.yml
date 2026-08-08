@@ -1,0 +1,34 @@
+name: Rodar Testes FrontEnd
+
+on:
+  pull_request:
+    # Roda nas branches criadas fora da main.
+    # Posteriormente ocorre o merge para a main.
+    # Quando for para a main, não preciso rodar
+    # essa pipeline de novo.
+    branches-ignore:
+      - 'main'
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  run-angular-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar Código do Projeto
+        uses: actions/checkout@v7
+      - name: Acessar Pasta Raíz do Projeto Angular
+        run: cd projetos/website-frontend
+      - name: Instalar e Configurar Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+      # OBS: npm ci vs npm install: npm ci é mais
+      # adequado para pipelines automatizadas
+      - name: Realizar Clean Install das Dependências
+        run: npm ci
+      - name: Rodar Lint
+        run: npm run lint --if-present
+      - name: Rodar Testes
+        run: npm run test:ci
