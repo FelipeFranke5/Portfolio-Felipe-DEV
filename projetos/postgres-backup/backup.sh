@@ -19,12 +19,20 @@ mkdir -p "$BACKUP_DIR"
 
 echo "[$(date -Iseconds)] Iniciando backup de ${POSTGRES_DB}..."
 
+TMP_SQL=$(mktemp "${BACKUP_DIR}/.${POSTGRES_DB}_${TIMESTAMP}.XXXXXX.sql")
+TMP_BACKUP="${BACKUP_FILE}.tmp"
+trap 'rm -f "$TMP_SQL" "$TMP_BACKUP"' EXIT HUP INT TERM
+
 PGPASSWORD="$POSTGRES_PASSWORD" pg_dump \
   -h "$POSTGRES_HOST" \
   -U "$POSTGRES_USER" \
   -d "$POSTGRES_DB" \
-  --no-owner --no-privileges \
-  | gzip > "$BACKUP_FILE"
+  --no-owner --no-privileges > "$TMP_SQL"
+
+gzip -c "$TMP_SQL" > "$TMP_BACKUP"
+mv "$TMP_BACKUP" "$BACKUP_FILE"
+rm -f "$TMP_SQL"
+trap - EXIT HUP INT TERM
 
 echo "[$(date -Iseconds)] Backup salvo em ${BACKUP_FILE} ($(du -h "$BACKUP_FILE" | cut -f1))"
 
