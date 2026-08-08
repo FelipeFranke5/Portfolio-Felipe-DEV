@@ -5,7 +5,7 @@
 # ============================================================
 
 # ---------- Stage 1: build ----------
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+FROM maven:3.9.9-eclipse-temurin-21@sha256:3a4ab3276a087bf276f79cae96b1af04f53731bec53fb2e651aca79e4b10211e AS build
 WORKDIR /build
 
 # Copia primeiro só o pom.xml e baixa as dependências.
@@ -20,7 +20,7 @@ RUN mvn -B clean package -DskipTests
 
 
 # ---------- Stage 2: runtime ----------
-FROM eclipse-temurin:21-jre-alpine AS runtime
+FROM eclipse-temurin:21-jre-alpine@sha256:3f08b13888f595cc49edabea7250ba69499ba25602b267da591720769400e08c AS runtime
 WORKDIR /app
 RUN addgroup -S spring && adduser -S spring -G spring
 

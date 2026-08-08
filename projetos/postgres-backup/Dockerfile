@@ -6,7 +6,7 @@
 #  ("Sem backup/restore automatizado para o PostgreSQL em produção").
 # ============================================================
 
-FROM postgres:16-alpine
+FROM postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
 
 COPY backup.sh /usr/local/bin/backup.sh
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh

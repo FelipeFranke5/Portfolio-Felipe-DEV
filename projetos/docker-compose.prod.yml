@@ -49,7 +49,7 @@
 services:
 
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
     container_name: website_db_prod
     environment:
       POSTGRES_DB: ${DB_NAME:-website_db}
@@ -105,7 +105,7 @@ services:
       - website_prod_net
 
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
+    image: quay.io/keycloak/keycloak:26.7.1-0@sha256:f1f1f01e472c8a78df40d8f2a49a925274eda4d3d80d5f6edbb5c880ee3c01c6
     container_name: website_keycloak_prod
     command: start
     environment:
@@ -123,6 +123,14 @@ services:
       # Necessário para o health check abaixo (endpoint de management,
       # porta 9000, não exposta ao host).
       KC_HEALTH_ENABLED: "true"
+
+      # Só usamos OAuth2/OIDC padrão, login com Google (Identity Provider)
+      # e administração de realms/clients — então desabilitamos tudo que
+      # não se aplica a esse escopo para reduzir superfície de ataque e
+      # overhead de boot. Lista de features disponíveis em cada versão:
+      # https://www.keycloak.org/server/all-config (procurar "kc.features")
+      # e https://www.keycloak.org/server/features
+      KC_FEATURES_DISABLED: "admin-fine-grained-authz,authorization,ciba,client-auth-federated,device-flow,dpop,fips,impersonation,jwt-authorization-grant,kerberos,kubernetes-service-accounts,log-mdc,multi-site,opentelemetry,organization,par,passkeys,persistent-user-sessions,recovery-codes,rolling-updates,step-up-authentication,step-up-authentication-saml,token-exchange-standard,twitter-broker,update-email,user-event-metrics,web-authn,workflows"
 
       KC_DB: postgres
       KC_DB_CONNECT_TIMEOUT: 20s
@@ -243,7 +251,7 @@ services:
       - website_prod_net
 
   certbot:
-    image: certbot/certbot:latest
+    image: certbot/certbot:v5.7.0@sha256:34ee91d2f43008eb78a007d22f23ed4b2eaa9a454cb27ca2c042b49527a695b4
     container_name: website_certbot_prod
     # certbot renew só age em certificados já emitidos (ver bootstrap
     # no cabeçalho deste arquivo) e só os substitui de fato quando
