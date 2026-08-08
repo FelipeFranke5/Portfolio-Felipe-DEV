@@ -12,20 +12,19 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { HeaderComponent } from '../../shared/components/header/header.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
-import { Skill, SkillsService } from './skills.service';
-
-interface LevelMeta {
-  key: string;
-  label: string;
-  tier: number;
-}
+import {
+  SKILL_LEVELS,
+  Skill,
+  SkillLevelMeta,
+  SkillsService,
+  UNKNOWN_SKILL_LEVEL,
+  resolveSkillLevel,
+} from './skills.service';
 
 interface SkillGroup {
   category: string;
   skills: Skill[];
 }
-
-const UNKNOWN_LEVEL: LevelMeta = { key: 'Unknown', label: 'Desconhecido', tier: -1 };
 
 const MODAL_CLOSE_ANIMATION_MS = 180;
 
@@ -42,21 +41,12 @@ export class SkillsComponent {
   private readonly defaultErrorMessage =
     'Houve uma falha ao consultar /api/skills. Tente novamente.';
 
-  readonly levels: LevelMeta[] = [
-    { key: 'Zero Experience - Still Learning', label: 'Sem experiência — ainda aprendendo', tier: 0 },
-    { key: 'Some Experience - Still Learning', label: 'Alguma experiência — ainda aprendendo', tier: 1 },
-    { key: 'Has intermediate knowledge about the topic', label: 'Conhecimento intermediário', tier: 2 },
-    {
-      key: 'Has advanced knowledge about the topic, but no work experience',
-      label: 'Avançado — sem experiência prática',
-      tier: 3,
-    },
-    {
-      key: 'Has advanced knowledge about the topic and work experience',
-      label: 'Avançado — com experiência prática',
-      tier: 4,
-    },
-  ];
+  // Vem do service para ser a mesma tabela usada pelo painel /admin. A versão
+  // anterior era uma lista local que casava o nível pela DESCRIÇÃO do enum,
+  // mas a API serializa o `skillLevel` pelo NOME da constante
+  // ("WORK_EXPERIENCE") — nenhuma skill batia, e todas apareciam como
+  // "Desconhecido" com o filtro de nível sem efeito.
+  readonly levels = SKILL_LEVELS;
 
   readonly skills = signal<Skill[]>([]);
   readonly isLoading = signal(true);
@@ -90,7 +80,9 @@ export class SkillsComponent {
       if (category !== 'all' && skill.category !== category) {
         return false;
       }
-      if (level !== 'all' && skill.skillLevel !== level) {
+      // Compara o nível já resolvido, e não o valor cru da API, para o filtro
+      // continuar funcionando se a serialização do enum mudar.
+      if (level !== 'all' && this.levelMeta(skill.skillLevel).enumName !== level) {
         return false;
       }
       if (search && !skill.name.toLowerCase().includes(search)) {
@@ -149,8 +141,8 @@ export class SkillsComponent {
     });
   }
 
-  levelMeta(skillLevel: string): LevelMeta {
-    return this.levels.find((level) => level.key === skillLevel) ?? UNKNOWN_LEVEL;
+  levelMeta(skillLevel: string): SkillLevelMeta {
+    return resolveSkillLevel(skillLevel) ?? UNKNOWN_SKILL_LEVEL;
   }
 
   levelBars(tier: number): boolean[] {

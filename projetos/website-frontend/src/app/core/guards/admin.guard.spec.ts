@@ -1,10 +1,11 @@
-import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { AuthGuardData } from 'keycloak-angular';
 
 import { isAdminAccessAllowed } from './admin.guard';
 
 describe('isAdminAccessAllowed', () => {
   const route = {} as ActivatedRouteSnapshot;
+  const deniedRedirect = { toString: () => '/' } as UrlTree;
 
   function buildAuthData(
     authenticated: boolean,
@@ -23,7 +24,7 @@ describe('isAdminAccessAllowed', () => {
     const authData = buildAuthData(true, ['ADMIN'], loginSpy);
     const state = { url: '/admin' } as RouterStateSnapshot;
 
-    const result = await isAdminAccessAllowed(route, state, authData);
+    const result = await isAdminAccessAllowed(route, state, authData, deniedRedirect);
 
     expect(result).toBeTrue();
     expect(loginSpy).not.toHaveBeenCalled();
@@ -34,7 +35,7 @@ describe('isAdminAccessAllowed', () => {
     const authData = buildAuthData(false, [], loginSpy);
     const state = { url: '/admin' } as RouterStateSnapshot;
 
-    const result = await isAdminAccessAllowed(route, state, authData);
+    const result = await isAdminAccessAllowed(route, state, authData, deniedRedirect);
 
     expect(result).toBeFalse();
     expect(loginSpy).toHaveBeenCalledWith({
@@ -42,14 +43,14 @@ describe('isAdminAccessAllowed', () => {
     });
   });
 
-  it('should deny access WITHOUT redirecting to login when authenticated but missing the ADMIN role', async () => {
+  it('should redirect home WITHOUT calling login when authenticated but missing the ADMIN role', async () => {
     const loginSpy = jasmine.createSpy('login');
     const authData = buildAuthData(true, ['USER'], loginSpy);
     const state = { url: '/admin' } as RouterStateSnapshot;
 
-    const result = await isAdminAccessAllowed(route, state, authData);
+    const result = await isAdminAccessAllowed(route, state, authData, deniedRedirect);
 
-    expect(result).toBeFalse();
+    expect(result).toBe(deniedRedirect);
     expect(loginSpy).not.toHaveBeenCalled();
   });
 });

@@ -1,0 +1,70 @@
+<app-header
+  class="fade-in fade-in--0"
+  [attr.inert]="sessionIdle.isExpired() ? '' : null"
+></app-header>
+
+<div class="admin-shell" [class.admin-shell--locked]="sessionIdle.isExpired()" [attr.inert]="sessionIdle.isExpired() ? '' : null">
+  <nav class="admin-nav fade-in fade-in--1" aria-label="Navegação do painel administrativo">
+    <div class="admin-nav__inner">
+      <span class="admin-nav__badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 3 4 6.5v5c0 4.5 3.2 8.4 8 9.5 4.8-1.1 8-5 8-9.5v-5z"></path>
+        </svg>
+        Painel
+      </span>
+
+      <ul class="admin-nav__list">
+        @for (link of navLinks; track link.path) {
+          <li>
+            <a
+              class="admin-nav__link"
+              [routerLink]="link.path"
+              routerLinkActive="admin-nav__link--active"
+              [routerLinkActiveOptions]="{ exact: link.exact }"
+            >{{ link.label }}</a>
+          </li>
+        }
+      </ul>
+    </div>
+  </nav>
+
+  <router-outlet></router-outlet>
+</div>
+
+@if (sessionIdle.isExpired()) {
+  <div class="admin-session-backdrop" role="presentation">
+    <div
+      class="admin-session"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="admin-session-title"
+      aria-describedby="admin-session-description"
+    >
+      <span class="admin-session__handle" aria-hidden="true"></span>
+
+      <div class="admin-session__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M12 7v5l3 2"></path>
+        </svg>
+      </div>
+
+      <h2 id="admin-session-title" class="admin-session__title">Sessão expirada</h2>
+      <p id="admin-session-description" class="admin-session__description">
+        Sua sessão expirou por inatividade. Autentique-se novamente para continuar gerenciando o
+        site.
+      </p>
+
+      <button
+        #reloginButton
+        type="button"
+        class="admin-btn admin-btn--primary admin-btn--block"
+        (click)="relogin()"
+      >
+        Realizar login novamente
+      </button>
+    </div>
+  </div>
+}
+
+<app-footer [attr.inert]="sessionIdle.isExpired() ? '' : null"></app-footer>

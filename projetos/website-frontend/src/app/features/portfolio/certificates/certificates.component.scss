@@ -74,8 +74,7 @@ $font-heading: tokens.$font-heading;
       0 0 20px color-mix(in srgb, $accent 30%, transparent);
 
     .certificate-card__image {
-      filter: grayscale(0);
-      transform: scale(1.04);
+      @include animations.image-reveal-active;
     }
 
     .certificate-card__cta {
@@ -109,8 +108,7 @@ $font-heading: tokens.$font-heading;
     height: 100%;
     object-fit: cover;
     object-position: center;
-    filter: grayscale(1);
-    transition: filter 0.35s ease, transform 0.35s ease;
+    @include animations.image-reveal-idle;
   }
 
   &__body {

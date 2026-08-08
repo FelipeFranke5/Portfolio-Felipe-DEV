@@ -1,0 +1,227 @@
+@use "../../shared/styles/tokens";
+@use "../../shared/styles/animations";
+@use "./styles/admin-ui";
+
+@include admin-ui.admin-ui;
+
+// Só o texto para leitores de tela (o número em si é escondido durante o
+// carregamento, mas o estado precisa ser anunciado).
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.dashboard-metric {
+  // Altura mínima fixa: o card já nasce do tamanho final, então a chegada do
+  // número não empurra o layout (requisito explícito do design).
+  min-height: 13rem;
+
+  &__kicker {
+    font-weight: 600;
+    font-size: 0.625rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: tokens.$text-muted;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: tokens.$text-muted;
+  }
+
+  &__value-wrapper {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    min-height: 3rem;
+  }
+
+  &__placeholder {
+    display: block;
+    width: 4.5rem;
+    height: 2.5rem;
+    border-radius: 8px;
+    @include animations.shimmer;
+  }
+
+  &__value {
+    font-family: tokens.$font-heading;
+    font-weight: 800;
+    font-size: clamp(2.25rem, 5vw, 2.75rem);
+    line-height: 1;
+    // Estado 1 -> 2 do design: o número nasce apagado e ganha a cor de
+    // destaque quando a contagem termina.
+    color: tokens.$text-muted;
+    transition: color animations.$count-up-color-duration ease;
+    font-variant-numeric: tabular-nums;
+
+    &--loaded {
+      color: var(--tone, #{tokens.$accent});
+    }
+  }
+
+  &__note {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: tokens.$text-muted;
+  }
+
+  &:hover .admin-icon-tile {
+    background-color: var(--tone, #{tokens.$accent});
+    border-color: var(--tone, #{tokens.$accent});
+    color: tokens.$bg;
+  }
+}
+
+.dashboard-error__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 9999px;
+  border: 1px solid tokens.$danger-border;
+  background-color: tokens.$danger-soft;
+  color: tokens.$danger;
+
+  svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+.dashboard-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+.dashboard-action {
+  align-items: center;
+  gap: 1rem;
+  padding: 2.5rem 2rem;
+  border-radius: 20px;
+  text-align: center;
+
+  &__title {
+    margin: 0;
+    font-family: tokens.$font-heading;
+    font-weight: 700;
+    font-size: 1.25rem;
+  }
+
+  &__buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: auto;
+    padding-top: 1rem;
+  }
+
+  // Bloco de logs com mais peso visual: é monitoramento, não conteúdo.
+  &--highlight {
+    border-color: tokens.$warning-border;
+    background-color: tokens.$bg-alt;
+    box-shadow: 0 0 0 1px tokens.$warning-border, 0 12px 32px rgba(0, 0, 0, 0.45);
+  }
+
+  &:hover .admin-icon-tile {
+    background-color: var(--tone, #{tokens.$accent});
+    border-color: var(--tone, #{tokens.$accent});
+    color: tokens.$bg;
+  }
+}
+
+@media (max-width: tokens.$bp-tablet) {
+  .dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+
+  .dashboard-action--highlight {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: tokens.$bp-mobile) {
+  .dashboard-metrics,
+  .dashboard-actions {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  // No mobile o design compacta o indicador em uma linha: ícone à esquerda,
+  // rótulo e número à direita.
+  .dashboard-metric {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "icon title"
+      "icon value"
+      "desc desc"
+      "note note";
+    align-items: center;
+    column-gap: 1.25rem;
+    row-gap: 0.25rem;
+    padding: 1.25rem;
+
+    .admin-card__header {
+      grid-area: icon;
+    }
+
+    &__kicker {
+      display: none;
+    }
+
+    &__title {
+      grid-area: title;
+      font-size: 0.6875rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    &__value-wrapper {
+      grid-area: value;
+      min-height: 2.5rem;
+    }
+
+    .admin-card__description {
+      grid-area: desc;
+      margin-top: 0.75rem;
+    }
+
+    &__note {
+      grid-area: note;
+    }
+  }
+
+  .dashboard-action {
+    padding: 1.75rem 1.5rem;
+  }
+
+  .dashboard-action--highlight {
+    grid-column: auto;
+  }
+}

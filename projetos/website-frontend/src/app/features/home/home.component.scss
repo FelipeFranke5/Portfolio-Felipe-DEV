@@ -135,9 +135,7 @@ $coffee-tint-light: brightness(0) invert(1);
 
     &:hover {
       color: $hero-accent-hover;
-      // O tom pedido é escuro demais para o fundo do site; o halo mantém as
-      // bordas da palavra perceptíveis sem alterar a cor em si.
-      text-shadow: 0 0 18px rgba($text, 0.45);
+      text-shadow: 0 0 2px rgba($text, 0.45);
     }
   }
 
@@ -573,7 +571,19 @@ $coffee-tint-light: brightness(0) invert(1);
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: saturate(0.7);
+    }
+
+    // A galeria não é interativa (não tem clique nem foco), então em tela de
+    // toque não haveria como sair do preto e branco — lá as imagens já entram
+    // coloridas. O zoom fica contido pelo `overflow: hidden` acima.
+    @media (hover: hover) and (pointer: fine) {
+      img {
+        @include animations.image-reveal-idle;
+      }
+
+      &:hover img {
+        @include animations.image-reveal-active;
+      }
     }
   }
 }
@@ -722,6 +732,14 @@ $coffee-tint-light: brightness(0) invert(1);
 
   .coffee-layer__cup {
     animation: none;
+  }
+
+  .gallery__item img {
+    transition: none;
+  }
+
+  .gallery__item:hover img {
+    transform: none;
   }
 }
 
