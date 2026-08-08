@@ -44,8 +44,8 @@
           (change)="selectedLevel.set($any($event.target).value)"
         >
           <option value="all">Todos os níveis</option>
-          @for (level of levels; track level.key) {
-            <option [value]="level.key">{{ level.label }}</option>
+          @for (level of levels; track level.enumName) {
+            <option [value]="level.enumName">{{ level.label }}</option>
           }
         </select>
       </div>

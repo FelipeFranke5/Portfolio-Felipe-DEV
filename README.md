@@ -44,7 +44,7 @@ Autenticação e autorização delegadas ao Keycloak (OIDC/OAuth2).
 | Contato | POST público, com envio de e-mail assíncrono (agendado) | Não | ✅ Implementado |
 | Log Interno (diagnóstico) | GET admin (lista dos últimos registros + detalhe por ID) | Sim (admin) | ✅ Implementado |
 | Chatbot com IA | WebSocket/STOMP em `/api/websocket` | Sim (usuário logado) | ✅ Implementado |
-| Admin Panel | /admin (Angular route) | Sim (admin) | Ainda não versionado neste repositório |
+| Admin Panel | /admin (rotas Angular: dashboard, projetos, skills e logs) | Sim (admin) | ✅ Implementado — CRUD de projetos e skills; logs somente leitura (o back-end não expõe escrita para `internal_log`) |
 
 ---
 

@@ -1,0 +1,376 @@
+<main class="admin-page">
+  <div class="admin-page__inner">
+    <section class="admin-intro fade-in fade-in--1">
+      <div class="admin-intro__text">
+        <p class="admin-intro__eyebrow">Gerenciamento</p>
+        <h1 class="admin-intro__heading">Projetos</h1>
+        <p class="admin-intro__description">
+          Crie, edite e remova os projetos exibidos na página de portfólio.
+        </p>
+      </div>
+
+      <button
+        #createTrigger
+        type="button"
+        class="admin-btn admin-btn--primary"
+        (click)="openCreate(createTrigger)"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"></path>
+        </svg>
+        Criar Projeto
+      </button>
+    </section>
+
+    @if (successMessage(); as message) {
+      <p class="admin-feedback admin-feedback--success fade-in fade-in--1" role="status">
+        {{ message }}
+        <button type="button" class="admin-inline-dismiss" (click)="dismissSuccess()">
+          Dispensar
+        </button>
+      </p>
+    }
+
+    <section class="admin-toolbar fade-in fade-in--2" aria-label="Busca de projetos">
+      <div class="admin-toolbar__search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <input
+          id="admin-projects-search"
+          type="text"
+          aria-label="Pesquisar projetos por nome ou tecnologia"
+          placeholder="Pesquisar por nome ou tecnologia…"
+          [value]="search()"
+          (input)="search.set($any($event.target).value)"
+        />
+      </div>
+
+      <span class="admin-toolbar__count">{{ totalResults() }} projeto(s)</span>
+    </section>
+
+    @if (isLoading()) {
+      <div class="admin-grid" aria-hidden="true">
+        @for (placeholder of [0, 1, 2, 3]; track placeholder) {
+          <div class="admin-skeleton-card">
+            <span class="admin-skeleton-line admin-skeleton-line--title"></span>
+            <span class="admin-skeleton-line admin-skeleton-line--text"></span>
+            <span class="admin-skeleton-line admin-skeleton-line--short"></span>
+          </div>
+        }
+      </div>
+    } @else if (hasFormLoadError()) {
+      <p class="admin-feedback admin-feedback--error" role="alert">{{ formErrorMessage() }}</p>
+    } @else if (errorMessage(); as message) {
+      <div class="admin-state admin-state--error fade-in fade-in--3" role="alert">
+        <h2 class="admin-state__title">Não foi possível carregar os projetos</h2>
+        <p class="admin-state__description">{{ message }}</p>
+        <button type="button" class="admin-btn admin-btn--primary" (click)="fetchProjects()">
+          Tentar novamente
+        </button>
+      </div>
+    } @else if (!hasResults()) {
+      <div class="admin-state fade-in fade-in--3">
+        <h2 class="admin-state__title">Nenhum projeto encontrado</h2>
+        <p class="admin-state__description">
+          @if (search().trim()) {
+            Nenhum resultado para "{{ search() }}". Tente outro termo de busca.
+          } @else {
+            Ainda não há projetos cadastrados. Comece criando o primeiro.
+          }
+        </p>
+      </div>
+    } @else {
+      <div class="admin-grid fade-in fade-in--3">
+        @for (project of filteredProjects(); track project.id) {
+          <article class="admin-card tone-accent">
+            <div class="admin-card__header">
+              <h2 class="admin-card__title">{{ project.name }}</h2>
+              @if (project.stack.length) {
+                <span class="admin-chip admin-chip--solid">{{ project.stack.length }} tec.</span>
+              }
+            </div>
+
+            <p class="admin-card__description">{{ project.description }}</p>
+
+            @if (project.stack.length) {
+              <div class="admin-chips">
+                @for (tech of project.stack; track $index) {
+                  <span class="admin-chip">{{ tech }}</span>
+                }
+              </div>
+            }
+
+            <span class="admin-card__meta">{{ project.id }}</span>
+
+            <div class="admin-card__actions">
+              <button
+                #editTrigger
+                type="button"
+                class="admin-btn"
+                (click)="openEdit(project, editTrigger)"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M4 20h4l10-10-4-4L4 16z"></path>
+                  <path d="m14 6 4 4"></path>
+                </svg>
+                Editar
+              </button>
+
+              <button
+                #deleteTrigger
+                type="button"
+                class="admin-btn admin-btn--danger"
+                (click)="askDeleteConfirmation(project, deleteTrigger)"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path>
+                </svg>
+                Excluir
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </div>
+
+  @if (isModalOpen()) {
+    <div
+      class="admin-modal-backdrop"
+      role="presentation"
+      (click)="onFormBackdropClick($event)"
+    >
+      <div
+        class="admin-modal admin-modal--wide"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-project-form-title"
+      >
+        <button
+          type="button"
+          class="admin-modal__close"
+          aria-label="Fechar formulário"
+          (click)="closeForm()"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18"></path>
+          </svg>
+        </button>
+
+        <h2 id="admin-project-form-title" class="admin-modal__title">
+          @if (formMode() === 'edit') {
+            Editar projeto
+          } @else {
+            Novo projeto
+          }
+        </h2>
+
+        @if (formMode() === 'edit') {
+          <p class="admin-modal__subtitle">{{ editingProjectName() }}</p>
+        }
+
+        @if (isFormLoading()) {
+          <div class="admin-skeleton-card" aria-live="polite">
+            <span class="admin-skeleton-line admin-skeleton-line--title"></span>
+            <span class="admin-skeleton-line admin-skeleton-line--text"></span>
+            <span class="admin-skeleton-line admin-skeleton-line--text"></span>
+            <span class="admin-skeleton-line admin-skeleton-line--short"></span>
+          </div>
+        } @else {
+          @if (formErrorMessage(); as message) {
+            <p class="admin-feedback admin-feedback--error" role="alert">{{ message }}</p>
+          }
+
+          <form class="admin-form" [formGroup]="projectForm" (ngSubmit)="submit()" novalidate>
+            <div class="admin-field">
+              <label class="admin-field__label" for="project-name">Nome</label>
+              <input
+                #nameInput
+                id="project-name"
+                type="text"
+                class="admin-field__control"
+                [class.admin-field__control--invalid]="isFieldInvalid('name') || fieldErrors('name').length"
+                formControlName="name"
+                [maxlength]="nameMaxLength"
+                placeholder="Nome do projeto"
+              />
+              <span class="admin-field__hint">
+                <span>Entre {{ nameMinLength }} e {{ nameMaxLength }} caracteres.</span>
+                <span>{{ projectForm.controls.name.value.length }}/{{ nameMaxLength }}</span>
+              </span>
+              @if (isFieldInvalid('name')) {
+                <span class="admin-field__error">
+                  Informe um nome com pelo menos {{ nameMinLength }} caracteres.
+                </span>
+              }
+              @for (message of fieldErrors('name'); track message) {
+                <span class="admin-field__error">{{ message }}</span>
+              }
+            </div>
+
+            <div class="admin-field">
+              <label class="admin-field__label" for="project-description">Descrição</label>
+              <textarea
+                id="project-description"
+                class="admin-field__control admin-field__control--textarea"
+                [class.admin-field__control--invalid]="isFieldInvalid('description') || fieldErrors('description').length"
+                formControlName="description"
+                [maxlength]="descriptionMaxLength"
+                placeholder="O que é o projeto, qual problema resolve…"
+              ></textarea>
+              <span class="admin-field__hint">
+                <span>Entre {{ descriptionMinLength }} e {{ descriptionMaxLength }} caracteres.</span>
+                <span>
+                  {{ projectForm.controls.description.value.length }}/{{ descriptionMaxLength }}
+                </span>
+              </span>
+              @if (isFieldInvalid('description')) {
+                <span class="admin-field__error">
+                  Informe uma descrição com pelo menos {{ descriptionMinLength }} caracteres.
+                </span>
+              }
+              @for (message of fieldErrors('description'); track message) {
+                <span class="admin-field__error">{{ message }}</span>
+              }
+            </div>
+
+            <div class="admin-field">
+              <label class="admin-field__label" for="project-stack">Stack</label>
+              <input
+                id="project-stack"
+                type="text"
+                class="admin-field__control"
+                [class.admin-field__control--invalid]="isFieldInvalid('stack') || fieldErrors('stack').length"
+                formControlName="stack"
+                placeholder="Java, Spring Boot, PostgreSQL"
+              />
+              <span class="admin-field__hint">
+                <span>Separe as tecnologias por vírgula.</span>
+              </span>
+              @if (stackPreview().length) {
+                <div class="admin-chips">
+                  @for (tech of stackPreview(); track $index) {
+                    <span class="admin-chip">{{ tech }}</span>
+                  }
+                </div>
+              }
+              @if (isFieldInvalid('stack')) {
+                <span class="admin-field__error">Informe ao menos uma tecnologia.</span>
+              }
+              @for (message of fieldErrors('stack'); track message) {
+                <span class="admin-field__error">{{ message }}</span>
+              }
+            </div>
+
+            <div class="admin-field">
+              <label class="admin-field__label" for="project-github">Repositório GitHub</label>
+              <input
+                id="project-github"
+                type="url"
+                class="admin-field__control"
+                [class.admin-field__control--invalid]="isFieldInvalid('githubURL') || fieldErrors('githubURL').length"
+                formControlName="githubURL"
+                placeholder="https://github.com/usuario/repositorio"
+              />
+              <span class="admin-field__hint">
+                <span>Opcional. Deve começar com https://github.com/</span>
+              </span>
+              @if (isFieldInvalid('githubURL')) {
+                <span class="admin-field__error">
+                  A URL precisa começar com https://github.com/
+                </span>
+              }
+              @for (message of fieldErrors('githubURL'); track message) {
+                <span class="admin-field__error">{{ message }}</span>
+              }
+            </div>
+
+            <div class="admin-field">
+              <label class="admin-field__label" for="project-demo">Demonstração</label>
+              <input
+                id="project-demo"
+                type="url"
+                class="admin-field__control"
+                [class.admin-field__control--invalid]="isFieldInvalid('demoURL') || fieldErrors('demoURL').length"
+                formControlName="demoURL"
+                placeholder="https://meuprojeto.com"
+              />
+              <span class="admin-field__hint">
+                <span>Opcional. Endereço público do projeto no ar.</span>
+              </span>
+              @if (isFieldInvalid('demoURL')) {
+                <span class="admin-field__error">Informe uma URL válida (http ou https).</span>
+              }
+              @for (message of fieldErrors('demoURL'); track message) {
+                <span class="admin-field__error">{{ message }}</span>
+              }
+            </div>
+
+            <div class="admin-field admin-field--checkbox">
+              <input id="project-featured" type="checkbox" formControlName="featured" />
+              <label for="project-featured">Exibir como projeto em destaque</label>
+            </div>
+
+            <div class="admin-modal__actions">
+              <button type="button" class="admin-btn" (click)="closeForm()">Cancelar</button>
+              <button
+                type="submit"
+                class="admin-btn admin-btn--primary"
+                [disabled]="isSubmitting()"
+              >
+                @if (isSubmitting()) {
+                  Salvando…
+                } @else if (formMode() === 'edit') {
+                  Salvar alterações
+                } @else {
+                  Criar projeto
+                }
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    </div>
+  }
+
+  @if (deleteTarget(); as target) {
+    <div
+      class="admin-modal-backdrop"
+      role="presentation"
+      (click)="onDeleteBackdropClick($event)"
+    >
+      <div
+        class="admin-modal"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="admin-project-delete-title"
+        aria-describedby="admin-project-delete-description"
+      >
+        <h2 id="admin-project-delete-title" class="admin-modal__title">Excluir projeto</h2>
+        <p id="admin-project-delete-description" class="admin-modal__subtitle">
+          O projeto "{{ target.name }}" será removido do portfólio. Esta ação não pode ser
+          desfeita.
+        </p>
+
+        @if (deleteErrorMessageSignal(); as message) {
+          <p class="admin-feedback admin-feedback--error" role="alert">{{ message }}</p>
+        }
+
+        <div class="admin-modal__actions">
+          <button type="button" class="admin-btn" (click)="closeDeleteConfirm()">Cancelar</button>
+          <button
+            #deleteConfirmButton
+            type="button"
+            class="admin-btn admin-btn--danger"
+            [disabled]="isDeleting()"
+            (click)="confirmDelete()"
+          >
+            {{ isDeleting() ? 'Excluindo…' : 'Excluir definitivamente' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</main>
