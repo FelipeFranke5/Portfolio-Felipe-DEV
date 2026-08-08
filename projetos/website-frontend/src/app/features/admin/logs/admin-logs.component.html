@@ -123,10 +123,12 @@
   @if (isModalOpen()) {
     <div class="admin-modal-backdrop" role="presentation" (click)="onBackdropClick($event)">
       <div
+        #modalElement
         class="admin-modal admin-modal--wide"
         role="dialog"
         aria-modal="true"
         aria-labelledby="admin-log-detail-title"
+        (keydown)="onModalKeydown($event)"
       >
         <button
           #closeButton
@@ -142,6 +144,7 @@
 
         @if (isModalLoading()) {
           <div class="admin-skeleton-card" aria-live="polite">
+            <span id="admin-log-detail-title" class="visually-hidden">Carregando detalhe do log</span>
             <span class="admin-skeleton-line admin-skeleton-line--title"></span>
             <span class="admin-skeleton-line admin-skeleton-line--text"></span>
             <span class="admin-skeleton-line admin-skeleton-line--text"></span>

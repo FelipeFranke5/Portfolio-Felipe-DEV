@@ -59,6 +59,7 @@ export class AdminLogsComponent {
 
   private readonly searchInput = viewChild<ElementRef<HTMLInputElement>>('searchInput');
   private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('closeButton');
+  private readonly modalElement = viewChild<ElementRef<HTMLElement>>('modalElement');
 
   private lastFocusedElement: HTMLElement | null = null;
   private copyFeedbackTimeout?: ReturnType<typeof setTimeout>;
@@ -117,6 +118,39 @@ export class AdminLogsComponent {
   onEscapePressed(): void {
     if (this.isModalOpen()) {
       this.closeModal();
+    }
+  }
+
+  onModalKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Tab') {
+      return;
+    }
+
+    const modal = this.modalElement()?.nativeElement;
+
+    if (!modal) {
+      return;
+    }
+
+    const focusable = Array.from(
+      modal.querySelectorAll<HTMLElement>(
+        'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter((element) => !element.hasAttribute('disabled'));
+
+    if (focusable.length === 0) {
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
     }
   }
 

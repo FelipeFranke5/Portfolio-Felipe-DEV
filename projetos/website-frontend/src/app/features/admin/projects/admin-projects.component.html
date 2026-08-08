@@ -96,7 +96,7 @@
 
             @if (project.stack.length) {
               <div class="admin-chips">
-                @for (tech of project.stack; track tech) {
+                @for (tech of project.stack; track $index) {
                   <span class="admin-chip">{{ tech }}</span>
                 }
               </div>
@@ -251,7 +251,7 @@
               </span>
               @if (stackPreview().length) {
                 <div class="admin-chips">
-                  @for (tech of stackPreview(); track tech) {
+                  @for (tech of stackPreview(); track $index) {
                     <span class="admin-chip">{{ tech }}</span>
                   }
                 </div>
