@@ -28,7 +28,6 @@ $cta-hover-ink: #32103b;
 $cta-hover-ink-soft: rgba(50, 16, 59, 0.85);
 
 $hero-accent-hover: #9b57ac;
-
 $danger: #ff5c5c;
 $danger-soft: rgba(255, 92, 92, 0.1);
 $danger-border: rgba(255, 92, 92, 0.35);
@@ -45,9 +44,9 @@ $success-border: rgba(34, 197, 94, 0.3);
 $warning: #f59e0b;
 $warning-soft: rgba(245, 158, 11, 0.1);
 $warning-border: rgba(245, 158, 11, 0.3);
-
 $font-heading: "Plus Jakarta Sans", "Inter", sans-serif;
 $font-body: "Inter", sans-serif;
+
 // Carregada no index.html desde o início, mas até então referenciada só via
 // `ui-monospace` solto nos modais. Usada nos IDs e no stack trace do /admin.
 $font-mono: "JetBrains Mono", ui-monospace, monospace;

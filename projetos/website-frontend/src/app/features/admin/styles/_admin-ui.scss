@@ -5,7 +5,6 @@
 // skills e logs). Ficam aqui como mixins, e não em um componente compartilhado,
 // porque o encapsulamento de estilo do Angular é por componente: cada tela
 // inclui o que usa e nada vaza para as páginas públicas do site.
-//
 // A referência visual é o design do dashboard administrativo, traduzido do
 // tema claro do mockup para os tokens dark do site.
 
@@ -316,7 +315,7 @@ $grid: 0.5rem;
       font-weight: 700;
       font-size: 1.0625rem;
       line-height: 1.3;
-      word-break: break-word;
+      overflow-wrap: anywhere;
     }
 
     &__description {

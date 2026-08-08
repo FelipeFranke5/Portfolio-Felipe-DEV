@@ -4,6 +4,7 @@
 // Ajustar aqui em vez de duplicar a keyframe pelos componentes.
 $fade-in-duration: 0.5s;
 $fade-in-step: 45ms;
+
 // 6 (e não mais 4) porque o dashboard do /admin escalona mais blocos do que as
 // páginas públicas. Índices não usados por uma página não custam nada.
 $fade-in-count: 6;
