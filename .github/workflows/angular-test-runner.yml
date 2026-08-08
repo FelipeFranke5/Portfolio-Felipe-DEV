@@ -2,35 +2,38 @@ name: Rodar Testes FrontEnd
 
 on:
   pull_request:
-    # Roda nas branches criadas fora da main.
-    # Posteriormente ocorre o merge para a main.
-    # Quando for para a main, não preciso rodar
-    # essa pipeline de novo.
-    branches-ignore:
-      - 'main'
     paths:
       - 'projetos/website-frontend/**'
       - '!**.md'
 
+defaults:
+  run:
+    working-directory: projetos/website-frontend
+
 jobs:
   testes-angular:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Baixar Código do Projeto
         uses: actions/checkout@v7
-      - name: Acessar Pasta Raíz do Projeto Angular
-        run: cd projetos/website-frontend
+        with:
+          persist-credentials: false
       - name: Instalar e Configurar Node
         uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
+          cache-dependency-path: projetos/website-frontend/package-lock.json
       - name: Aprovar Execução de Lifecycle Scripts
         run: npm approve-scripts --all
       # OBS: npm ci vs npm install: npm ci é mais
       # adequado para pipelines automatizadas
       - name: Realizar Clean Install das Dependências
         run: npm ci
+      - name: Instalar Playwright
+        run: npx playwright install --with-deps chromium
       - name: Rodar Lint
         run: npm run lint --if-present
       - name: Rodar Testes
