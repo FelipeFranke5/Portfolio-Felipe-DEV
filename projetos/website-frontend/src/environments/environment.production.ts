@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: '/api',
+  apiUrl: 'https://frankefelipe-dev.tech/api',
   keycloak: {
     url: '/auth',
     realm: 'website',
