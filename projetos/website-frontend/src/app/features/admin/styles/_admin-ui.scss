@@ -188,6 +188,7 @@ $grid: 0.5rem;
 
 @mixin buttons {
   .admin-btn {
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     justify-content: center;
