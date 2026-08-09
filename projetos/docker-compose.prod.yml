@@ -130,7 +130,7 @@ services:
       # overhead de boot. Lista de features disponíveis em cada versão:
       # https://www.keycloak.org/server/all-config (procurar "kc.features")
       # e https://www.keycloak.org/server/features
-      KC_FEATURES_DISABLED: "admin-fine-grained-authz,authorization,ciba,client-auth-federated,device-flow,dpop,fips,impersonation,jwt-authorization-grant,kerberos,kubernetes-service-accounts,log-mdc,multi-site,opentelemetry,organization,par,passkeys,persistent-user-sessions,recovery-codes,rolling-updates,step-up-authentication,step-up-authentication-saml,token-exchange-standard,twitter-broker,update-email,user-event-metrics,web-authn,workflows"
+      KC_FEATURES_DISABLED: "admin-fine-grained-authz,authorization,ciba,client-auth-federated,device-flow,dpop,fips,impersonation,jwt-authorization-grant,kerberos,kubernetes-service-accounts,log-mdc,multi-site,opentelemetry,organization,par,passkeys,persistent-user-sessions,recovery-codes,step-up-authentication,step-up-authentication-saml,token-exchange-standard,twitter-broker,update-email,user-event-metrics,web-authn,workflows"
 
       KC_DB: postgres
       KC_DB_CONNECT_TIMEOUT: 20s
@@ -147,7 +147,7 @@ services:
         - "CMD-SHELL"
         - >
           exec 3<>/dev/tcp/127.0.0.1/9000 &&
-          echo -e 'GET /health/ready HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n' >&3 &&
+          echo -e 'GET /auth/health/ready HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n' >&3 &&
           cat <&3 | grep -m 1 status | grep -m 1 -q UP
       start_period: 60s
       interval: 10s
