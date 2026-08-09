@@ -123,15 +123,6 @@ services:
       # Necessário para o health check abaixo (endpoint de management,
       # porta 9000, não exposta ao host).
       KC_HEALTH_ENABLED: "true"
-
-      # Só usamos OAuth2/OIDC padrão, login com Google (Identity Provider)
-      # e administração de realms/clients — então desabilitamos tudo que
-      # não se aplica a esse escopo para reduzir superfície de ataque e
-      # overhead de boot. Lista de features disponíveis em cada versão:
-      # https://www.keycloak.org/server/all-config (procurar "kc.features")
-      # e https://www.keycloak.org/server/features
-      KC_FEATURES_DISABLED: "admin-fine-grained-authz,authorization,ciba,client-auth-federated,device-flow,dpop,fips,impersonation,jwt-authorization-grant,kerberos,kubernetes-service-accounts,log-mdc,multi-site,opentelemetry,organization,par,passkeys,persistent-user-sessions,recovery-codes,step-up-authentication,step-up-authentication-saml,token-exchange-standard,twitter-broker,update-email,user-event-metrics,web-authn,workflows"
-
       KC_DB: postgres
       KC_DB_CONNECT_TIMEOUT: 20s
       KC_DB_USERNAME: ${DB_USER:?defina DB_USER no .env}
