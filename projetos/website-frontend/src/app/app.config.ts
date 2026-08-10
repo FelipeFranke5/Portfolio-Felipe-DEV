@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, inject, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import {
@@ -11,6 +11,7 @@ import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
+import { KEYCLOAK_INIT_PROMISE } from './core/tokens/keycloak-init.token';
 
 // O Bearer token só deve ir para o próprio backend (environment.apiUrl), nunca
 // para o handshake do chat (/api/websocket) — que usa SockJS/XHR bruto e por
@@ -36,14 +37,6 @@ export const appConfig: ApplicationConfig = {
     },
     provideKeycloak({
       config: environment.keycloak,
-      initOptions: {
-        // 'check-sso' (não 'login-required'): a maioria das rotas é pública,
-        // então só detectamos silenciosamente uma sessão SSO já existente,
-        // sem forçar redirect de login em toda a aplicação.
-        onLoad: 'check-sso',
-        silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
-        pkceMethod: 'S256',
-      },
       // withAutoRefreshToken ficou de fora: exige AutoRefreshTokenService e
       // UserActivityService via DI, mas nenhum dos dois é providedIn:'root'
       // nesta versão da lib nem é registrado por provideKeycloak — sem
@@ -53,6 +46,9 @@ export const appConfig: ApplicationConfig = {
       // ChatbotService chama getToken() (que faz updateToken(30)) a cada
       // tentativa de conexão STOMP, e o includeBearerTokenInterceptor faz o
       // mesmo antes de cada requisição REST batida pela config abaixo.
+    }),
+    provideAppInitializer(() => {
+      inject(KEYCLOAK_INIT_PROMISE);
     }),
   ],
 };

@@ -46,6 +46,15 @@ describe('HomeComponent', () => {
     expect(accent.textContent).toContain('Portfólio!');
   });
 
+  it('should mark the hero image as a high-priority LCP candidate', () => {
+    const heroImage: HTMLImageElement = fixture.nativeElement.querySelector('.hero__media-image');
+
+    expect(heroImage.getAttribute('fetchpriority')).toBe('high');
+    expect(heroImage.getAttribute('width')).toBe('1000');
+    expect(heroImage.getAttribute('height')).toBe('1000');
+    expect(heroImage.getAttribute('src')).toContain('/images/home/imagem-felipe-2.jpg');
+  });
+
   it('should render one trail step per entry in trailSteps', () => {
     const steps = fixture.nativeElement.querySelectorAll('.trail__step');
 

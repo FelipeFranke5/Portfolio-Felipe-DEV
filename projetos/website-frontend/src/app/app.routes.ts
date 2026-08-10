@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { authGuard } from './core/guards/auth.guard';
+import { keycloakReadyGuard } from './core/guards/keycloak-ready.guard';
 
 export const routes: Routes = [
   {
@@ -31,13 +32,13 @@ export const routes: Routes = [
   },
   {
     path: 'chat',
-    canActivate: [authGuard],
+    canActivate: [keycloakReadyGuard, authGuard],
     loadComponent: () =>
       import('./features/chat/chat.component').then((m) => m.ChatComponent),
   },
   {
     path: 'admin',
-    canActivate: [adminGuard],
+    canActivate: [keycloakReadyGuard, adminGuard],
     loadChildren: () =>
       import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
