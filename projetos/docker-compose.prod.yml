@@ -107,7 +107,11 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.7.1-0@sha256:f1f1f01e472c8a78df40d8f2a49a925274eda4d3d80d5f6edbb5c880ee3c01c6
     container_name: website_keycloak_prod
-    command: start
+    command: 
+      - start
+      - --import-realm
+    volumes:
+      - ./keycloak/prod:/opt/keycloak/data/import
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:?defina KC_BOOTSTRAP_ADMIN_USERNAME no .env}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:?defina KC_BOOTSTRAP_ADMIN_PASSWORD no .env}

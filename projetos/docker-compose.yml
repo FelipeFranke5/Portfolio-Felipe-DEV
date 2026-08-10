@@ -36,7 +36,11 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     container_name: website_keycloak_dev
-    command: start-dev
+    command: 
+      - start-dev
+      - --import-realm
+    volumes:
+      - ./keycloak/dev:/opt/keycloak/data/import
     environment:
       # KEYCLOAK_ADMIN e KEYCLOAK_ADMIN_PASSWORD foram deprecados
       # Novo uso deve ser: KC_BOOTSTRAP_ADMIN_USERNAME e KC_BOOTSTRAP_ADMIN_PASSWORD
