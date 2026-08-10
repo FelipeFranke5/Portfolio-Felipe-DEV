@@ -795,6 +795,24 @@ $coffee-tint-light: brightness(0) invert(1);
 
     &__track {
       padding: 1.25rem;
+      flex-direction: column;
+      flex-wrap: nowrap;
+      align-items: stretch;
+    }
+
+    &__step {
+      width: 100%;
+    }
+
+    &__label {
+      white-space: normal;
+      overflow-wrap: break-word;
+      max-width: 100%;
+    }
+
+    &__separator {
+      align-self: center;
+      transform: rotate(90deg);
     }
   }
 

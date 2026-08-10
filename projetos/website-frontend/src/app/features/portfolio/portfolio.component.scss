@@ -234,6 +234,12 @@ $font-body: tokens.$font-body;
   }
 }
 
+app-certificates {
+  margin-top: 3rem;
+  padding-top: 3rem;
+  border-top: 1px solid $border-soft;
+}
+
 @keyframes portfolio-skeleton-pulse {
   0%,
   100% {
