@@ -1,0 +1,77 @@
+{
+  "realm": "website",
+  "enabled": true,
+  "displayName": "Website",
+  "displayNameHtml": "<strong>Website Felipe Franke - PROD</strong>",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": true,
+  "rememberMe": false,
+  "verifyEmail": true,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "sslRequired": "all",
+
+  "roles": {
+    "realm": [
+      {
+        "name": "USER",
+        "description": "Usuário comum",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "ADMIN",
+        "description": "Administrador do sistema",
+        "composite": false,
+        "clientRole": false
+      }
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "website-frontend",
+      "name": "Aplicação Angular",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+
+      "redirectUris": [
+        "https://frankefelipe-dev.tech/*"
+      ],
+
+      "webOrigins": [
+        "https://frankefelipe-dev.tech/*",
+        "https://frankefelipe-dev.tech"
+      ],
+
+      "attributes": {
+        "post.logout.redirect.uris": "https://frankefelipe-dev.tech"
+      }
+    }
+  ],
+
+  "users": [
+    {
+      "username": "${KC_BOOTSTRAP_ADMIN_USERNAME}",
+      "enabled": true,
+      "email": "${KC_BOOTSTRAP_ADMIN_USERNAME}",
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "Portfolio",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${KC_BOOTSTRAP_ADMIN_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN",
+        "USER"
+      ]
+    }
+  ]
+}

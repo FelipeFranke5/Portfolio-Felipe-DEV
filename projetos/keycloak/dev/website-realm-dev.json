@@ -1,0 +1,83 @@
+{
+  "realm": "website-dev-import-test",
+  "enabled": true,
+  "displayName": "Website",
+  "displayNameHtml": "<strong>Website - DEV</strong>",
+
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": true,
+  "rememberMe": true,
+  "verifyEmail": true,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+
+  "sslRequired": "external",
+
+  "roles": {
+    "realm": [
+      {
+        "name": "USER",
+        "description": "Usuário comum",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "ADMIN",
+        "description": "Administrador do sistema",
+        "composite": false,
+        "clientRole": false
+      }
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "website-frontend",
+      "name": "Aplicação Angular",
+      "enabled": true,
+
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost/*"
+      ],
+
+      "webOrigins": [
+        "http://localhost:4200",
+        "http://localhost"
+      ],
+
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost"
+      }
+    }
+  ],
+
+  "users": [
+    {
+      "username": "${KC_BOOTSTRAP_ADMIN_USERNAME}",
+      "enabled": true,
+      "email": "${KC_BOOTSTRAP_ADMIN_USERNAME}",
+      "emailVerified": true,
+
+      "firstName": "Admin",
+      "lastName": "Portfolio",
+
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${KC_BOOTSTRAP_ADMIN_PASSWORD}",
+          "temporary": false
+        }
+      ],
+
+      "realmRoles": [
+        "ADMIN"
+      ]
+    }
+  ]
+}
