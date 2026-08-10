@@ -36,6 +36,12 @@ describe('ContactComponent', () => {
     expect(footerElement).not.toBeNull();
   });
 
+  it('should render the direct email unchanged', () => {
+    const emailElement = fixture.nativeElement.querySelector('.contact-intro__direct-email');
+
+    expect(emailElement.textContent.trim()).toBe(component.directEmail);
+  });
+
   it('should start on step 1 with the "Continuar" button disabled while the name is empty', () => {
     expect(component.currentStep()).toBe(1);
     expect(component.isStepButtonDisabled('name')).toBe(true);

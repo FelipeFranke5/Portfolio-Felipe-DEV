@@ -52,6 +52,12 @@ describe('HomeComponent', () => {
     expect(steps.length).toBe(component.trailSteps.length);
   });
 
+  it('should render one trail separator between each trail step', () => {
+    const separators = fixture.nativeElement.querySelectorAll('.trail__separator');
+
+    expect(separators.length).toBe(component.trailSteps.length - 1);
+  });
+
   it('should render one timeline entry per item in aboutTimeline', () => {
     const entries = fixture.nativeElement.querySelectorAll('.about__entry');
 
