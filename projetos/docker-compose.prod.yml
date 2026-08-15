@@ -1,51 +1,3 @@
-# ============================================================
-#  docker-compose.prod.yml - PRODUÇÃO
-#
-#  Diferenças em relação ao docker-compose.yml (dev):
-#    - Front-end: build de produção do Angular, servido como
-#      estático pelo próprio NGINX (sem container "frontend"
-#      separado com ng serve) — ver website-frontend/Dockerfile.prod
-#      e nginx/nginx.prod.conf.
-#    - Keycloak em modo produção (não "start-dev").
-#    - Postgres, Keycloak e back-end não publicam porta no host:
-#      só o NGINX fica exposto (80/443). Tudo mais é interno à
-#      rede Docker.
-#    - Health checks robustos em todos os serviços, usados via
-#      "condition: service_healthy" para evitar boot em cascata
-#      com dependências ainda não prontas.
-#    - Backup automatizado do Postgres (serviço postgres_backup),
-#      endereçando o ponto pendente #9 do README.
-#    - Renovação automática do certificado TLS (serviço certbot,
-#      método webroot, roda "certbot renew" a cada 12h). O NGINX
-#      recarrega a cada 6h (ver website-frontend/nginx-entrypoint.sh)
-#      para pegar o certificado renovado sem downtime.
-#    - Limites de memória/CPU pensados para uma VPS 4GB/2vCPU
-#
-#  Pré-requisitos antes do primeiro "docker compose -f
-#  docker-compose.prod.yml up -d --build":
-#    1. .env com todas as variáveis obrigatórias (ver README,
-#       seção "Variáveis de Ambiente", + as novas abaixo).
-#    2. nginx/nginx.prod.conf com "SEU_DOMINIO" substituído pelo
-#       domínio real (arquivo estático, não é gerado dinamicamente).
-#    3. EMISSÃO INICIAL DO CERTIFICADO (só na primeira vez — o
-#       serviço certbot deste compose só RENOVA certificados que já
-#       existem, não emite o primeiro). Com a porta 80 livre no host
-#       (nada do stack rodando ainda) e o DNS do domínio já apontando
-#       para a VPS:
-#
-#         docker run --rm -p 80:80 \
-#           -v /etc/letsencrypt:/etc/letsencrypt \
-#           certbot/certbot certonly --standalone \
-#           -d SEU_DOMINIO --email SEU_EMAIL --agree-tos --no-eff-email
-#
-#       Isso cria /etc/letsencrypt/live/SEU_DOMINIO/ no host. Só
-#       depois disso o "docker compose up" abaixo funciona (o NGINX
-#       não sobe sem o certificado já existir).
-#
-#  Uso (depois do passo 3 acima):
-#    docker compose -f docker-compose.prod.yml up -d --build
-# ============================================================
-
 services:
 
   postgres:
@@ -180,13 +132,6 @@ services:
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USER: ${MAIL_USER:?defina MAIL_USER no .env}
       MAIL_PASS: ${MAIL_PASS:?defina MAIL_PASS no .env}
-
-      SPRING_AI_ANTHROPIC_API_KEY: ${SPRING_AI_ANTHROPIC_API_KEY:?defina SPRING_AI_ANTHROPIC_API_KEY no .env}
-      CHATBOT_MODEL:              ${CHATBOT_MODEL:-claude-haiku-4-5}
-      CHATBOT_MAX_TOKENS:         ${CHATBOT_MAX_TOKENS:-600}
-      CHATBOT_MAX_PER_MINUTE:     ${CHATBOT_MAX_PER_MINUTE:-5}
-      CHATBOT_MAX_PER_USER_DAILY: ${CHATBOT_MAX_PER_USER_DAILY:-40}
-      CHATBOT_MAX_CONCURRENT:     ${CHATBOT_MAX_CONCURRENT:-2}
     expose:
       - "8085"
     depends_on:
