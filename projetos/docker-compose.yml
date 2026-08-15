@@ -1,15 +1,3 @@
-# ============================================================
-#  docker-compose.yml - DEV
-#
-#  Sobe: back-end (Spring Boot), front-end (Angular via ng serve),
-#  PostgreSQL, NGINX (proxy de dev) e Keycloak (modo dev, com
-#  admin/admin padrão).
-#
-#  Uso:
-#    docker compose up -d --build
-#
-# ============================================================
-
 services:
 
   postgres:
@@ -83,8 +71,6 @@ services:
       # não a porta 8083 publicada no host. "8083:8080" no serviço keycloak só vale
       # para acesso de fora do Docker.
       KEYCLOAK_JWKS_URI: http://keycloak:8080/auth/realms/website/protocol/openid-connect/certs
-
-      # CORS - origem do Angular, servido através do NGINX de dev (porta 80)
       FRONT_END_URL: http://localhost
 
       # SMTP fake para dev
@@ -93,16 +79,6 @@ services:
       MAIL_PORT: "1025"
       MAIL_USER: dev@localhost
       MAIL_PASS: dev
-
-      # Chatbot (Spring AI / Anthropic)
-      # A sintaxe ${VAR:?msg} faz o `docker compose up` FALHAR se a chave não estiver
-      # no .env — melhor do que subir "funcionando" e só quebrar na primeira pergunta.
-      SPRING_AI_ANTHROPIC_API_KEY: ${SPRING_AI_ANTHROPIC_API_KEY:?defina SPRING_AI_ANTHROPIC_API_KEY no .env}
-      CHATBOT_MODEL:               ${CHATBOT_MODEL:-claude-haiku-4-5}
-      CHATBOT_MAX_TOKENS:          ${CHATBOT_MAX_TOKENS:-600}
-      CHATBOT_MAX_PER_MINUTE:      ${CHATBOT_MAX_PER_MINUTE:-5}
-      CHATBOT_MAX_PER_USER_DAILY:  ${CHATBOT_MAX_PER_USER_DAILY:-40}
-      CHATBOT_MAX_CONCURRENT:      ${CHATBOT_MAX_CONCURRENT:-2}
     expose:
       - "8085"
     depends_on:
@@ -123,6 +99,7 @@ services:
       - "4200"
     depends_on:
       - backend
+      - keycloak
     restart: unless-stopped
     networks:
       - website_dev_net

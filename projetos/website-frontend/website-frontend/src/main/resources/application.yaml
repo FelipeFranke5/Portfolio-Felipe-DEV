@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: website-frontend
+server:
+  port: 8086
+  forward-headers-strategy: native
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized

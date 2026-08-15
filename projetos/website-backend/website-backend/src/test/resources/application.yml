@@ -14,25 +14,3 @@ spring:
     properties:
         format_sql: true
         default_batch_fetch_size: 100
-
-  # ─── Spring AI ─────────────────────────────────────
-  # Nenhum teste pode gastar token de verdade. Três barreiras:
-  #   1. o ChatClient é sempre substituído por @MockitoBean nos contextos que sobem o
-  #      ChatbotService;
-  #   2. a chave abaixo não é válida;
-  #   3. a base-url aponta para uma porta inexistente — se alguma chamada escapar das
-  #      duas primeiras, ela falha na hora em vez de sair para a internet.
-  ai:
-    anthropic:
-      api-key: chave-de-teste-nunca-usada
-      base-url: http://127.0.0.1:1
-      chat:
-        model: claude-haiku-4-5
-        max-tokens: 64
-
-# Limites baixos de propósito, para o teste de cota estourar rápido.
-chatbot:
-  quota:
-    maxPerMinute: 3
-    maxPerUserPerDay: 5
-    maxConcurrentCalls: 1

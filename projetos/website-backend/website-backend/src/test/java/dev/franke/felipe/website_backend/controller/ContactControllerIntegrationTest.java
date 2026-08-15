@@ -6,7 +6,6 @@ import dev.franke.felipe.website_backend.model.Contact;
 import dev.franke.felipe.website_backend.repository.ContactRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -40,9 +39,6 @@ class ContactControllerIntegrationTest {
 
     @MockitoBean
     private JwtDecoder jwtDecoder;
-
-    @MockitoBean
-    private ChatClient chatClient;
 
     @Autowired
     private MockMvc mockMvc;
